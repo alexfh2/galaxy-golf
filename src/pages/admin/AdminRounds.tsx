@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,27 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
 type Season = Tables<'seasons'>;
+type Competition = Tables<'competitions'>;
+type RoundCompetition = Tables<'round_competitions'>;
 type RoundStatus = Database['public']['Enums']['round_status'];
+
+type CompStage = 'regular' | 'major' | 'playoff' | 'final';
+type CompFormEntry = {
+  enabled: boolean;
+  stage: CompStage;
+  competition_round_number: string;
+  counts_for_ranking: boolean;
+};
+type RoundCompetitionWithName = RoundCompetition & {
+  competition: { id: string; name: string; display_order: number } | null;
+};
+
+const stageLabels: Record<CompStage, string> = {
+  regular: 'Regular',
+  major: 'Major',
+  playoff: 'Playoff',
+  final: 'Final',
+};
 
 interface ParsedRound {
   round_number: number;
@@ -95,6 +115,7 @@ const AdminRounds = () => {
     course_handicap_women: '' as string,
     has_women_handicap: false,
   });
+  const [competitionsForm, setCompetitionsForm] = useState<Record<string, CompFormEntry>>({});
 
   const { data: seasons } = useQuery({
     queryKey: ['admin-seasons-list'],
@@ -120,6 +141,61 @@ const AdminRounds = () => {
       return data as Round[];
     },
   });
+
+  const { data: competitions } = useQuery({
+    queryKey: ['admin-competitions', activeSeasonId],
+    enabled: !!activeSeasonId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('competitions')
+        .select('*')
+        .eq('season_id', activeSeasonId)
+        .eq('active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as Competition[];
+    },
+  });
+
+  const roundIdsKey = (rounds ?? []).map((r) => r.id).sort().join(',');
+  const { data: roundCompetitions } = useQuery({
+    queryKey: ['admin-round-competitions', roundIdsKey],
+    enabled: !!rounds && rounds.length > 0,
+    queryFn: async () => {
+      const ids = (rounds ?? []).map((r) => r.id);
+      const { data, error } = await supabase
+        .from('round_competitions')
+        .select('*, competition:competitions(id, name, display_order)')
+        .in('round_id', ids);
+      if (error) throw error;
+      return data as RoundCompetitionWithName[];
+    },
+  });
+
+  // Initialize competitions form when the dialog opens (after competitions loads)
+  useEffect(() => {
+    if (!dialogOpen) return;
+    if (!competitions) return;
+    if (Object.keys(competitionsForm).length > 0) return;
+    const existing = editingRound
+      ? (roundCompetitions ?? []).filter((rc) => rc.round_id === editingRound.id)
+      : [];
+    const map: Record<string, CompFormEntry> = {};
+    competitions.forEach((c) => {
+      const found = existing.find((rc) => rc.competition_id === c.id);
+      map[c.id] = found
+        ? {
+            enabled: true,
+            stage: (found.stage as CompStage) ?? 'regular',
+            competition_round_number:
+              found.competition_round_number != null ? String(found.competition_round_number) : '',
+            counts_for_ranking: found.counts_for_ranking,
+          }
+        : { enabled: false, stage: 'regular', competition_round_number: '', counts_for_ranking: true };
+    });
+    setCompetitionsForm(map);
+  }, [dialogOpen, competitions, editingRound, roundCompetitions, competitionsForm]);
+
 
   // ─── IMPORT FROM URL ───
   const handleImport = async () => {
@@ -247,19 +323,65 @@ const AdminRounds = () => {
         course_handicap: courseHandicap,
         course_handicap_women: courseHandicapWomen,
       } as any;
+
+      // Validate competitions selection
+      const enabledEntries = Object.entries(competitionsForm).filter(([, v]) => v.enabled);
+      if (enabledEntries.length === 0) {
+        throw new Error('Selecciona al menos una competición para la jornada.');
+      }
+      for (const [, v] of enabledEntries) {
+        const n = parseInt(v.competition_round_number);
+        if (!v.competition_round_number.trim() || isNaN(n) || n < 1) {
+          throw new Error('Indica el nº de prueba para cada competición seleccionada.');
+        }
+      }
+
+      let roundId: string;
       if (editingRound) {
         const { error } = await supabase.from('rounds').update(payload).eq('id', editingRound.id);
         if (error) throw error;
+        roundId = editingRound.id;
       } else {
-        const { error } = await supabase.from('rounds').insert(payload);
+        const { data, error } = await supabase.from('rounds').insert(payload).select('id').single();
+        if (error) throw error;
+        roundId = data.id;
+      }
+
+      // Upsert active competition associations
+      const upsertRows = enabledEntries.map(([competition_id, v]) => ({
+        round_id: roundId,
+        competition_id,
+        stage: v.stage,
+        competition_round_number: parseInt(v.competition_round_number),
+        counts_for_ranking: v.counts_for_ranking,
+      }));
+      if (upsertRows.length > 0) {
+        const { error } = await supabase
+          .from('round_competitions')
+          .upsert(upsertRows, { onConflict: 'round_id,competition_id' });
+        if (error) throw error;
+      }
+
+      // Delete only associations the user disabled
+      const disabledIds = Object.entries(competitionsForm)
+        .filter(([, v]) => !v.enabled)
+        .map(([id]) => id);
+      if (disabledIds.length > 0) {
+        const { error } = await supabase
+          .from('round_competitions')
+          .delete()
+          .eq('round_id', roundId)
+          .in('competition_id', disabledIds);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-round-competitions'] });
       toast({ title: editingRound ? 'Jornada actualitzada' : 'Jornada creada' });
       setDialogOpen(false);
       setEditingRound(null);
+      setCompetitionsForm({});
     },
     onError: (err: Error) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -315,6 +437,7 @@ const AdminRounds = () => {
       course_handicap_women: hcpWomenStr,
       has_women_handicap: Array.isArray(hcpWomenData) && hcpWomenData.length > 0,
     });
+    setCompetitionsForm({});
     setDialogOpen(true);
   };
 
@@ -328,6 +451,7 @@ const AdminRounds = () => {
       course_par: '', course_handicap: '',
       course_handicap_women: '', has_women_handicap: false,
     });
+    setCompetitionsForm({});
     setDialogOpen(true);
   };
 
@@ -603,6 +727,28 @@ const AdminRounds = () => {
                       {round.end_date && round.end_date !== round.date && (
                         <span className="text-xs text-muted-foreground">→ {round.end_date}</span>
                       )}
+                      {(() => {
+                        const assocs = (roundCompetitions ?? []).filter((rc) => rc.round_id === round.id);
+                        if (assocs.length === 0) {
+                          return (
+                            <Badge variant="outline" className="text-xs text-muted-foreground">
+                              Sin competición asignada
+                            </Badge>
+                          );
+                        }
+                        return assocs
+                          .slice()
+                          .sort(
+                            (a, b) =>
+                              (a.competition?.display_order ?? 0) - (b.competition?.display_order ?? 0),
+                          )
+                          .map((rc) => (
+                            <Badge key={rc.id} variant="secondary" className="text-xs">
+                              {rc.competition?.name ?? '—'} · {stageLabels[rc.stage as CompStage] ?? rc.stage}
+                              {rc.competition_round_number != null ? ` · P${rc.competition_round_number}` : ''}
+                            </Badge>
+                          ));
+                      })()}
                     </div>
                     <span className="text-xs text-muted-foreground hidden sm:inline-block mr-2">
                       Clica per gestionar
@@ -982,6 +1128,99 @@ const AdminRounds = () => {
               <Switch checked={form.is_master} onCheckedChange={(v) => updateField('is_master', v)} />
               <Label>Prova MASTER (coef. ×1.25)</Label>
             </div>
+
+            <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
+              <Label className="font-semibold">Competiciones y ranking</Label>
+              {!competitions || competitions.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No hay competiciones configuradas para esta temporada.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {competitions.map((c) => {
+                    const entry =
+                      competitionsForm[c.id] ?? {
+                        enabled: false,
+                        stage: 'regular' as CompStage,
+                        competition_round_number: '',
+                        counts_for_ranking: true,
+                      };
+                    const update = (patch: Partial<CompFormEntry>) =>
+                      setCompetitionsForm((prev) => ({
+                        ...prev,
+                        [c.id]: { ...entry, ...patch },
+                      }));
+                    return (
+                      <div
+                        key={c.id}
+                        className="rounded-md border border-border/40 bg-background p-3 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <Label className="font-medium">{c.name}</Label>
+                          <Switch
+                            checked={entry.enabled}
+                            onCheckedChange={(v) =>
+                              update(
+                                v
+                                  ? {
+                                      enabled: true,
+                                      stage: 'regular',
+                                      counts_for_ranking: true,
+                                    }
+                                  : { enabled: false },
+                              )
+                            }
+                          />
+                        </div>
+                        {entry.enabled && (
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Tipo de prueba</Label>
+                              <Select
+                                value={entry.stage}
+                                onValueChange={(v) => update({ stage: v as CompStage })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="regular">Regular</SelectItem>
+                                  <SelectItem value="major">Major</SelectItem>
+                                  <SelectItem value="playoff">Playoff</SelectItem>
+                                  <SelectItem value="final">Final</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Nº de prueba en la competición</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={entry.competition_round_number}
+                                onChange={(e) =>
+                                  update({ competition_round_number: e.target.value })
+                                }
+                                required
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Computa para ranking</Label>
+                              <div className="h-10 flex items-center">
+                                <Switch
+                                  checked={entry.counts_for_ranking}
+                                  onCheckedChange={(v) => update({ counts_for_ranking: v })}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Guardant...' : 'Guardar'}
             </Button>
