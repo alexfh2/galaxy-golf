@@ -1128,6 +1128,99 @@ const AdminRounds = () => {
               <Switch checked={form.is_master} onCheckedChange={(v) => updateField('is_master', v)} />
               <Label>Prova MASTER (coef. ×1.25)</Label>
             </div>
+
+            <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
+              <Label className="font-semibold">Competiciones y ranking</Label>
+              {!competitions || competitions.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No hay competiciones configuradas para esta temporada.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {competitions.map((c) => {
+                    const entry =
+                      competitionsForm[c.id] ?? {
+                        enabled: false,
+                        stage: 'regular' as CompStage,
+                        competition_round_number: '',
+                        counts_for_ranking: true,
+                      };
+                    const update = (patch: Partial<CompFormEntry>) =>
+                      setCompetitionsForm((prev) => ({
+                        ...prev,
+                        [c.id]: { ...entry, ...patch },
+                      }));
+                    return (
+                      <div
+                        key={c.id}
+                        className="rounded-md border border-border/40 bg-background p-3 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <Label className="font-medium">{c.name}</Label>
+                          <Switch
+                            checked={entry.enabled}
+                            onCheckedChange={(v) =>
+                              update(
+                                v
+                                  ? {
+                                      enabled: true,
+                                      stage: 'regular',
+                                      counts_for_ranking: true,
+                                    }
+                                  : { enabled: false },
+                              )
+                            }
+                          />
+                        </div>
+                        {entry.enabled && (
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Tipo de prueba</Label>
+                              <Select
+                                value={entry.stage}
+                                onValueChange={(v) => update({ stage: v as CompStage })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="regular">Regular</SelectItem>
+                                  <SelectItem value="major">Major</SelectItem>
+                                  <SelectItem value="playoff">Playoff</SelectItem>
+                                  <SelectItem value="final">Final</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Nº de prueba en la competición</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={entry.competition_round_number}
+                                onChange={(e) =>
+                                  update({ competition_round_number: e.target.value })
+                                }
+                                required
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Computa para ranking</Label>
+                              <div className="h-10 flex items-center">
+                                <Switch
+                                  checked={entry.counts_for_ranking}
+                                  onCheckedChange={(v) => update({ counts_for_ranking: v })}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Guardant...' : 'Guardar'}
             </Button>
