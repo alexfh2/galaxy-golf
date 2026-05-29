@@ -52,6 +52,13 @@
     --green-light: 158 22% 28%;
     --cream: 40 20% 90%;
     --cream-dark: 40 12% 70%;
+
+    /* GalaxyGolf brand tokens */
+    --gg-navy: 218 56% 9%;       /* #0B1324 */
+    --gg-green: 152 34% 18%;     /* #1E3D2F */
+    --gg-ivory: 38 47% 93%;      /* #F4EFE6 */
+    --gg-gold: 36 43% 64%;       /* #C8AA7D */
+    --gg-copper: 21 51% 47%;     /* #B66B3C */
   }
 
   .light {
