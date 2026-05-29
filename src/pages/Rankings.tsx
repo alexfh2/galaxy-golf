@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Trophy, CalendarDays, ArrowRight } from "lucide-react";
-import Layout from "@/components/layout/Layout";
+
 import { Button } from "@/components/ui/button";
 
 // TODO: sustituir esta pantalla editorial por rankings reales separados por competición
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Rankings() {
   return (
-    <Layout>
+    
       {/* Cabecera editorial */}
       <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
         <div
@@ -145,6 +145,6 @@ export default function Rankings() {
           </div>
         </div>
       </section>
-    </Layout>
+    
   );
 }
