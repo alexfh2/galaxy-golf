@@ -323,19 +323,65 @@ const AdminRounds = () => {
         course_handicap: courseHandicap,
         course_handicap_women: courseHandicapWomen,
       } as any;
+
+      // Validate competitions selection
+      const enabledEntries = Object.entries(competitionsForm).filter(([, v]) => v.enabled);
+      if (enabledEntries.length === 0) {
+        throw new Error('Selecciona al menos una competición para la jornada.');
+      }
+      for (const [, v] of enabledEntries) {
+        const n = parseInt(v.competition_round_number);
+        if (!v.competition_round_number.trim() || isNaN(n) || n < 1) {
+          throw new Error('Indica el nº de prueba para cada competición seleccionada.');
+        }
+      }
+
+      let roundId: string;
       if (editingRound) {
         const { error } = await supabase.from('rounds').update(payload).eq('id', editingRound.id);
         if (error) throw error;
+        roundId = editingRound.id;
       } else {
-        const { error } = await supabase.from('rounds').insert(payload);
+        const { data, error } = await supabase.from('rounds').insert(payload).select('id').single();
+        if (error) throw error;
+        roundId = data.id;
+      }
+
+      // Upsert active competition associations
+      const upsertRows = enabledEntries.map(([competition_id, v]) => ({
+        round_id: roundId,
+        competition_id,
+        stage: v.stage,
+        competition_round_number: parseInt(v.competition_round_number),
+        counts_for_ranking: v.counts_for_ranking,
+      }));
+      if (upsertRows.length > 0) {
+        const { error } = await supabase
+          .from('round_competitions')
+          .upsert(upsertRows, { onConflict: 'round_id,competition_id' });
+        if (error) throw error;
+      }
+
+      // Delete only associations the user disabled
+      const disabledIds = Object.entries(competitionsForm)
+        .filter(([, v]) => !v.enabled)
+        .map(([id]) => id);
+      if (disabledIds.length > 0) {
+        const { error } = await supabase
+          .from('round_competitions')
+          .delete()
+          .eq('round_id', roundId)
+          .in('competition_id', disabledIds);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-round-competitions'] });
       toast({ title: editingRound ? 'Jornada actualitzada' : 'Jornada creada' });
       setDialogOpen(false);
       setEditingRound(null);
+      setCompetitionsForm({});
     },
     onError: (err: Error) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
