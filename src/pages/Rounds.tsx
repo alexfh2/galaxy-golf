@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, ChevronDown, BarChart3, CalendarPlus, CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
 import { ca, es } from 'date-fns/locale';
@@ -11,19 +10,34 @@ import { buildPlayerCategoryHandicapMap } from '@/lib/playerCategoryHandicap';
 import { computeScratchStableford } from '@/lib/scratchStableford';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 
+type CompetitionSlug = 'circuito-galaxygolf' | 'galaxycup';
+type Stage = 'regular' | 'major' | 'playoff' | 'final';
+type CompetitionFilter = 'all' | CompetitionSlug;
+
+type RoundCompetitionLink = {
+  stage: Stage;
+  competition_round_number: number | null;
+  competitions: {
+    name: string;
+    slug: CompetitionSlug;
+    display_order: number;
+  } | null;
+};
+
 const Rounds = () => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ca' ? ca : es;
   const [expandedRound, setExpandedRound] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [activeResultTab, setActiveResultTab] = useState('hcpLow');
+  const [filter, setFilter] = useState<CompetitionFilter>('all');
 
   const { data: rounds, isLoading } = useQuery({
-    queryKey: ['public-rounds-all'],
+    queryKey: ['public-rounds-all-with-competitions'],
     queryFn: async () => {
       const { data } = await supabase
         .from('rounds')
-        .select('*')
+        .select('*, round_competitions(stage, competition_round_number, competitions(name, slug, display_order))')
         .order('date', { ascending: true });
       return data || [];
     },
@@ -31,21 +45,126 @@ const Rounds = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const buildIcsContent = (round: any) => {
+  const getLinks = (round: any): RoundCompetitionLink[] => {
+    const raw = (round?.round_competitions ?? []) as RoundCompetitionLink[];
+    return [...raw]
+      .filter((l) => l.competitions)
+      .sort(
+        (a, b) =>
+          (a.competitions?.display_order ?? 0) - (b.competitions?.display_order ?? 0),
+      );
+  };
+
+  const visibleRounds = useMemo(() => {
+    if (!rounds) return [];
+    if (filter === 'all') return rounds;
+    return rounds.filter((r: any) =>
+      getLinks(r).some((l) => l.competitions?.slug === filter),
+    );
+  }, [rounds, filter]);
+
+  const filterOptions: { value: CompetitionFilter; label: string }[] = [
+    { value: 'all', label: 'Totes les proves' },
+    { value: 'circuito-galaxygolf', label: 'Circuito GalaxyGolf' },
+    { value: 'galaxycup', label: 'GalaxyCup' },
+  ];
+
+  const stageLabel = (stage: Stage): string | null => {
+    if (stage === 'major') return 'Major';
+    if (stage === 'playoff') return 'Playoff';
+    if (stage === 'final') return 'Final';
+    return null;
+  };
+
+  const renderRoundBadges = (round: any) => {
+    const links = getLinks(round);
+    if (!links.length) return null;
+
+    if (filter === 'all') {
+      return links.map((l, idx) => {
+        const isCircuito = l.competitions?.slug === 'circuito-galaxygolf';
+        const shortName = isCircuito ? 'Circuito' : 'GalaxyCup';
+        const stage = stageLabel(l.stage);
+        const parts = [shortName];
+        if (stage) parts.push(stage);
+        if (l.competition_round_number != null && l.stage !== 'final') {
+          parts.push(`P${l.competition_round_number}`);
+        } else if (l.stage === 'final') {
+          // Final ya está reflejado
+        }
+        return (
+          <span
+            key={idx}
+            className="text-[9px] px-2 py-0.5 border border-accent/25 text-accent/80 font-body font-medium tracking-[0.12em] uppercase"
+          >
+            {parts.join(' · ')}
+          </span>
+        );
+      });
+    }
+
+    const link = links.find((l) => l.competitions?.slug === filter);
+    if (!link) return null;
+    const compName = link.competitions?.name ?? '';
+    const stage = stageLabel(link.stage);
+
+    const badges: JSX.Element[] = [];
+    let mainLabel = '';
+    if (link.stage === 'final') {
+      mainLabel = `${compName} · Final`;
+    } else {
+      mainLabel = `${compName} · P${link.competition_round_number ?? '?'}`;
+    }
+    badges.push(
+      <span
+        key="main"
+        className="text-[9px] px-2 py-0.5 border border-accent/25 text-accent/80 font-body font-medium tracking-[0.12em] uppercase"
+      >
+        {mainLabel}
+      </span>,
+    );
+    if (filter === 'galaxycup' && stage && (link.stage === 'major' || link.stage === 'playoff')) {
+      badges.push(
+        <span
+          key="stage"
+          className="text-[9px] px-2 py-0.5 border border-accent/40 text-accent font-body font-semibold tracking-[0.15em] uppercase"
+        >
+          {stage}
+        </span>,
+      );
+    }
+    return badges;
+  };
+
+  const buildIcsEvent = (round: any) => {
     const startDate = round.date.replace(/-/g, '');
     const endRaw = round.end_date || round.date;
     const endNext = new Date(endRaw);
     endNext.setDate(endNext.getDate() + 1);
     const endDate = endNext.toISOString().split('T')[0].replace(/-/g, '');
-    const title = `${round.name} — Circuit Gastronòmic Golf`;
+    const title = `${round.name} — GalaxyGolf`;
     const location = [round.club, round.course].filter(Boolean).join(' — ');
-    const description = [round.sponsor ? `Patrocinador: ${round.sponsor}` : '', round.is_master ? 'Jornada MASTER (x1.25)' : ''].filter(Boolean).join('\\n');
+    const description = [round.sponsor ? `Patrocinador: ${round.sponsor}` : ''].filter(Boolean).join('\\n');
     return [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Circuit Gastronomic Golf//CA',
-      'BEGIN:VEVENT', `DTSTART;VALUE=DATE:${startDate}`, `DTEND;VALUE=DATE:${endDate}`,
-      `SUMMARY:${title}`, location ? `LOCATION:${location}` : '', description ? `DESCRIPTION:${description}` : '',
-      `UID:${round.id}@gastronomicgolf`, 'END:VEVENT', 'END:VCALENDAR',
+      'BEGIN:VEVENT',
+      `DTSTART;VALUE=DATE:${startDate}`,
+      `DTEND;VALUE=DATE:${endDate}`,
+      `SUMMARY:${title}`,
+      location ? `LOCATION:${location}` : '',
+      description ? `DESCRIPTION:${description}` : '',
+      `UID:${round.id}@galaxygolf`,
+      'END:VEVENT',
     ].filter(Boolean).join('\r\n');
+  };
+
+  const buildIcsContent = (round: any) => {
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//GalaxyGolf//CA',
+      buildIcsEvent(round),
+      'END:VCALENDAR',
+    ].join('\r\n');
   };
 
   const downloadIcs = (content: string, filename: string) => {
@@ -57,24 +176,19 @@ const Rounds = () => {
   };
 
   const downloadAllIcs = () => {
-    if (!rounds?.length) return;
-    const events = rounds.map(r => {
-      const startDate = r.date.replace(/-/g, '');
-      const endRaw = r.end_date || r.date;
-      const endNext = new Date(endRaw);
-      endNext.setDate(endNext.getDate() + 1);
-      const endDate = endNext.toISOString().split('T')[0].replace(/-/g, '');
-      const title = `${r.name} — Circuit Gastronòmic Golf`;
-      const location = [r.club, r.course].filter(Boolean).join(' — ');
-      const description = [r.sponsor ? `Patrocinador: ${r.sponsor}` : '', r.is_master ? 'Jornada MASTER (x1.25)' : ''].filter(Boolean).join('\\n');
-      return [
-        'BEGIN:VEVENT', `DTSTART;VALUE=DATE:${startDate}`, `DTEND;VALUE=DATE:${endDate}`,
-        `SUMMARY:${title}`, location ? `LOCATION:${location}` : '', description ? `DESCRIPTION:${description}` : '',
-        `UID:${r.id}@gastronomicgolf`, 'END:VEVENT',
-      ].filter(Boolean).join('\r\n');
-    }).join('\r\n');
-    const ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Circuit Gastronomic Golf//CA\r\n${events}\r\nEND:VCALENDAR`;
-    downloadIcs(ics, 'circuit-gastronomic-golf-2026.ics');
+    if (!visibleRounds?.length) return;
+    // De-dup por id (las jornadas compartidas ya vienen únicas, pero protegemos)
+    const seen = new Set<string>();
+    const events = visibleRounds
+      .filter((r: any) => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      })
+      .map((r: any) => buildIcsEvent(r))
+      .join('\r\n');
+    const ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//GalaxyGolf//CA\r\n${events}\r\nEND:VCALENDAR`;
+    downloadIcs(ics, 'galaxygolf-2026.ics');
   };
 
   const { data: roundData } = useQuery({
@@ -108,7 +222,6 @@ const Rounds = () => {
       .sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const senior = results.filter(r => ((r as any).players_public)?.is_senior)
       .sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
-    // Scratch: ranking por Stableford bruto (sin handicap), todos los jugadores.
     const scratch = results
       .map(r => ({ ...r, _scratchPts: computeScratchStableford(r.scorecard, (r as any).rounds?.course_par) }))
       .filter(r => r._scratchPts != null)
@@ -196,19 +309,35 @@ const Rounds = () => {
             Afegir totes
           </button>
         </div>
-        <p className="text-[11px] font-body text-muted-foreground tracking-wide mb-6">
+        <p className="text-[11px] font-body text-muted-foreground tracking-wide mb-4">
           {t('rounds.calendar')} — {t('common.season')} 2026
         </p>
+
+        <div className="flex flex-wrap gap-2 mb-2">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`px-4 py-2 text-[11px] font-body font-medium tracking-[0.15em] uppercase transition-all duration-300 border ${
+                filter === opt.value
+                  ? 'border-accent/40 bg-accent/10 text-accent'
+                  : 'border-border/50 bg-card/30 text-muted-foreground hover:border-accent/20 hover:text-foreground'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="container pb-14">
         {isLoading ? (
           <p className="text-muted-foreground text-sm py-8 text-center">{t('common.loading')}</p>
-        ) : !rounds?.length ? (
+        ) : !visibleRounds?.length ? (
           <p className="text-muted-foreground text-sm py-8 text-center">{t('common.noData')}</p>
         ) : (
           <div className="space-y-2">
-            {rounds.map((round) => {
+            {visibleRounds.map((round: any) => {
               const played = round.date < today || (round.end_date && round.end_date < today);
               const hasResults = round.status === 'published';
               const isExpanded = expandedRound === round.id;
@@ -222,21 +351,13 @@ const Rounds = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex-1 space-y-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`font-mono text-[10px] tracking-wider ${played ? 'text-accent/60' : 'text-muted-foreground/40'}`}>J{round.round_number}</span>
-                          <span className={`font-display text-base font-semibold ${played ? 'text-foreground' : 'text-muted-foreground/50'}`}>{round.name}</span>
-                          {round.is_master && (
-                            <span className="text-[9px] px-2 py-0.5 border border-accent/30 text-accent/80 font-body font-medium tracking-[0.15em] uppercase">MASTER</span>
-                          )}
-                          {played ? (
-                            <span className="text-[9px] px-2 py-0.5 border border-accent/20 text-accent/60 font-body font-medium tracking-[0.1em] uppercase">Jugada</span>
-                          ) : (
-                            <span className="text-[9px] px-2 py-0.5 border border-border/40 text-muted-foreground/40 font-body font-medium tracking-[0.1em] uppercase">Pendent</span>
-                          )}
+                          {renderRoundBadges(round)}
+                          <span className={`font-display text-base font-semibold ${played ? 'text-foreground' : 'text-muted-foreground/80'}`}>{round.name}</span>
                           {round.sponsor && (
-                            <span className={`text-[11px] font-body ${played ? 'text-muted-foreground/60' : 'text-muted-foreground/30'}`}>· {round.sponsor}</span>
+                            <span className={`text-[11px] font-body ${played ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>· {round.sponsor}</span>
                           )}
                         </div>
-                        <div className={`flex items-center gap-4 text-[11px] font-body ${played ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                        <div className={`flex items-center gap-4 text-[11px] font-body ${played ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {format(new Date(round.date), 'dd MMM yyyy', { locale })}
@@ -251,14 +372,15 @@ const Rounds = () => {
                             </span>
                           )}
                         </div>
-                        {hasResults && (
+                        {hasResults ? (
                           <span className="text-[10px] text-accent/70 font-body font-medium flex items-center gap-1 tracking-wide uppercase">
                             <BarChart3 className="h-3 w-3" />
                             Veure resultats
                           </span>
-                        )}
-                        {!hasResults && played && (
-                          <span className="text-[10px] text-muted-foreground/50 font-body italic">Pendent de resultats</span>
+                        ) : played ? (
+                          <span className="text-[10px] text-muted-foreground/60 font-body italic">Resultats pendents de publicació</span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground/50 font-body italic">Propera prova</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
