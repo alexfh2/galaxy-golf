@@ -727,6 +727,28 @@ const AdminRounds = () => {
                       {round.end_date && round.end_date !== round.date && (
                         <span className="text-xs text-muted-foreground">→ {round.end_date}</span>
                       )}
+                      {(() => {
+                        const assocs = (roundCompetitions ?? []).filter((rc) => rc.round_id === round.id);
+                        if (assocs.length === 0) {
+                          return (
+                            <Badge variant="outline" className="text-xs text-muted-foreground">
+                              Sin competición asignada
+                            </Badge>
+                          );
+                        }
+                        return assocs
+                          .slice()
+                          .sort(
+                            (a, b) =>
+                              (a.competition?.display_order ?? 0) - (b.competition?.display_order ?? 0),
+                          )
+                          .map((rc) => (
+                            <Badge key={rc.id} variant="secondary" className="text-xs">
+                              {rc.competition?.name ?? '—'} · {stageLabels[rc.stage as CompStage] ?? rc.stage}
+                              {rc.competition_round_number != null ? ` · P${rc.competition_round_number}` : ''}
+                            </Badge>
+                          ));
+                      })()}
                     </div>
                     <span className="text-xs text-muted-foreground hidden sm:inline-block mr-2">
                       Clica per gestionar
