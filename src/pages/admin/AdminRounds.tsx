@@ -440,6 +440,10 @@ const AdminRounds = () => {
     setDialogOpen(true);
   };
 
+    setCompetitionsForm({});
+    setDialogOpen(true);
+  };
+
   const openCreate = () => {
     setEditingRound(null);
     const n = (rounds?.length ?? 0) + 1;
