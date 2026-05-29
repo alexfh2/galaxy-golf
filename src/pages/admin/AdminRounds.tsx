@@ -437,9 +437,6 @@ const AdminRounds = () => {
       course_handicap_women: hcpWomenStr,
       has_women_handicap: Array.isArray(hcpWomenData) && hcpWomenData.length > 0,
     });
-    setDialogOpen(true);
-  };
-
     setCompetitionsForm({});
     setDialogOpen(true);
   };
@@ -454,6 +451,7 @@ const AdminRounds = () => {
       course_par: '', course_handicap: '',
       course_handicap_women: '', has_women_handicap: false,
     });
+    setCompetitionsForm({});
     setDialogOpen(true);
   };
 
