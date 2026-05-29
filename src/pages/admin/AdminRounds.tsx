@@ -115,6 +115,7 @@ const AdminRounds = () => {
     course_handicap_women: '' as string,
     has_women_handicap: false,
   });
+  const [competitionsForm, setCompetitionsForm] = useState<Record<string, CompFormEntry>>({});
 
   const { data: seasons } = useQuery({
     queryKey: ['admin-seasons-list'],
