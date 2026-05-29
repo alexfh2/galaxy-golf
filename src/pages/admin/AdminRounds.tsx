@@ -34,7 +34,27 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
 type Season = Tables<'seasons'>;
+type Competition = Tables<'competitions'>;
+type RoundCompetition = Tables<'round_competitions'>;
 type RoundStatus = Database['public']['Enums']['round_status'];
+
+type CompStage = 'regular' | 'major' | 'playoff' | 'final';
+type CompFormEntry = {
+  enabled: boolean;
+  stage: CompStage;
+  competition_round_number: string;
+  counts_for_ranking: boolean;
+};
+type RoundCompetitionWithName = RoundCompetition & {
+  competition: { id: string; name: string; display_order: number } | null;
+};
+
+const stageLabels: Record<CompStage, string> = {
+  regular: 'Regular',
+  major: 'Major',
+  playoff: 'Playoff',
+  final: 'Final',
+};
 
 interface ParsedRound {
   round_number: number;
