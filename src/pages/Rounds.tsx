@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, MapPin, Users, ChevronDown, BarChart3, CalendarPlus, CalendarDays } from 'lucide-react';
+import { Calendar, MapPin, Users, ChevronDown, BarChart3, CalendarPlus, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
-import { ca, es } from 'date-fns/locale';
+import { es } from 'date-fns/locale';
 import { fetchPublicCircuitData, publicCircuitDataQueryKey } from '@/lib/publicCircuitData';
 import { buildPlayerCategoryHandicapMap } from '@/lib/playerCategoryHandicap';
 import { computeScratchStableford } from '@/lib/scratchStableford';
@@ -25,8 +24,7 @@ type RoundCompetitionLink = {
 };
 
 const Rounds = () => {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language === 'ca' ? ca : es;
+  const locale = es;
   const [expandedRound, setExpandedRound] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [activeResultTab, setActiveResultTab] = useState('hcpLow');
@@ -64,7 +62,7 @@ const Rounds = () => {
   }, [rounds, filter]);
 
   const filterOptions: { value: CompetitionFilter; label: string }[] = [
-    { value: 'all', label: 'Totes les proves' },
+    { value: 'all', label: 'Todas las pruebas' },
     { value: 'circuito-galaxygolf', label: 'Circuito GalaxyGolf' },
     { value: 'galaxycup', label: 'GalaxyCup' },
   ];
@@ -76,27 +74,36 @@ const Rounds = () => {
     return null;
   };
 
+  const isHighlightStage = (stage: Stage) =>
+    stage === 'major' || stage === 'playoff' || stage === 'final';
+
+  const badgeClass = (slug: CompetitionSlug | undefined, highlight: boolean) => {
+    if (highlight) {
+      return 'text-[10px] px-2 py-0.5 border border-[hsl(var(--gg-copper))]/60 bg-[hsl(var(--gg-copper))]/10 text-[hsl(var(--gg-copper))] font-semibold tracking-[0.15em] uppercase';
+    }
+    if (slug === 'galaxycup') {
+      return 'text-[10px] px-2 py-0.5 border border-[hsl(var(--gg-gold))]/40 text-[hsl(var(--gg-gold))] font-medium tracking-[0.14em] uppercase';
+    }
+    return 'text-[10px] px-2 py-0.5 border border-[hsl(var(--gg-gold))]/35 text-[hsl(var(--gg-gold))]/90 font-medium tracking-[0.14em] uppercase';
+  };
+
   const renderRoundBadges = (round: any) => {
     const links = getLinks(round);
     if (!links.length) return null;
 
     if (filter === 'all') {
       return links.map((l, idx) => {
-        const isCircuito = l.competitions?.slug === 'circuito-galaxygolf';
+        const slug = l.competitions?.slug;
+        const isCircuito = slug === 'circuito-galaxygolf';
         const shortName = isCircuito ? 'Circuito' : 'GalaxyCup';
         const stage = stageLabel(l.stage);
         const parts = [shortName];
         if (stage) parts.push(stage);
         if (l.competition_round_number != null && l.stage !== 'final') {
           parts.push(`P${l.competition_round_number}`);
-        } else if (l.stage === 'final') {
-          // Final ya está reflejado
         }
         return (
-          <span
-            key={idx}
-            className="text-[9px] px-2 py-0.5 border border-accent/25 text-accent/80 font-body font-medium tracking-[0.12em] uppercase"
-          >
+          <span key={idx} className={badgeClass(slug, isHighlightStage(l.stage))}>
             {parts.join(' · ')}
           </span>
         );
@@ -116,19 +123,13 @@ const Rounds = () => {
       mainLabel = `${compName} · P${link.competition_round_number ?? '?'}`;
     }
     badges.push(
-      <span
-        key="main"
-        className="text-[9px] px-2 py-0.5 border border-accent/25 text-accent/80 font-body font-medium tracking-[0.12em] uppercase"
-      >
+      <span key="main" className={badgeClass(link.competitions?.slug, link.stage === 'final')}>
         {mainLabel}
       </span>,
     );
     if (filter === 'galaxycup' && stage && (link.stage === 'major' || link.stage === 'playoff')) {
       badges.push(
-        <span
-          key="stage"
-          className="text-[9px] px-2 py-0.5 border border-accent/40 text-accent font-body font-semibold tracking-[0.15em] uppercase"
-        >
+        <span key="stage" className={badgeClass(link.competitions?.slug, true)}>
           {stage}
         </span>,
       );
@@ -177,7 +178,6 @@ const Rounds = () => {
 
   const downloadAllIcs = () => {
     if (!visibleRounds?.length) return;
-    // De-dup por id (las jornadas compartidas ya vienen únicas, pero protegemos)
     const seen = new Set<string>();
     const events = visibleRounds
       .filter((r: any) => {
@@ -232,22 +232,22 @@ const Rounds = () => {
   const categorized = categorizeResults(roundResults);
 
   const roundCategories = [
-    { key: 'hcpLow', label: 'HCP Baix (≤15)' },
-    { key: 'hcpHigh', label: 'HCP Alt (>15)' },
-    { key: 'female', label: t('categories.female') },
-    { key: 'senior', label: t('categories.senior') },
+    { key: 'hcpLow', label: 'HCP Bajo (≤15)' },
+    { key: 'hcpHigh', label: 'HCP Alto (>15)' },
+    { key: 'female', label: 'Femenino' },
+    { key: 'senior', label: 'Sénior' },
     { key: 'scratch', label: 'Scratch' },
   ];
 
   const renderResultsTable = (results: any[], scoreField: 'stableford' | 'scratch' = 'stableford') => {
-    if (!results?.length) return <p className="text-muted-foreground text-sm py-4 text-center">{t('common.noData')}</p>;
+    if (!results?.length) return <p className="text-muted-foreground text-sm py-4 text-center">Sin datos</p>;
     return (
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-separate border-spacing-0">
           <thead>
-            <tr className="text-[10px] text-muted-foreground/70 font-body font-medium tracking-[0.15em] uppercase">
+            <tr className="text-[10px] text-muted-foreground/70 font-medium tracking-[0.15em] uppercase">
               <th className="text-left py-3 pr-2 w-12 border-b border-border/30">Pos.</th>
-              <th className="text-left py-3 border-b border-border/30">{t('common.name')} <span className="font-normal text-muted-foreground/50">(hcp)</span></th>
+              <th className="text-left py-3 border-b border-border/30">Nombre <span className="font-normal text-muted-foreground/50">(hcp)</span></th>
               <th className="text-right py-3 border-b border-border/30">{scoreField === 'scratch' ? 'Scratch' : 'Stableford'}</th>
             </tr>
           </thead>
@@ -271,13 +271,13 @@ const Rounds = () => {
                       : undefined
                   }
                 >
-                  <td className={`py-3.5 pr-2 text-sm font-body font-semibold ${isTop3 ? 'text-accent' : 'text-muted-foreground'}`}>{position}</td>
+                  <td className={`py-3.5 pr-2 text-sm font-semibold ${isTop3 ? 'text-accent' : 'text-muted-foreground'}`}>{position}</td>
                   <td className="py-3.5">
                     <button type="button" onClick={() => setSelectedPlayerId(r.player_id)} className="flex items-center gap-2 hover:text-accent transition-colors text-left">
                       <div className="h-6 w-6 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
                         <Users className="h-3 w-3 text-muted-foreground/60" />
                       </div>
-                      <span className="text-sm font-body font-medium text-foreground">{((r as any).players_public)?.name}</span>
+                      <span className="text-sm font-medium text-foreground">{((r as any).players_public)?.name}</span>
                       {r.handicap_at_round != null && (
                         <span className="text-[10px] text-muted-foreground/60 font-mono">({Number(r.handicap_at_round).toFixed(1)})</span>
                       )}
@@ -293,94 +293,214 @@ const Rounds = () => {
     );
   };
 
+  // Summary by active filter
+  const summary = (() => {
+    if (filter === 'circuito-galaxygolf') {
+      return {
+        title: 'Circuito GalaxyGolf',
+        count: visibleRounds.length,
+        support: '12 pruebas + Gran Final',
+      };
+    }
+    if (filter === 'galaxycup') {
+      return {
+        title: 'GalaxyCup',
+        count: visibleRounds.length,
+        support: 'Fase regular, Majors y Playoffs',
+      };
+    }
+    return {
+      title: 'Temporada completa',
+      count: visibleRounds.length,
+      support: null as string | null,
+    };
+  })();
+
   return (
     <div className="animate-fade-in">
-      <section className="container pt-6 pb-4">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-5 w-5 text-accent/70" strokeWidth={1.5} />
-            <h1 className="font-display text-2xl font-semibold text-foreground">{t('rounds.title')}</h1>
-          </div>
-          <button
-            onClick={downloadAllIcs}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-body font-medium tracking-[0.1em] uppercase border border-border/50 bg-card/30 text-muted-foreground hover:border-accent/20 hover:text-foreground transition-all"
-          >
-            <CalendarPlus className="h-3.5 w-3.5" />
-            Afegir totes
-          </button>
-        </div>
-        <p className="text-[11px] font-body text-muted-foreground tracking-wide mb-4">
-          {t('rounds.calendar')} — {t('common.season')} 2026
-        </p>
+      {/* ——— EDITORIAL HEADER ——— */}
+      <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
+        {/* orbital decorations */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-32 -right-24 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-10 -right-10 h-3 w-3 rounded-full bg-[hsl(var(--gg-gold))]/70"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-6 left-1/3 h-1.5 w-1.5 rounded-full bg-[hsl(var(--gg-gold))]/50"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-gold))]/40 to-transparent"
+        />
 
-        <div className="flex flex-wrap gap-2 mb-2">
-          {filterOptions.map((opt) => (
+        <div className="container relative py-16 lg:py-20">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
+                Temporada 2026
+              </p>
+              <h1 className="font-display text-4xl lg:text-6xl font-medium leading-[1] mb-5 text-[hsl(var(--gg-ivory))]">
+                Calendario GalaxyGolf
+              </h1>
+              <p className="text-sm lg:text-base text-[hsl(var(--gg-ivory))]/70 leading-relaxed max-w-xl">
+                Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
+              </p>
+            </div>
             <button
-              key={opt.value}
-              onClick={() => setFilter(opt.value)}
-              className={`px-4 py-2 text-[11px] font-body font-medium tracking-[0.15em] uppercase transition-all duration-300 border ${
-                filter === opt.value
-                  ? 'border-accent/40 bg-accent/10 text-accent'
-                  : 'border-border/50 bg-card/30 text-muted-foreground hover:border-accent/20 hover:text-foreground'
-              }`}
+              onClick={downloadAllIcs}
+              className="self-start lg:self-end inline-flex items-center gap-2 px-6 py-3 text-[11px] font-semibold tracking-[0.22em] uppercase border border-[hsl(var(--gg-gold))]/50 text-[hsl(var(--gg-gold))] hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
             >
-              {opt.label}
+              <CalendarPlus className="h-4 w-4" />
+              Descargar calendario
             </button>
-          ))}
+          </div>
         </div>
       </section>
 
-      <section className="container pb-14">
+      {/* ——— FILTERS + SUMMARY ——— */}
+      <section className="container pt-10 pb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          {/* Segmented control */}
+          <div className="-mx-4 px-4 lg:mx-0 lg:px-0 overflow-x-auto">
+            <div className="inline-flex p-1 bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 whitespace-nowrap">
+              {filterOptions.map((opt) => {
+                const active = filter === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFilter(opt.value)}
+                    className={`px-4 py-2 text-[11px] font-semibold tracking-[0.18em] uppercase transition-all ${
+                      active
+                        ? 'bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] border border-[hsl(var(--gg-gold))]/60'
+                        : 'text-[hsl(var(--gg-ivory))]/60 hover:text-[hsl(var(--gg-gold))] border border-transparent'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="flex items-center gap-4 border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 px-5 py-3">
+            {filter === 'galaxycup' && (
+              <Trophy className="h-5 w-5 text-[hsl(var(--gg-copper))]" strokeWidth={1.4} />
+            )}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-[hsl(var(--gg-gold))]/80">
+                {summary.title}
+              </span>
+              <span className="font-display text-xl text-[hsl(var(--gg-ivory))]">
+                {summary.count} pruebas
+              </span>
+              {summary.support && (
+                <span className="text-[10px] text-[hsl(var(--gg-ivory))]/55 tracking-wide">
+                  {summary.support}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ——— ROUNDS LIST ——— */}
+      <section className="container pb-16">
         {isLoading ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">{t('common.loading')}</p>
+          <p className="text-muted-foreground text-sm py-8 text-center">Cargando…</p>
         ) : !visibleRounds?.length ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">{t('common.noData')}</p>
+          <p className="text-muted-foreground text-sm py-8 text-center">Sin datos</p>
         ) : (
           <div className="space-y-2">
             {visibleRounds.map((round: any) => {
               const played = round.date < today || (round.end_date && round.end_date < today);
               const hasResults = round.status === 'published';
               const isExpanded = expandedRound === round.id;
+              const links = getLinks(round);
+              const isGalaxyCup = links.some((l) => l.competitions?.slug === 'galaxycup');
+              const isCircuito = links.some((l) => l.competitions?.slug === 'circuito-galaxygolf');
 
               return (
-                <div key={round.id} className={`border transition-all ${played ? 'border-accent/20 bg-accent/[0.03]' : 'border-border/50 bg-card/30'}`}>
+                <div
+                  key={round.id}
+                  className={`relative border bg-[hsl(var(--gg-navy))]/50 transition-all ${
+                    played
+                      ? 'border-[hsl(var(--gg-gold))]/35'
+                      : 'border-[hsl(var(--gg-gold))]/15'
+                  }`}
+                >
+                  {/* left accent */}
+                  <span
+                    aria-hidden
+                    className={`absolute left-0 top-0 bottom-0 w-[2px] ${
+                      isCircuito
+                        ? 'bg-[hsl(var(--gg-green))]'
+                        : isGalaxyCup
+                        ? 'bg-[hsl(var(--gg-copper))]/70'
+                        : 'bg-transparent'
+                    }`}
+                  />
                   <button
-                    onClick={() => hasResults ? setExpandedRound(isExpanded ? null : round.id) : null}
-                    className={`w-full text-left px-5 py-4 ${!hasResults ? 'cursor-default' : 'hover:bg-muted/10'}`}
+                    onClick={() => (hasResults ? setExpandedRound(isExpanded ? null : round.id) : null)}
+                    className={`w-full text-left px-5 py-4 ${!hasResults ? 'cursor-default' : 'hover:bg-[hsl(var(--gg-green))]/10'}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
                           {renderRoundBadges(round)}
-                          <span className={`font-display text-base font-semibold ${played ? 'text-foreground' : 'text-muted-foreground/80'}`}>{round.name}</span>
-                          {round.sponsor && (
-                            <span className={`text-[11px] font-body ${played ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>· {round.sponsor}</span>
+                          {isGalaxyCup && (
+                            <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-copper))]/80" strokeWidth={1.4} />
                           )}
                         </div>
-                        <div className={`flex items-center gap-4 text-[11px] font-body ${played ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                        <h3
+                          className={`font-display text-lg lg:text-xl font-medium leading-tight ${
+                            played ? 'text-[hsl(var(--gg-ivory))]' : 'text-[hsl(var(--gg-ivory))]/70'
+                          }`}
+                        >
+                          {round.name}
+                          {round.sponsor && (
+                            <span className="ml-2 text-[11px] font-sans font-normal text-[hsl(var(--gg-ivory))]/45">
+                              · {round.sponsor}
+                            </span>
+                          )}
+                        </h3>
+                        <div
+                          className={`flex items-center gap-5 text-[11px] ${
+                            played ? 'text-[hsl(var(--gg-ivory))]/65' : 'text-[hsl(var(--gg-ivory))]/45'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3 text-[hsl(var(--gg-gold))]/70" />
                             {format(new Date(round.date), 'dd MMM yyyy', { locale })}
                             {round.end_date && round.end_date !== round.date && (
                               <> — {format(new Date(round.end_date), 'dd MMM yyyy', { locale })}</>
                             )}
                           </span>
                           {round.course && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="h-3 w-3 text-[hsl(var(--gg-gold))]/70" />
                               {round.course}
                             </span>
                           )}
                         </div>
                         {hasResults ? (
-                          <span className="text-[10px] text-accent/70 font-body font-medium flex items-center gap-1 tracking-wide uppercase">
+                          <span className="inline-flex items-center gap-1.5 text-[10px] text-[hsl(var(--gg-gold))] font-semibold tracking-[0.2em] uppercase">
                             <BarChart3 className="h-3 w-3" />
-                            Veure resultats
+                            Ver resultados
                           </span>
                         ) : played ? (
-                          <span className="text-[10px] text-muted-foreground/60 font-body italic">Resultats pendents de publicació</span>
+                          <span className="text-[10px] text-[hsl(var(--gg-ivory))]/50 italic tracking-wide">
+                            Resultados pendientes de publicación
+                          </span>
                         ) : (
-                          <span className="text-[10px] text-muted-foreground/50 font-body italic">Propera prova</span>
+                          <span className="text-[10px] text-[hsl(var(--gg-copper))]/80 font-semibold tracking-[0.2em] uppercase">
+                            Próxima prueba
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -390,24 +510,26 @@ const Rounds = () => {
                               e.stopPropagation();
                               downloadIcs(buildIcsContent(round), `${round.name.replace(/\s+/g, '-').toLowerCase()}.ics`);
                             }}
-                            className="p-1.5 hover:bg-muted/30 transition-colors"
-                            title="Afegir al calendari"
+                            className="p-1.5 hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
+                            title="Añadir al calendario"
                           >
-                            <CalendarPlus className="h-4 w-4 text-muted-foreground/50 hover:text-accent transition-colors" />
+                            <CalendarPlus className="h-4 w-4 text-[hsl(var(--gg-ivory))]/50 hover:text-[hsl(var(--gg-gold))] transition-colors" />
                           </button>
                         )}
                         {hasResults && (
-                          <ChevronDown className={`h-4 w-4 text-muted-foreground/40 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                          <ChevronDown
+                            className={`h-4 w-4 text-[hsl(var(--gg-gold))]/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
                         )}
                       </div>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t border-border/30 px-5 py-4">
-                      <div className="flex items-center gap-2 mb-3 text-[11px] font-body text-muted-foreground tracking-wide">
+                    <div className="border-t border-[hsl(var(--gg-gold))]/15 px-5 py-4">
+                      <div className="flex items-center gap-2 mb-3 text-[11px] text-[hsl(var(--gg-ivory))]/65 tracking-wide">
                         <Users className="h-3.5 w-3.5" />
-                        <span>{roundResults?.length || 0} participants</span>
+                        <span>{roundResults?.length || 0} participantes</span>
                       </div>
 
                       {roundResults && roundResults.length > 0 ? (
@@ -417,10 +539,10 @@ const Rounds = () => {
                               <button
                                 key={cat.key}
                                 onClick={() => setActiveResultTab(cat.key)}
-                                className={`px-4 py-2 text-[11px] font-body font-medium tracking-[0.15em] uppercase transition-all duration-300 border ${
+                                className={`px-4 py-2 text-[11px] font-semibold tracking-[0.15em] uppercase transition-all border ${
                                   activeResultTab === cat.key
-                                    ? 'border-accent/40 bg-accent/10 text-accent'
-                                    : 'border-border/50 bg-card/30 text-muted-foreground hover:border-accent/20 hover:text-foreground'
+                                    ? 'border-[hsl(var(--gg-gold))]/60 bg-[hsl(var(--gg-green))]/40 text-[hsl(var(--gg-gold))]'
+                                    : 'border-[hsl(var(--gg-gold))]/15 text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-gold))]'
                                 }`}
                               >
                                 {cat.label}
@@ -430,7 +552,7 @@ const Rounds = () => {
                           {renderResultsTable((categorized as any)[activeResultTab], activeResultTab === 'scratch' ? 'scratch' : 'stableford')}
                         </>
                       ) : (
-                        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+                        <p className="text-sm text-muted-foreground">Cargando…</p>
                       )}
                     </div>
                   )}
