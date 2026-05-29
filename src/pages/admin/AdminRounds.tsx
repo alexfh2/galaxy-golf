@@ -142,6 +142,61 @@ const AdminRounds = () => {
     },
   });
 
+  const { data: competitions } = useQuery({
+    queryKey: ['admin-competitions', activeSeasonId],
+    enabled: !!activeSeasonId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('competitions')
+        .select('*')
+        .eq('season_id', activeSeasonId)
+        .eq('active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as Competition[];
+    },
+  });
+
+  const roundIdsKey = (rounds ?? []).map((r) => r.id).sort().join(',');
+  const { data: roundCompetitions } = useQuery({
+    queryKey: ['admin-round-competitions', roundIdsKey],
+    enabled: !!rounds && rounds.length > 0,
+    queryFn: async () => {
+      const ids = (rounds ?? []).map((r) => r.id);
+      const { data, error } = await supabase
+        .from('round_competitions')
+        .select('*, competition:competitions(id, name, display_order)')
+        .in('round_id', ids);
+      if (error) throw error;
+      return data as RoundCompetitionWithName[];
+    },
+  });
+
+  // Initialize competitions form when the dialog opens (after competitions loads)
+  useEffect(() => {
+    if (!dialogOpen) return;
+    if (!competitions) return;
+    if (Object.keys(competitionsForm).length > 0) return;
+    const existing = editingRound
+      ? (roundCompetitions ?? []).filter((rc) => rc.round_id === editingRound.id)
+      : [];
+    const map: Record<string, CompFormEntry> = {};
+    competitions.forEach((c) => {
+      const found = existing.find((rc) => rc.competition_id === c.id);
+      map[c.id] = found
+        ? {
+            enabled: true,
+            stage: (found.stage as CompStage) ?? 'regular',
+            competition_round_number:
+              found.competition_round_number != null ? String(found.competition_round_number) : '',
+            counts_for_ranking: found.counts_for_ranking,
+          }
+        : { enabled: false, stage: 'regular', competition_round_number: '', counts_for_ranking: true };
+    });
+    setCompetitionsForm(map);
+  }, [dialogOpen, competitions, editingRound, roundCompetitions, competitionsForm]);
+
+
   // ─── IMPORT FROM URL ───
   const handleImport = async () => {
     if (!importUrl.trim()) return;
