@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      competitions: {
+        Row: {
+          active: boolean
+          competition_type: string
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          rules_config: Json
+          season_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          competition_type: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          rules_config?: Json
+          season_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          competition_type?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          rules_config?: Json
+          season_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitions_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_logs: {
         Row: {
           created_at: string
@@ -278,6 +325,51 @@ export type Database = {
           },
           {
             foreignKeyName: "results_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_competitions: {
+        Row: {
+          competition_id: string
+          competition_round_number: number | null
+          counts_for_ranking: boolean
+          created_at: string
+          id: string
+          round_id: string
+          stage: string
+        }
+        Insert: {
+          competition_id: string
+          competition_round_number?: number | null
+          counts_for_ranking?: boolean
+          created_at?: string
+          id?: string
+          round_id: string
+          stage?: string
+        }
+        Update: {
+          competition_id?: string
+          competition_round_number?: number | null
+          counts_for_ranking?: boolean
+          created_at?: string
+          id?: string
+          round_id?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_competitions_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_competitions_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
             referencedRelation: "rounds"
