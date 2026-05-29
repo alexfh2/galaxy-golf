@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Rankings() {
   return (
+    <>
     
       {/* Cabecera editorial */}
       <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
