@@ -258,8 +258,10 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       if (detectedSource === 'golfdirecto') {
         const roundPar = (round as any).course_par;
         const roundHcp = (round as any).course_handicap;
+        const roundHcpW = (round as any).course_handicap_women;
         const hasPar = Array.isArray(roundPar) && roundPar.length === 18;
         const hasHcp = Array.isArray(roundHcp) && roundHcp.length === 18;
+        const hasHcpW = Array.isArray(roundHcpW) && roundHcpW.length === 18;
         const updates: Record<string, unknown> = {};
         for (const resp of responses) {
           if (!hasPar && !updates.course_par && Array.isArray(resp.course_par) && resp.course_par.length === 18) {
@@ -267,6 +269,9 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           }
           if (!hasHcp && !updates.course_handicap && Array.isArray(resp.course_handicap) && resp.course_handicap.length === 18) {
             updates.course_handicap = resp.course_handicap;
+          }
+          if (!hasHcpW && !updates.course_handicap_women && Array.isArray(resp.course_handicap_women) && resp.course_handicap_women.length === 18) {
+            updates.course_handicap_women = resp.course_handicap_women;
           }
         }
         if (Object.keys(updates).length > 0) {
@@ -278,6 +283,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             const parts: string[] = [];
             if (updates.course_par) parts.push('par');
             if (updates.course_handicap) parts.push('handicap');
+            if (updates.course_handicap_women) parts.push('handicap ♀');
             courseDataMsg = ` Dades del camp afegides (${parts.join(' + ')}).`;
             queryClient.invalidateQueries({ queryKey: ['admin-rounds'] });
           }
