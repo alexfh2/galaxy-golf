@@ -79,6 +79,8 @@ function detectSource(url: string): string {
 interface GolfDirectoResult {
   results: ParsedResult[];
   categories: { id: string; name: string; count: number }[];
+  course_par?: number[];
+  course_handicap?: number[];
 }
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
