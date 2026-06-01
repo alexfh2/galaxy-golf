@@ -521,6 +521,11 @@ export default function Rankings() {
           )}
         </div>
       </section>
+      <PlayerProfileDialog
+        playerId={selectedPlayerId}
+        open={!!selectedPlayerId}
+        onOpenChange={(o) => !o && setSelectedPlayerId(null)}
+      />
     </>
   );
 }
