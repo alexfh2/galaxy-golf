@@ -17,6 +17,7 @@ interface ParsedResult {
   scratch_score: number | null;
   scores: number[];
   source_url: string;
+  play_date?: string | null;
   _is_senior?: boolean;
 }
 
