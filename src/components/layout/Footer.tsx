@@ -15,7 +15,7 @@ const Footer = () => {
                 Dos competiciones. Una misma pasión por el golf.
               </p>
               <p className="text-sm text-[hsl(var(--gg-ivory))]/60 mt-1">
-                Sigue el Circuito GalaxyGolf y la GalaxyCup durante toda la temporada 2026.
+                Sigue el Circuito GALAXY GOLF y la GalaxyCup durante toda la temporada 2026.
               </p>
             </div>
           </div>

@@ -52,7 +52,7 @@ export default function Players() {
             </p>
             <p className="mt-2 text-sm text-muted-foreground/80">
               Cada perfil incluirá participación, resultados y evolución dentro de las
-              competiciones GalaxyGolf.
+              competiciones GALAXY GOLF.
             </p>
           </div>
         </div>
