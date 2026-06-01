@@ -294,6 +294,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     course_par: coursePar,
     course_handicap: courseHandicap,
     course_handicap_women: courseHandicapWomen,
+    game_date: gameDate,
   };
 }
 
