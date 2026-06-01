@@ -297,7 +297,7 @@ const Rounds = () => {
   const summary = (() => {
     if (filter === 'circuito-galaxygolf') {
       return {
-        title: 'Circuito GalaxyGolf',
+        title: 'Circuito GALAXY GOLF',
         count: visibleRounds.length,
         support: '12 pruebas + Gran Final',
       };
