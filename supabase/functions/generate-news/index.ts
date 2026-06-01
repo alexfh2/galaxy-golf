@@ -65,8 +65,8 @@ serve(async (req) => {
     const topStableford = results.slice(0, 5);
     
     // Categorize results
-    const hcpLow = results.filter((r: any) => r.category === 'hcp_low' || (r.handicap_at_round !== null && r.handicap_at_round <= 15));
-    const hcpHigh = results.filter((r: any) => r.category === 'hcp_high' || (r.handicap_at_round !== null && r.handicap_at_round > 15));
+    const hcpLow = results.filter((r: any) => r.category === 'hcp_low' || (r.handicap_at_round !== null && r.handicap_at_round <= 15.4));
+    const hcpHigh = results.filter((r: any) => r.category === 'hcp_high' || (r.handicap_at_round !== null && r.handicap_at_round >= 15.5));
     const females = results.filter((r: any) => r.is_female_prize || r.players?.gender === 'F');
     const seniors = results.filter((r: any) => r.is_senior_prize || r.players?.is_senior === true);
 
@@ -103,7 +103,7 @@ TEXT DE REFERÈNCIA D'ESTIL (adapta'l al golf i al Gastronòmic Golf Experience)
 ---
 Després de [X] intenses jornades, la classificació s'està consolidant i ja es perfilen els jugadors que lluitaran pel podi aquesta temporada.
 
-Hàndicap Baix: la batalla dels millors!
+Hándicap Inferior: la batalla dels millors!
 La competició no pot estar més ajustada. [Descripció del líder i perseguidors]
 
 1. [Nom] encapçala amb [X] pts, mostrant una regularitat impressionant.
@@ -113,7 +113,7 @@ La competició no pot estar més ajustada. [Descripció del líder i perseguidor
 TOP 10:
 [Llistat]
 
-Hàndicap Alt: els qui millor dominen el camp!
+Hándicap Superior: els qui millor dominen el camp!
 [Mateixa estructura]
 
 Classificació Femenina:
@@ -134,7 +134,7 @@ DADES DE LA JORNADA:
 - Camp: ${round.course || 'N/A'}
 - Data: ${round.date}
 - Patrocinador: ${sponsor || 'cap'}
-${round.is_master ? '- JORNADA MASTER (punts x1.25)' : ''}
+
 ${special_mention ? `- Menció especial: ${special_mention}` : ''}
 ${(() => {
   const w = weather_conditions || {};
@@ -147,10 +147,10 @@ ${(() => {
   return lines.length ? `- Condicions meteorològiques i del camp:\n${lines.join('\n')}` : '';
 })()}
 
-CLASSIFICACIÓ HANDICAP BAIX (≤15.0) — ${hcpLow.length} jugadors:
+CLASSIFICACIÓ HÁNDICAP INFERIOR (≤15,4) — ${hcpLow.length} jugadors:
 ${hcpLow.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join('\n')}
 
-CLASSIFICACIÓ HANDICAP ALT (15.1–36.0) — ${hcpHigh.length} jugadors:
+CLASSIFICACIÓ HÁNDICAP SUPERIOR (≥15,5) — ${hcpHigh.length} jugadors:
 ${hcpHigh.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join('\n')}
 
 ${females.length > 0 ? `CLASSIFICACIÓ FEMENINA — ${females.length} jugadores:\n1. ${females[0].players?.name} — ${females[0].stableford_points} pts (Hcp ${females[0].handicap_at_round})` : ''}
@@ -163,9 +163,9 @@ INSTRUCCIONS:
 - ABSOLUTAMENT CAP EMOJI. Ni un sol emoji en tot el text. Això és una nota de premsa professional per enviar a diaris i mitjans de comunicació.
 - To formal, sobri i periodístic. Sense exclamacions excessives.
 - Segueix l'estructura: introducció, després cada categoria amb descripció + top 3 (Hcp Baix i Alt) o guanyador/a (Femenina i Sènior)
-- Per a Hàndicap Baix i Hàndicap Alt: inclou els 3 primers classificats amb comentaris personalitzats
+- Per a Hándicap Inferior i Hándicap Superior: inclou els 3 primers classificats amb comentaris personalitzats
 - Per a Femenina i Sènior: menciona NOMÉS el/la guanyador/a
-- OBLIGATORI: inclou SEMPRE les 4 categories si hi ha dades: Hàndicap Baix, Hàndicap Alt, Femenina i Sènior
+- OBLIGATORI: inclou SEMPRE les 4 categories si hi ha dades: Hándicap Inferior, Hándicap Superior, Femenina i Sènior
 - Separa cada secció/categoria amb una línia en blanc per facilitar la lectura
 - NO mencionIs resultats scratch ni cops totals
 - Si s'han proporcionat condicions meteorològiques, velocitat de greens o vent, integra-les amb naturalitat a la narració quan siguin rellevants (especialment si han estat dures: pluja, vent fort, greens molt ràpids, calor, etc.). Si són condicions normals, pots ometre-les o mencionar-les breument. No facis una secció separada de meteorologia.
