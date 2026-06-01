@@ -158,7 +158,7 @@ INSTRUCCIONS:
 - Inclou SEMPRE els sponsors i hashtags al final
 - El to ha de ser celebratori i engrescador
 - Modalitat STABLEFORD, NO mencionIs resultats scratch
-- Si és jornada MASTER, destaca-ho
+
 - Si hi ha patrocinador, menciona'l
 - Retorna NOMÉS el text del post, sense JSON ni markdown
 
