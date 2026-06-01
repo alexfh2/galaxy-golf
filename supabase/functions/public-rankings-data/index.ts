@@ -91,6 +91,8 @@ Deno.serve(async (req) => {
         play_date,
         source_url,
         extra_play_count,
+        official_position,
+        official_category,
         created_at,
         updated_at,
         rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
