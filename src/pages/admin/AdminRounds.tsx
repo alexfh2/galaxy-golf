@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Star, Download, Check, Link2, FileSpreadsheet, Trash2, Globe, Loader2, Newspaper, Send, Upload, ChevronDown, Flag } from 'lucide-react';
 import {
@@ -86,6 +87,7 @@ const AdminRounds = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedSeason, setSelectedSeason] = useState<string>('');
+  const [competitionFilter, setCompetitionFilter] = useState<string>('all');
 
   // Import state
   const [importUrl, setImportUrl] = useState('https://galaxygolf.net');
@@ -707,8 +709,56 @@ const AdminRounds = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {rounds.map((round) => (
+        <div className="space-y-4">
+          {competitions && competitions.length > 0 && (
+            <Tabs value={competitionFilter} onValueChange={setCompetitionFilter}>
+              <TabsList className="flex flex-wrap h-auto">
+                <TabsTrigger value="all">
+                  Todas <span className="ml-1 text-xs opacity-70">({rounds.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="none">
+                  Sin asignar
+                  <span className="ml-1 text-xs opacity-70">
+                    ({rounds.filter((r) => !(roundCompetitions ?? []).some((rc) => rc.round_id === r.id)).length})
+                  </span>
+                </TabsTrigger>
+                {competitions.map((c) => {
+                  const count = rounds.filter((r) =>
+                    (roundCompetitions ?? []).some(
+                      (rc) => rc.round_id === r.id && rc.competition_id === c.id,
+                    ),
+                  ).length;
+                  return (
+                    <TabsTrigger key={c.id} value={c.id}>
+                      {c.name} <span className="ml-1 text-xs opacity-70">({count})</span>
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </Tabs>
+          )}
+
+          {(() => {
+            const filteredRounds = rounds.filter((round) => {
+              if (competitionFilter === 'all') return true;
+              const assocs = (roundCompetitions ?? []).filter((rc) => rc.round_id === round.id);
+              if (competitionFilter === 'none') return assocs.length === 0;
+              return assocs.some((rc) => rc.competition_id === competitionFilter);
+            });
+
+            if (filteredRounds.length === 0) {
+              return (
+                <Card className="border-border/60">
+                  <CardContent className="p-8 text-center text-muted-foreground text-sm">
+                    No hay jornadas en esta competición.
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                {filteredRounds.map((round) => (
             <Card key={round.id} className="border-border/60 overflow-hidden">
               <Collapsible>
                 <CollapsibleTrigger className="w-full text-left group">
@@ -881,6 +931,9 @@ const AdminRounds = () => {
               </Collapsible>
             </Card>
           ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 
