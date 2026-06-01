@@ -17,7 +17,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Star, Download, Check, Link2, FileSpreadsheet, Trash2, Globe, Loader2, Newspaper, Send, Upload, ChevronDown, Flag } from 'lucide-react';
+import { Plus, Pencil, Download, Check, Link2, FileSpreadsheet, Trash2, Globe, Loader2, Newspaper, Send, Upload, ChevronDown, Flag } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,7 +110,7 @@ const AdminRounds = () => {
   const [calendarFile, setCalendarFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     name: '', round_number: '', date: '', end_date: '',
-    club: '', course: '', sponsor: '', is_master: false,
+    club: '', course: '', sponsor: '',
     season_id: '',
     course_par: '' as string,
     course_handicap: '' as string,
@@ -261,8 +261,6 @@ const AdminRounds = () => {
         club: null,
         course: r.name || null,
         sponsor: r.sponsor || null,
-        is_master: false,
-        master_coefficient: 1.0,
         status: 'draft' as RoundStatus,
         season_id: activeSeasonId,
         external_links: r.detail_url ? [{ url: r.detail_url, label: 'Web' }] : [],
@@ -317,8 +315,6 @@ const AdminRounds = () => {
         club: form.club || null,
         course: form.course || null,
         sponsor: form.sponsor || null,
-        is_master: form.is_master,
-        master_coefficient: form.is_master ? 1.25 : 1.0,
         status: editingRound ? editingRound.status : 'draft',
         season_id: form.season_id || activeSeasonId,
         course_par: coursePar,
@@ -432,7 +428,7 @@ const AdminRounds = () => {
       name: round.name, round_number: String(round.round_number),
       date: round.date, end_date: round.end_date || '',
       club: round.club || '', course: round.course || '',
-      sponsor: round.sponsor || '', is_master: round.is_master,
+      sponsor: round.sponsor || '',
       season_id: round.season_id,
       course_par: parStr,
       course_handicap: hcpStr,
@@ -449,7 +445,7 @@ const AdminRounds = () => {
     setForm({
       name: `Jornada ${n}`, round_number: String(n),
       date: '', end_date: '', club: '', course: '', sponsor: '',
-      is_master: false, season_id: activeSeasonId,
+      season_id: activeSeasonId,
       course_par: '', course_handicap: '',
       course_handicap_women: '', has_women_handicap: false,
     });
@@ -766,7 +762,6 @@ const AdminRounds = () => {
                     <div className="flex items-center gap-3 flex-wrap">
                       <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                       <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        {round.is_master && <Star className="h-4 w-4 text-accent fill-accent" />}
                         <Badge variant="outline" className="text-xs">J{round.round_number}</Badge>
                         {round.name}
                       </CardTitle>
@@ -1177,10 +1172,6 @@ const AdminRounds = () => {
               })}
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch checked={form.is_master} onCheckedChange={(v) => updateField('is_master', v)} />
-              <Label>Prova MASTER (coef. ×1.25)</Label>
-            </div>
 
             <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
               <Label className="font-semibold">Competiciones y ranking</Label>

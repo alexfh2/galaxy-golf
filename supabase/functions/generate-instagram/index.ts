@@ -60,10 +60,10 @@ serve(async (req) => {
 
     // Categorize results
     const hcpLow = results
-      .filter((r: any) => r.category === "hcp_low" || (r.handicap_at_round !== null && r.handicap_at_round <= 15))
+      .filter((r: any) => r.category === "hcp_low" || (r.handicap_at_round !== null && r.handicap_at_round <= 15.4))
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const hcpHigh = results
-      .filter((r: any) => r.category === "hcp_high" || (r.handicap_at_round !== null && r.handicap_at_round > 15))
+      .filter((r: any) => r.category === "hcp_high" || (r.handicap_at_round !== null && r.handicap_at_round >= 15.5))
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const females = results
       .filter((r: any) => r.is_female_prize || r.players?.gender === 'F')
@@ -100,12 +100,12 @@ ESTRUCTURA DE REFERÈNCIA (adapta-la per a RESULTATS, no per a convocatòria):
 
 🏆 RESULTATS
 
-🏌️ *Hàndicap Baix*
+🏌️ *Hándicap Inferior*
 🥇 [Nom] — [Punts] pts
 🥈 [Nom] — [Punts] pts
 🥉 [Nom] — [Punts] pts
 
-🏌️ *Hàndicap Alt*
+🏌️ *Hándicap Superior*
 🥇 [Nom] — [Punts] pts
 🥈 [Nom] — [Punts] pts
 🥉 [Nom] — [Punts] pts
@@ -137,12 +137,11 @@ DADES DE LA JORNADA:
 - Camp: ${round.course || "N/A"}
 - Data: ${round.date}
 - Patrocinador: ${round.sponsor || "cap"}
-${round.is_master ? "- JORNADA MASTER (punts x1.25)" : ""}
 
-CLASSIFICACIÓ HANDICAP BAIX (≤15.0):
+CLASSIFICACIÓ HÁNDICAP INFERIOR (≤15,4):
 ${hcpLow.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join("\n")}
 
-CLASSIFICACIÓ HANDICAP ALT (15.1–36.0):
+CLASSIFICACIÓ HÁNDICAP SUPERIOR (≥15,5):
 ${hcpHigh.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join("\n")}
 
 ${females.length > 0 ? `CLASSIFICACIÓ FEMENINA — Guanyadora:\n1. ${females[0].players?.name} — ${females[0].stableford_points} pts (Hcp ${females[0].handicap_at_round})` : ""}
@@ -153,13 +152,13 @@ Total participants: ${results.length}
 
 INSTRUCCIONS:
 - Utilitza emojis de manera similar a l'estructura de referència
-- Per a Hàndicap Baix i Alt: inclou els 3 primers classificats (🥇🥈🥉)
+- Per a Hándicap Inferior i Superior: inclou els 3 primers classificats (🥇🥈🥉)
 - Per a Femenina i Sènior: menciona NOMÉS el/la guanyador/a (🥇)
 - IMPORTANT: Deixa una línia en blanc entre cada secció/categoria per facilitar la lectura
 - Inclou SEMPRE els sponsors i hashtags al final
 - El to ha de ser celebratori i engrescador
 - Modalitat STABLEFORD, NO mencionIs resultats scratch
-- Si és jornada MASTER, destaca-ho
+
 - Si hi ha patrocinador, menciona'l
 - Retorna NOMÉS el text del post, sense JSON ni markdown
 

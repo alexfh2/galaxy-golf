@@ -60,10 +60,10 @@ serve(async (req) => {
 
     // Categorize results
     const hcpLow = results
-      .filter((r: any) => r.category === "hcp_low" || (r.handicap_at_round !== null && r.handicap_at_round <= 15))
+      .filter((r: any) => r.category === "hcp_low" || (r.handicap_at_round !== null && r.handicap_at_round <= 15.4))
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const hcpHigh = results
-      .filter((r: any) => r.category === "hcp_high" || (r.handicap_at_round !== null && r.handicap_at_round > 15))
+      .filter((r: any) => r.category === "hcp_high" || (r.handicap_at_round !== null && r.handicap_at_round >= 15.5))
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const females = results
       .filter((r: any) => r.is_female_prize || r.players?.gender === 'F')
@@ -87,11 +87,10 @@ RESULTATS DE LA ${round.name} DEL GASTRONÒMIC GOLF EXPERIENCE ${season?.year ||
 
 El ${round.club || "club"} ha acollit la ${round.name} del Gastronòmic Golf Experience, disputada el ${round.date}, amb la participació de ${results.length} jugadors.
 ${round.sponsor ? `Jornada patrocinada per ${round.sponsor}.` : ""}
-${round.is_master ? "⭐ JORNADA MASTER — Punts x1.25!" : ""}
 
-En la classificació Hàndicap Baix (≤15), [NOM] s'ha imposat amb [X] punts Stableford, seguit de [NOM] ([X]) i [NOM] ([X]).
+En la classificació Hándicap Inferior (≤15,4), [NOM] s'ha imposat amb [X] punts Stableford, seguit de [NOM] ([X]) i [NOM] ([X]).
 
-En la classificació Hàndicap Alt (15.1–36), [NOM] s'ha imposat amb [X] punts, seguit de [NOM] ([X]) i [NOM] ([X]).
+En la classificació Hándicap Superior (≥15,5), [NOM] s'ha imposat amb [X] punts, seguit de [NOM] ([X]) i [NOM] ([X]).
 ${females.length > 0 ? `\nEn la classificació Femenina, [NOM] s'ha imposat amb [X] punts.` : ""}
 ${seniors.length > 0 ? `\nEn la classificació Sènior (+65), [NOM] s'ha imposat amb [X] punts.` : ""}
 
@@ -99,10 +98,10 @@ Les classificacions completes i estadístiques detallades es poden consultar a: 
 ---
 
 DADES REALS:
-CLASSIFICACIÓ HANDICAP BAIX (≤15.0) — ${hcpLow.length} jugadors:
+CLASSIFICACIÓ HÁNDICAP INFERIOR (≤15,4) — ${hcpLow.length} jugadors:
 ${hcpLow.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join("\n")}
 
-CLASSIFICACIÓ HANDICAP ALT (15.1–36.0) — ${hcpHigh.length} jugadors:
+CLASSIFICACIÓ HÁNDICAP SUPERIOR (≥15,5) — ${hcpHigh.length} jugadors:
 ${hcpHigh.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join("\n")}
 
 ${females.length > 0 ? `CLASSIFICACIÓ FEMENINA — Guanyadora:\n1. ${females[0].players?.name} — ${females[0].stableford_points} pts (Hcp ${females[0].handicap_at_round})` : ""}
@@ -112,7 +111,7 @@ Total participants: ${results.length}
 
 INSTRUCCIONS:
 - Segueix EXACTAMENT l'estructura del text de referència: títol, introducció, resultats per categories, link final
-- Per a Hàndicap Baix i Alt: inclou els 3 primers classificats
+- Per a Hándicap Inferior i Superior: inclou els 3 primers classificats
 - Per a Femenina i Sènior: menciona NOMÉS el/la guanyador/a
 - IMPORTANT: Deixa una línia en blanc entre cada secció/categoria per facilitar la lectura
 - Utilitza format *negretes* de WhatsApp per al títol i noms de categories

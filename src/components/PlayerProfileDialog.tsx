@@ -40,7 +40,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     queryFn: async () => {
       const { data } = await supabase
         .from('results')
-        .select('*, rounds!inner(name, date, club, round_number, status, is_master, master_coefficient, course_par, course_handicap, course_handicap_women)')
+        .select('*, rounds!inner(name, date, club, round_number, status, course_par, course_handicap, course_handicap_women)')
         .eq('player_id', playerId!)
         .eq('rounds.status', 'published')
         .order('rounds(round_number)');
@@ -92,9 +92,8 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
           scores: [],
         });
       }
-      const isMaster = r.rounds?.is_master || false;
-      const coef = r.rounds?.master_coefficient || 1;
-      const weighted = Math.round(r.stableford_points * (isMaster ? coef : 1));
+      // GalaxyGolf 2026: sin multiplicador Master.
+      const weighted = r.stableford_points;
       byPlayer.get(pid)!.scores.push({ points: r.stableford_points, weighted });
     }
 
@@ -113,8 +112,8 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
       return idx === -1 ? null : { pos: idx + 1, total: ranking[idx].total, of: ranking.length };
     };
 
-    const hcpLow = buildRanking((p) => p.handicap != null && p.handicap <= 15.0);
-    const hcpHigh = buildRanking((p) => p.handicap != null && p.handicap > 15.0);
+    const hcpLow = buildRanking((p) => p.handicap != null && p.handicap <= 15.4);
+    const hcpHigh = buildRanking((p) => p.handicap != null && p.handicap >= 15.5);
     const female = buildRanking((p) => p.gender === 'F');
     const senior = buildRanking((p) => p.is_senior);
 
@@ -202,10 +201,10 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
   // Categoría fijada por el HCP de la primera ronda jugada (consistente con Rankings).
   const hcp = positions?.categoryHcp ?? player.current_handicap;
   const mainCategory =
-    hcp != null && hcp <= 15.0
-      ? { key: 'hcpLow', label: 'HCP Baix (≤15.0)', pos: positions?.hcpLow }
+    hcp != null && hcp <= 15.4
+      ? { key: 'hcpLow', label: 'Hándicap Inferior (≤15,4)', pos: positions?.hcpLow }
       : hcp != null
-      ? { key: 'hcpHigh', label: 'HCP Alt (>15.0)', pos: positions?.hcpHigh }
+      ? { key: 'hcpHigh', label: 'Hándicap Superior (≥15,5)', pos: positions?.hcpHigh }
       : null;
 
   const subCategories: { label: string; pos: { pos: number; total: number; of: number } | null | undefined }[] = [];
@@ -423,7 +422,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                         <div className="flex items-center gap-2 text-left flex-1 min-w-0">
                           <Badge variant="outline" className="text-[10px] font-mono shrink-0 px-1.5 py-0 border-accent/30">J{round?.round_number}</Badge>
                           <span className="font-medium text-sm truncate text-foreground">{round?.name}</span>
-                          {round?.is_master && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-accent/20 text-accent border-0 shrink-0">M</Badge>}
+                          
                           <span className="text-xs text-muted-foreground ml-auto mr-2 shrink-0">
                             {round?.date ? format(new Date(round.date), 'dd MMM', { locale }) : ''}
                           </span>

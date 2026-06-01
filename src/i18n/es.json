@@ -37,8 +37,8 @@
     "download": "Descargar"
   },
   "categories": {
-    "hcpLow": "Handicap Bajo",
-    "hcpHigh": "Handicap Alto",
+    "hcpLow": "Hándicap Inferior",
+    "hcpHigh": "Hándicap Superior",
     "scratch": "Scratch",
     "female": "Femenina",
     "senior": "Senior"

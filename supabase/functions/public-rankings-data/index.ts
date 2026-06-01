@@ -35,8 +35,6 @@ type RankingResultRow = {
   } | null;
   rounds: {
     status: string;
-    is_master: boolean;
-    master_coefficient: number;
     name: string;
     round_number: number;
     date: string | null;
@@ -90,7 +88,7 @@ Deno.serve(async (req) => {
         source_url,
         created_at,
         updated_at,
-        rounds!inner(status, is_master, master_coefficient, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
+        rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
         players!inner(id, name, license, club, gender, is_senior, initial_handicap, current_handicap, photo_url, created_at, updated_at)
       `)
       .eq("rounds.status", "published")
@@ -122,8 +120,6 @@ Deno.serve(async (req) => {
       rounds: row.rounds
         ? {
             status: row.rounds.status,
-            is_master: row.rounds.is_master,
-            master_coefficient: Number(row.rounds.master_coefficient ?? 1),
             name: row.rounds.name,
             round_number: row.rounds.round_number,
             date: row.rounds.date,

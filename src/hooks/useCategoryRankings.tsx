@@ -24,7 +24,7 @@ type Result = {
   handicap_at_round: number | null;
   round_id: string;
   players_public: { name: string; gender: string | null; is_senior: boolean; current_handicap: number | null } | null;
-  rounds: { is_master: boolean; master_coefficient: number; status: string } | null;
+  rounds: { status: string } | null;
 };
 
 export function useCategoryRankings() {
@@ -70,9 +70,9 @@ export function useCategoryRankings() {
           scores: [],
         });
       }
-      const coef = r.rounds?.master_coefficient || 1;
-      const isMaster = r.rounds?.is_master || false;
-      const weighted = Math.round(r.stableford_points * (isMaster ? coef : 1));
+      // GalaxyGolf 2026: sin multiplicador Master. Los Majors se identifican por
+      // round_competitions.stage = 'major', no afectan al peso del Stableford.
+      const weighted = r.stableford_points;
       byPlayer.get(pid)!.scores.push({ points: r.stableford_points, weighted });
     }
 
@@ -97,8 +97,8 @@ export function useCategoryRankings() {
     };
 
     return {
-      hcpInf: build(p => p.handicap != null && p.handicap <= 15.0),
-      hcpSup: build(p => p.handicap != null && p.handicap > 15.0),
+      hcpInf: build(p => p.handicap != null && p.handicap <= 15.4),
+      hcpSup: build(p => p.handicap != null && p.handicap >= 15.5),
       female: build(p => p.gender === 'F'),
       senior: build(p => p.is_senior),
     };
