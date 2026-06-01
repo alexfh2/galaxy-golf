@@ -931,6 +931,9 @@ const AdminRounds = () => {
               </Collapsible>
             </Card>
           ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 
