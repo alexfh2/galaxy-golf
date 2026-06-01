@@ -202,6 +202,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   // Fetch hole-by-hole scorecards in parallel (batches of 10)
   let coursePar: number[] | undefined;
   let courseHandicap: number[] | undefined;
+  let courseHandicapWomen: number[] | undefined;
   const batchSize = 10;
   for (let i = 0; i < entryDataList.length; i += batchSize) {
     const batch = entryDataList.slice(i, i + batchSize);
@@ -216,6 +217,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
         const cardData = await cardRes.json();
         const data = cardData.data || cardData;
         const score = data.score || {};
+        const gameTee = data.gameTee || {};
 
         const holes: number[] = [];
         for (let h = 1; h <= 18; h++) {
@@ -233,32 +235,32 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
           }
         }
 
-        // Extract course par + stroke-index (handicap) per hole — try common field names
-        if (!coursePar || !courseHandicap) {
-          const parCandidates = ["par", "Par", "PAR"];
-          const hcpCandidates = ["hcp", "handicap", "stroke", "strokeIndex", "si"];
-          const tryRead = (prefixList: string[]): number[] | null => {
-            for (const prefix of prefixList) {
-              const arr: number[] = [];
-              let ok = true;
-              for (let h = 1; h <= 18; h++) {
-                const v = score[`${prefix}${h}`];
-                const n = v != null ? Number(v) : NaN;
-                if (!Number.isFinite(n) || n <= 0) { ok = false; break; }
-                arr.push(n);
-              }
-              if (ok && arr.length === 18) return arr;
-            }
-            return null;
-          };
-          if (!coursePar) {
-            const p = tryRead(parCandidates);
-            if (p) coursePar = p;
+        // Extract course par + stroke-index per hole from gameTee
+        const readArr = (prefix: string): number[] | null => {
+          const arr: number[] = [];
+          for (let h = 1; h <= 18; h++) {
+            const v = gameTee[`${prefix}${h}`];
+            const n = v != null ? Number(v) : NaN;
+            if (!Number.isFinite(n) || n <= 0) return null;
+            arr.push(n);
           }
-          if (!courseHandicap) {
-            const h = tryRead(hcpCandidates);
-            if (h) courseHandicap = h;
-          }
+          return arr;
+        };
+
+        const isFemale = (gameTee.gender || "").toUpperCase() === "F"
+          || (ed.result.gender || "").toUpperCase() === "F";
+
+        if (!coursePar) {
+          const p = readArr("par");
+          if (p) coursePar = p;
+        }
+        if (!isFemale && !courseHandicap) {
+          const h = readArr("hcp");
+          if (h) courseHandicap = h;
+        }
+        if (isFemale && !courseHandicapWomen) {
+          const h = readArr("hcp");
+          if (h) courseHandicapWomen = h;
         }
       } catch {
         // silently skip scorecard errors
@@ -270,7 +272,13 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   const results = entryDataList.map((ed) => ed.result);
   results.sort((a, b) => a.position - b.position);
 
-  return { results, categories: allCategories, course_par: coursePar, course_handicap: courseHandicap };
+  return {
+    results,
+    categories: allCategories,
+    course_par: coursePar,
+    course_handicap: courseHandicap,
+    course_handicap_women: courseHandicapWomen,
+  };
 }
 
 // ─── TEEONE ────────────────────────────────────────────────────────────────────
