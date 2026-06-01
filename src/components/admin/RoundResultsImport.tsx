@@ -73,12 +73,30 @@ interface DuplicateGroup {
 }
 
 /**
+ * Order priority for "first result wins" duplicate resolution:
+ *  1. Earliest play_date (real game date when available).
+ *  2. Tie-break: lowest _url_index (URL #1 before URL #2, etc.).
+ * Never use Stableford or any score — always temporal/source order only.
+ */
+const compareFirstResult = (a: ParsedResult, b: ParsedResult): number => {
+  const ad = a.play_date ?? '\uffff';
+  const bd = b.play_date ?? '\uffff';
+  if (ad < bd) return -1;
+  if (ad > bd) return 1;
+  const ai = a._url_index ?? Number.POSITIVE_INFINITY;
+  const bi = b._url_index ?? Number.POSITIVE_INFINITY;
+  if (ai < bi) return -1;
+  if (ai > bi) return 1;
+  return 0;
+};
+
+/**
  * Build duplicate-group view. Each group of >=2 rows sharing the same dupKey.
  *
  * Auto-resolution rules (reglamento GalaxyGolf 2026):
- *  - Only ever pick the EARLIEST play_date — never "best" by points.
- *  - Auto-pick allowed only if every row has a valid play_date AND there is
- *    a strict minimum (no tie).
+ *  - Only ever pick the FIRST result by date + URL order — never "best" by points.
+ *  - Auto-pick allowed when the top row has a reliable signal (date or URL index)
+ *    AND there's a strict order vs the next row (no full tie on both keys).
  *  - Otherwise the group is a manual conflict.
  */
 const computeDuplicateGroups = (rows: ParsedResult[]): DuplicateGroup[] => {
@@ -92,23 +110,19 @@ const computeDuplicateGroups = (rows: ParsedResult[]): DuplicateGroup[] => {
   const groups: DuplicateGroup[] = [];
   for (const [key, grp] of map.entries()) {
     if (grp.length < 2) continue;
-    const dates = grp.map(r => r.play_date);
-    const allHaveDate = dates.every(d => !!d);
-    let needsManual = true;
-    let autoResolved = false;
-    if (allHaveDate) {
-      const sorted = [...grp].sort((a, b) => (a.play_date! < b.play_date! ? -1 : a.play_date! > b.play_date! ? 1 : 0));
-      const firstDate = sorted[0].play_date!;
-      const tied = sorted.filter(r => r.play_date === firstDate);
-      if (tied.length === 1) {
-        needsManual = false;
-        autoResolved = true;
-      }
-    }
-    groups.push({ key, rows: grp, needsManual, autoResolved });
+    const sorted = [...grp].sort(compareFirstResult);
+    const first = sorted[0];
+    const second = sorted[1];
+    const firstHasSignal = first.play_date != null || first._url_index != null;
+    const fullTie =
+      (first.play_date ?? null) === (second.play_date ?? null) &&
+      (first._url_index ?? null) === (second._url_index ?? null);
+    const autoResolved = firstHasSignal && !fullTie;
+    groups.push({ key, rows: grp, needsManual: !autoResolved, autoResolved });
   }
   return groups;
 };
+
 
 const RoundResultsImport = ({ round, onClose }: Props) => {
   const { toast } = useToast();
@@ -146,16 +160,33 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const updateUrlDate = (idx: number, value: string) =>
     setUrls(prev => prev.map((u, i) => i === idx ? { ...u, date: value } : u));
 
+  // Duplicate groups computed from raw rows — used for import summary/toasts.
   const duplicateGroups = useMemo(
     () => computeDuplicateGroups(results.filter(r => !r._is_np)),
     [results]
   );
-  const unresolvedConflicts = duplicateGroups.filter(g => g.needsManual);
+  // Conflicts STILL pending manual resolution: derived from current _conflict_group tags,
+  // so that after the admin picks one option the group disappears and Save is enabled.
+  const unresolvedConflicts = useMemo(() => {
+    const byKey = new Map<string, ParsedResult[]>();
+    for (const r of results) {
+      if (!r._conflict_group) continue;
+      const arr = byKey.get(r._conflict_group) ?? [];
+      arr.push(r);
+      byKey.set(r._conflict_group, arr);
+    }
+    return Array.from(byKey.entries()).map(([key, rows]) => ({
+      key,
+      rows,
+      needsManual: true,
+      autoResolved: false,
+    } as DuplicateGroup));
+  }, [results]);
   const hasUnresolvedConflicts = unresolvedConflicts.length > 0;
 
   /**
    * Apply duplicate resolution to a fresh parsed list:
-   *  - Auto-resolvable groups: keep the row with the earliest play_date selected; deselect rest.
+   *  - Auto-resolvable groups: keep the first row (by date, then URL index) selected; deselect rest.
    *  - Manual-conflict groups: deselect all rows in the group and tag them with _conflict_group.
    *  - Singletons: stay selected as imported.
    */
@@ -171,14 +202,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       if (g.needsManual) {
         return { ...r, _selected: false, _conflict_group: g.key };
       }
-      // auto-resolved: keep only the earliest date
-      const earliest = [...g.rows].sort((a, b) =>
-        (a.play_date! < b.play_date! ? -1 : a.play_date! > b.play_date! ? 1 : 0)
-      )[0];
+      const first = [...g.rows].sort(compareFirstResult)[0];
       return {
         ...r,
         _conflict_group: undefined,
-        _selected: r._uid === earliest._uid,
+        _selected: r._uid === first._uid,
       };
     });
   };
@@ -412,12 +440,26 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       }
 
       const groups = computeDuplicateGroups(matched);
-      const autoCount = groups.filter(g => g.autoResolved).length;
+      
       const conflictCount = groups.filter(g => g.needsManual).length;
       const totalResults = responses.reduce((sum, r) => sum + (r.count || 0), 0);
+      // Detailed auto-resolution summary (date vs URL order)
+      const autoGroups = groups.filter(g => g.autoResolved);
+      let autoMsg = '';
+      if (autoGroups.length > 0) {
+        const byDate = autoGroups.filter(g => {
+          const sorted = [...g.rows].sort(compareFirstResult);
+          return sorted[0].play_date !== sorted[1].play_date;
+        }).length;
+        const byUrl = autoGroups.length - byDate;
+        const parts: string[] = [];
+        if (byDate > 0) parts.push(`${byDate} per data més antiga`);
+        if (byUrl > 0) parts.push(`${byUrl} per ordre d'URL (#1 abans que #2…)`);
+        autoMsg = ` ${autoGroups.length} duplicat${autoGroups.length > 1 ? 's' : ''} resolt${autoGroups.length > 1 ? 's' : ''} automàticament (${parts.join(', ')}).`;
+      }
       toast({
         title: `${matched.length} resultats llegits (${totalResults} brut, ${validUrls.length} URL${validUrls.length > 1 ? 's' : ''})`,
-        description: `Font: ${detectedSource}.${courseDataMsg}${autoCount > 0 ? ` ${autoCount} duplicats resolts per data.` : ''}${conflictCount > 0 ? ` ⚠ ${conflictCount} conflictes pendents.` : ''}`,
+        description: `Font: ${detectedSource}.${courseDataMsg}${autoMsg}${conflictCount > 0 ? ` ⚠ ${conflictCount} conflicte${conflictCount > 1 ? 's' : ''} pendent${conflictCount > 1 ? 's' : ''} de resolució manual.` : ''}`,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
