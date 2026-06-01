@@ -30,7 +30,7 @@ export default function Rankings() {
             TEMPORADA 2026
           </p>
           <h1 className="font-display text-4xl md:text-6xl font-light leading-tight">
-            Rankings GalaxyGolf
+            Rankings GALAXY GOLF
           </h1>
           <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">
             Consulta las clasificaciones del Circuito GalaxyGolf y la GalaxyCup a medida

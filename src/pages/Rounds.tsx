@@ -143,7 +143,7 @@ const Rounds = () => {
     const endNext = new Date(endRaw);
     endNext.setDate(endNext.getDate() + 1);
     const endDate = endNext.toISOString().split('T')[0].replace(/-/g, '');
-    const title = `${round.name} — GalaxyGolf`;
+    const title = `${round.name} — GALAXY GOLF`;
     const location = [round.club, round.course].filter(Boolean).join(' — ');
     const description = [round.sponsor ? `Patrocinador: ${round.sponsor}` : ''].filter(Boolean).join('\\n');
     return [
@@ -345,7 +345,7 @@ const Rounds = () => {
                 Temporada 2026
               </p>
               <h1 className="font-display text-4xl lg:text-6xl font-medium leading-[1] mb-5 text-[hsl(var(--gg-ivory))]">
-                Calendario GalaxyGolf
+                Calendario GALAXY GOLF
               </h1>
               <p className="text-sm lg:text-base text-[hsl(var(--gg-ivory))]/70 leading-relaxed max-w-xl">
                 Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
