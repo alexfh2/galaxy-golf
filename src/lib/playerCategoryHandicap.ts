@@ -59,8 +59,26 @@ export function buildPlayerCategoryHandicapMap(
 }
 
 export function categorizeByHandicap(hcp: number | null | undefined): 'hcp_low' | 'hcp_high' | null {
-  if (hcp == null) return null;
-  return Number(hcp) <= 15 ? 'hcp_low' : 'hcp_high';
+  return getGalaxyGolfCategoryByHandicap(hcp);
+}
+
+/**
+ * Helper único GalaxyGolf 2026.
+ * Hándicap Inferior: hasta 15,4. Hándicap Superior: desde 15,5.
+ */
+export function getGalaxyGolfCategoryByHandicap(
+  hcp: number | null | undefined,
+): 'hcp_low' | 'hcp_high' | null {
+  if (hcp == null || Number.isNaN(Number(hcp))) return null;
+  return Number(hcp) <= 15.4 ? 'hcp_low' : 'hcp_high';
+}
+
+export function getGalaxyGolfCategoryLabel(
+  category: 'hcp_low' | 'hcp_high' | null | undefined,
+): string {
+  if (category === 'hcp_low') return 'Hándicap Inferior';
+  if (category === 'hcp_high') return 'Hándicap Superior';
+  return '';
 }
 
 /**
