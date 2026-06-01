@@ -19,7 +19,7 @@ const Wordmark = ({ className = '' }: { className?: string }) => (
   <span
     className={`font-display tracking-[0.22em] uppercase font-medium text-[hsl(var(--gg-gold))] ${className}`}
   >
-    GALAXYGOLF
+    GALAXY GOLF
   </span>
 );
 

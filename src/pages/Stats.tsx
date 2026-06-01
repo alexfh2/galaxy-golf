@@ -33,7 +33,7 @@ export default function Stats() {
           </h1>
           <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">
             Analiza el rendimiento de jugadores, torneos y campos del Circuito
-            GalaxyGolf y la GalaxyCup.
+            GALAXY GOLF y la GalaxyCup.
           </p>
         </div>
       </section>

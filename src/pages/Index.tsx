@@ -26,7 +26,7 @@ const Index = () => {
             La temporada<br />está en juego
           </h1>
           <p className="text-base lg:text-lg text-[hsl(var(--gg-ivory))]/75 leading-relaxed mb-10 max-w-xl">
-            Sigue los torneos, el calendario y las clasificaciones del Circuito GalaxyGolf y la GalaxyCup 2026.
+            Sigue los torneos, el calendario y las clasificaciones del Circuito GALAXY GOLF y la GalaxyCup 2026.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
@@ -70,7 +70,7 @@ const Index = () => {
                 Temporada 2026
               </p>
             </div>
-            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-ivory))]">Circuito GalaxyGolf</h3>
+            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-ivory))]">Circuito GALAXY GOLF</h3>
             <p className="text-[hsl(var(--gg-ivory))]/70 leading-relaxed mb-6">
               Ranking anual, pruebas regulares y Gran Final.
             </p>

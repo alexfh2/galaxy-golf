@@ -15,7 +15,7 @@ const Footer = () => {
                 Dos competiciones. Una misma pasión por el golf.
               </p>
               <p className="text-sm text-[hsl(var(--gg-ivory))]/60 mt-1">
-                Sigue el Circuito GalaxyGolf y la GalaxyCup durante toda la temporada 2026.
+                Sigue el Circuito GALAXY GOLF y la GalaxyCup durante toda la temporada 2026.
               </p>
             </div>
           </div>
@@ -31,10 +31,10 @@ const Footer = () => {
 
       <div className="container py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <span className="font-display tracking-[0.22em] uppercase text-[hsl(var(--gg-gold))] text-sm">
-          GALAXYGOLF
+          GALAXY GOLF
         </span>
         <p className="text-[10px] tracking-[0.18em] uppercase text-[hsl(var(--gg-ivory))]/50">
-          GalaxyGolf — Calendario y clasificaciones oficiales
+          GALAXY GOLF — Calendario y clasificaciones oficiales
         </p>
         <p className="text-[10px] text-[hsl(var(--gg-ivory))]/40">
           © {new Date().getFullYear()}
