@@ -83,6 +83,7 @@ interface GolfDirectoResult {
   categories: { id: string; name: string; count: number }[];
   course_par?: number[];
   course_handicap?: number[];
+  course_handicap_women?: number[];
 }
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
