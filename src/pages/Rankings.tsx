@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import { useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
 
@@ -315,6 +315,7 @@ export default function Rankings() {
 
   const [circuitoCat, setCircuitoCat] = useState<Category>('hcp_low');
   const [galaxyCupCat, setGalaxyCupCat] = useState<Category>('hcp_low');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const circuitoRows = useMemo(
     () => (data ? computeCircuito(data.results, data.round_competitions) : []),
@@ -409,12 +410,13 @@ export default function Rankings() {
                               {i + 1}
                             </TableCell>
                             <TableCell>
-                              <Link
-                                to={`/jugadors/${r.player_id}`}
-                                className="font-medium transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPlayerId(r.player_id)}
+                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
                               >
                                 {r.name}
-                              </Link>
+                              </button>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {getGalaxyGolfCategoryLabel(r.category)}
@@ -470,12 +472,13 @@ export default function Rankings() {
                               {i + 1}
                             </TableCell>
                             <TableCell>
-                              <Link
-                                to={`/jugadors/${r.player_id}`}
-                                className="font-medium transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPlayerId(r.player_id)}
+                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
                               >
                                 {r.name}
-                              </Link>
+                              </button>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {getGalaxyGolfCategoryLabel(r.category)}
@@ -518,6 +521,11 @@ export default function Rankings() {
           )}
         </div>
       </section>
+      <PlayerProfileDialog
+        playerId={selectedPlayerId}
+        open={!!selectedPlayerId}
+        onOpenChange={(o) => !o && setSelectedPlayerId(null)}
+      />
     </>
   );
 }
