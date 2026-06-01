@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
 
@@ -403,11 +404,18 @@ export default function Rankings() {
                       </TableHeader>
                       <TableBody>
                         {circuitoFiltered.map((r, i) => (
-                          <TableRow key={r.player_id}>
+                          <TableRow key={r.player_id} className="group">
                             <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
                               {i + 1}
                             </TableCell>
-                            <TableCell className="font-medium">{r.name}</TableCell>
+                            <TableCell>
+                              <Link
+                                to={`/jugadors/${r.player_id}`}
+                                className="font-medium transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              >
+                                {r.name}
+                              </Link>
+                            </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {getGalaxyGolfCategoryLabel(r.category)}
                             </TableCell>
@@ -457,11 +465,18 @@ export default function Rankings() {
                       </TableHeader>
                       <TableBody>
                         {galaxyCupFiltered.map((r, i) => (
-                          <TableRow key={r.player_id}>
+                          <TableRow key={r.player_id} className="group">
                             <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
                               {i + 1}
                             </TableCell>
-                            <TableCell className="font-medium">{r.name}</TableCell>
+                            <TableCell>
+                              <Link
+                                to={`/jugadors/${r.player_id}`}
+                                className="font-medium transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              >
+                                {r.name}
+                              </Link>
+                            </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {getGalaxyGolfCategoryLabel(r.category)}
                             </TableCell>
