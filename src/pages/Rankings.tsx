@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import { useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
 
