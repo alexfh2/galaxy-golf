@@ -160,16 +160,33 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const updateUrlDate = (idx: number, value: string) =>
     setUrls(prev => prev.map((u, i) => i === idx ? { ...u, date: value } : u));
 
+  // Duplicate groups computed from raw rows — used for import summary/toasts.
   const duplicateGroups = useMemo(
     () => computeDuplicateGroups(results.filter(r => !r._is_np)),
     [results]
   );
-  const unresolvedConflicts = duplicateGroups.filter(g => g.needsManual);
+  // Conflicts STILL pending manual resolution: derived from current _conflict_group tags,
+  // so that after the admin picks one option the group disappears and Save is enabled.
+  const unresolvedConflicts = useMemo(() => {
+    const byKey = new Map<string, ParsedResult[]>();
+    for (const r of results) {
+      if (!r._conflict_group) continue;
+      const arr = byKey.get(r._conflict_group) ?? [];
+      arr.push(r);
+      byKey.set(r._conflict_group, arr);
+    }
+    return Array.from(byKey.entries()).map(([key, rows]) => ({
+      key,
+      rows,
+      needsManual: true,
+      autoResolved: false,
+    } as DuplicateGroup));
+  }, [results]);
   const hasUnresolvedConflicts = unresolvedConflicts.length > 0;
 
   /**
    * Apply duplicate resolution to a fresh parsed list:
-   *  - Auto-resolvable groups: keep the row with the earliest play_date selected; deselect rest.
+   *  - Auto-resolvable groups: keep the first row (by date, then URL index) selected; deselect rest.
    *  - Manual-conflict groups: deselect all rows in the group and tag them with _conflict_group.
    *  - Singletons: stay selected as imported.
    */
@@ -185,14 +202,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       if (g.needsManual) {
         return { ...r, _selected: false, _conflict_group: g.key };
       }
-      // auto-resolved: keep only the earliest date
-      const earliest = [...g.rows].sort((a, b) =>
-        (a.play_date! < b.play_date! ? -1 : a.play_date! > b.play_date! ? 1 : 0)
-      )[0];
+      const first = [...g.rows].sort(compareFirstResult)[0];
       return {
         ...r,
         _conflict_group: undefined,
-        _selected: r._uid === earliest._uid,
+        _selected: r._uid === first._uid,
       };
     });
   };
