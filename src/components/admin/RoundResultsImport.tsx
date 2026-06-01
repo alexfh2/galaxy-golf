@@ -73,12 +73,30 @@ interface DuplicateGroup {
 }
 
 /**
+ * Order priority for "first result wins" duplicate resolution:
+ *  1. Earliest play_date (real game date when available).
+ *  2. Tie-break: lowest _url_index (URL #1 before URL #2, etc.).
+ * Never use Stableford or any score — always temporal/source order only.
+ */
+const compareFirstResult = (a: ParsedResult, b: ParsedResult): number => {
+  const ad = a.play_date ?? '\uffff';
+  const bd = b.play_date ?? '\uffff';
+  if (ad < bd) return -1;
+  if (ad > bd) return 1;
+  const ai = a._url_index ?? Number.POSITIVE_INFINITY;
+  const bi = b._url_index ?? Number.POSITIVE_INFINITY;
+  if (ai < bi) return -1;
+  if (ai > bi) return 1;
+  return 0;
+};
+
+/**
  * Build duplicate-group view. Each group of >=2 rows sharing the same dupKey.
  *
  * Auto-resolution rules (reglamento GalaxyGolf 2026):
- *  - Only ever pick the EARLIEST play_date — never "best" by points.
- *  - Auto-pick allowed only if every row has a valid play_date AND there is
- *    a strict minimum (no tie).
+ *  - Only ever pick the FIRST result by date + URL order — never "best" by points.
+ *  - Auto-pick allowed when the top row has a reliable signal (date or URL index)
+ *    AND there's a strict order vs the next row (no full tie on both keys).
  *  - Otherwise the group is a manual conflict.
  */
 const computeDuplicateGroups = (rows: ParsedResult[]): DuplicateGroup[] => {
@@ -92,23 +110,19 @@ const computeDuplicateGroups = (rows: ParsedResult[]): DuplicateGroup[] => {
   const groups: DuplicateGroup[] = [];
   for (const [key, grp] of map.entries()) {
     if (grp.length < 2) continue;
-    const dates = grp.map(r => r.play_date);
-    const allHaveDate = dates.every(d => !!d);
-    let needsManual = true;
-    let autoResolved = false;
-    if (allHaveDate) {
-      const sorted = [...grp].sort((a, b) => (a.play_date! < b.play_date! ? -1 : a.play_date! > b.play_date! ? 1 : 0));
-      const firstDate = sorted[0].play_date!;
-      const tied = sorted.filter(r => r.play_date === firstDate);
-      if (tied.length === 1) {
-        needsManual = false;
-        autoResolved = true;
-      }
-    }
-    groups.push({ key, rows: grp, needsManual, autoResolved });
+    const sorted = [...grp].sort(compareFirstResult);
+    const first = sorted[0];
+    const second = sorted[1];
+    const firstHasSignal = first.play_date != null || first._url_index != null;
+    const fullTie =
+      (first.play_date ?? null) === (second.play_date ?? null) &&
+      (first._url_index ?? null) === (second._url_index ?? null);
+    const autoResolved = firstHasSignal && !fullTie;
+    groups.push({ key, rows: grp, needsManual: !autoResolved, autoResolved });
   }
   return groups;
 };
+
 
 const RoundResultsImport = ({ round, onClose }: Props) => {
   const { toast } = useToast();
