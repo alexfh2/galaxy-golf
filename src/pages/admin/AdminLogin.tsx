@@ -38,8 +38,8 @@ const AdminLogin = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border/60">
         <CardHeader className="text-center">
-          <CardTitle className="font-display text-2xl">Gastronomic Golf</CardTitle>
-          <CardDescription>Accés al panell d'administració</CardDescription>
+          <CardTitle className="font-display text-2xl">GALAXY GOLF</CardTitle>
+          <CardDescription>Acceso al panel de administración</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
