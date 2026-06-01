@@ -315,6 +315,7 @@ export default function Rankings() {
 
   const [circuitoCat, setCircuitoCat] = useState<Category>('hcp_low');
   const [galaxyCupCat, setGalaxyCupCat] = useState<Category>('hcp_low');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const circuitoRows = useMemo(
     () => (data ? computeCircuito(data.results, data.round_competitions) : []),
