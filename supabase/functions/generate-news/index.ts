@@ -124,57 +124,6 @@ serve(async (req) => {
       ? 'nota de premsa esportiva, formal i professional' 
       : 'engrescador per xarxes socials (WhatsApp/Instagram), amb emojis i to proper';
 
-    const prompt = `Genera una notícia esportiva de golf en ${langLabel} amb to de ${toneLabel}.
-IMPORTANT: La competició és en modalitat STABLEFORD. NO mencionis resultats scratch ni cops totals. Tots els resultats són en punts Stableford.
-El circuit és el "Gastronòmic Golf Experience" — un circuit de golf amb gastronomia i grans premis.
-
-TEXT DE REFERÈNCIA D'ESTIL (adapta'l al golf i al Gastronòmic Golf Experience):
----
-Després de [X] intenses jornades, la classificació s'està consolidant i ja es perfilen els jugadors que lluitaran pel podi aquesta temporada.
-
-Hándicap Inferior: la batalla dels millors!
-La competició no pot estar més ajustada. [Descripció del líder i perseguidors]
-
-1. [Nom] encapçala amb [X] pts, mostrant una regularitat impressionant.
-2. Molt a prop, [Nom] amb [X] pts.
-3. La tercera posició és per a [Nom] amb [X] pts.
-
-TOP 10:
-[Llistat]
-
-Hándicap Superior: els qui millor dominen el camp!
-[Mateixa estructura]
-
-Classificació Femenina:
-[Mateixa estructura amb top 3]
-
-Classificació Sènior (+65):
-[Mateixa estructura amb top 3]
-
-[Si hi ha actuacions destacades: birdies, hole-in-ones, etc.]
-
-Per a més detalls i classificacions actualitzades, visiteu la nostra web.
----
-
-DADES DE LA JORNADA:
-- Jornada: ${round.name} (J${round.round_number})
-- Temporada: ${season?.year || 'N/A'}
-- Club: ${round.club || 'N/A'}
-- Camp: ${round.course || 'N/A'}
-- Data: ${round.date}
-- Patrocinador: ${sponsor || 'cap'}
-
-${special_mention ? `- Menció especial: ${special_mention}` : ''}
-${(() => {
-  const w = weather_conditions || {};
-  const lines: string[] = [];
-  if (w.friday) lines.push(`  · Divendres: ${w.friday}`);
-  if (w.saturday) lines.push(`  · Dissabte: ${w.saturday}`);
-  if (w.sunday) lines.push(`  · Diumenge: ${w.sunday}`);
-  if (w.green_speed) lines.push(`  · Velocitat dels greens: ${w.green_speed}`);
-  if (w.wind) lines.push(`  · Vent: ${w.wind}`);
-  return lines.length ? `- Condicions meteorològiques i del camp:\n${lines.join('\n')}` : '';
-})()}
 
     const prompt = `Genera una notícia esportiva de golf en ${langLabel} amb to de ${toneLabel}.
 
