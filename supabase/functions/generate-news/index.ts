@@ -61,6 +61,35 @@ serve(async (req) => {
       .eq("id", round.season_id)
       .single();
 
+    // Fetch competition context (Circuito GalaxyGolf / GalaxyCup + stage)
+    const { data: roundComps } = await supabase
+      .from("round_competitions")
+      .select("stage, competition:competitions(slug, name)")
+      .eq("round_id", round_id);
+
+    const competitionsCtx = (roundComps ?? []).map((rc: any) => {
+      const slug = rc.competition?.slug ?? "";
+      const name = rc.competition?.name ?? slug;
+      const stage = rc.stage ?? "regular";
+      const stageLabel =
+        stage === "major" ? "Major" :
+        stage === "playoff" ? "Playoff" :
+        stage === "final" ? "Gran Final" : "Regular";
+      return { slug, name, stage, stageLabel, label: `${name} · ${stageLabel}` };
+    });
+    const competitionLine = competitionsCtx.length
+      ? competitionsCtx.map((c) => c.label).join(" / ")
+      : "GalaxyGolf";
+    const hasMajor = competitionsCtx.some((c) => c.stage === "major");
+    const hasFinal = competitionsCtx.some((c) => c.stage === "final" || c.stage === "playoff");
+    const isCircuito = competitionsCtx.some((c) => c.slug === "circuito-galaxygolf");
+    const isGalaxyCup = competitionsCtx.some((c) => c.slug === "galaxycup");
+    const eventToneHint = hasFinal
+      ? "Es una prueba de Playoff/Gran Final: tono épico, decisivo, cierre de temporada."
+      : hasMajor
+        ? "Es una prueba Major: jornada de máxima categoría, redobla la importancia."
+        : "Jornada regular del circuito: tono cercano, deportivo y celebrativo.";
+
     // Build context for AI — Stableford only (no scratch)
     const topStableford = results.slice(0, 5);
     
