@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Check, X, AlertTriangle, Search, Plus, Trash2, Upload, FileSpreadsheet } from 'lucide-react';
 import { DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { parseExcelResults, type ExcelParsedResult, type ExcelParseOutput } from '@/lib/parseExcelResults';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { parseExcelResults } from '@/lib/parseExcelResults';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
@@ -29,7 +30,10 @@ interface ParsedResult {
   scratch_score: number | null;
   scores: (number | null)[];
   source_url: string;
+  play_date: string | null;
+  _uid: string;
   _selected: boolean;
+  _conflict_group?: string; // dup key if this row is part of an unresolved conflict
   _matched_player_id?: string;
   _url_index?: number;
   _is_np?: boolean;
@@ -43,33 +47,139 @@ interface Props {
 
 const SENIOR_AGE = 65;
 
+// Normalise a name for duplicate detection: lowercase, strip accents, collapse spaces, trim
+const normaliseName = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const dupKey = (r: ParsedResult): string => {
+  if (r.license && r.license.trim()) return `lic:${r.license.trim().toUpperCase()}`;
+  return `nm:${normaliseName(r.name)}`;
+};
+
+const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+interface DuplicateGroup {
+  key: string;
+  rows: ParsedResult[];
+  autoResolved: boolean; // true if one row already _selected and the rest deselected automatically
+  needsManual: boolean;
+}
+
+/**
+ * Build duplicate-group view. Each group of >=2 rows sharing the same dupKey.
+ *
+ * Auto-resolution rules (reglamento GalaxyGolf 2026):
+ *  - Only ever pick the EARLIEST play_date — never "best" by points.
+ *  - Auto-pick allowed only if every row has a valid play_date AND there is
+ *    a strict minimum (no tie).
+ *  - Otherwise the group is a manual conflict.
+ */
+const computeDuplicateGroups = (rows: ParsedResult[]): DuplicateGroup[] => {
+  const map = new Map<string, ParsedResult[]>();
+  for (const r of rows) {
+    const k = dupKey(r);
+    const arr = map.get(k) ?? [];
+    arr.push(r);
+    map.set(k, arr);
+  }
+  const groups: DuplicateGroup[] = [];
+  for (const [key, grp] of map.entries()) {
+    if (grp.length < 2) continue;
+    const dates = grp.map(r => r.play_date);
+    const allHaveDate = dates.every(d => !!d);
+    let needsManual = true;
+    let autoResolved = false;
+    if (allHaveDate) {
+      const sorted = [...grp].sort((a, b) => (a.play_date! < b.play_date! ? -1 : a.play_date! > b.play_date! ? 1 : 0));
+      const firstDate = sorted[0].play_date!;
+      const tied = sorted.filter(r => r.play_date === firstDate);
+      if (tied.length === 1) {
+        needsManual = false;
+        autoResolved = true;
+      }
+    }
+    groups.push({ key, rows: grp, needsManual, autoResolved });
+  }
+  return groups;
+};
+
 const RoundResultsImport = ({ round, onClose }: Props) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [urls, setUrls] = useState<string[]>(['']);
+  const [urls, setUrls] = useState<{ url: string; date: string }[]>([{ url: '', date: round.date ?? '' }]);
   const [format, setFormat] = useState('stableford');
+  const [excelPlayDate, setExcelPlayDate] = useState<string>(round.date ?? '');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ParsedResult[]>([]);
   const [source, setSource] = useState('');
+  const [importSource, setImportSource] = useState<'golfdirecto' | 'teeone' | 'excel' | 'generic' | ''>('');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [importTab, setImportTab] = useState('url');
   const [deleteExisting, setDeleteExisting] = useState(false);
   const [existingCount, setExistingCount] = useState<number | null>(null);
+  const [existingPlayerIds, setExistingPlayerIds] = useState<Set<string>>(new Set());
   const [needsSeniorFile, setNeedsSeniorFile] = useState(false);
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    supabase.from('results').select('id', { count: 'exact', head: true })
+    supabase.from('results').select('id, player_id', { count: 'exact' })
       .eq('round_id', round.id)
-      .then(({ count }) => setExistingCount(count ?? 0));
+      .then(({ data, count }) => {
+        setExistingCount(count ?? 0);
+        setExistingPlayerIds(new Set((data ?? []).map(r => r.player_id)));
+      });
   }, [round.id]);
 
-  const addUrl = () => setUrls(prev => [...prev, '']);
+  const addUrl = () => setUrls(prev => [...prev, { url: '', date: round.date ?? '' }]);
   const removeUrl = (idx: number) => setUrls(prev => prev.filter((_, i) => i !== idx));
   const updateUrl = (idx: number, value: string) =>
-    setUrls(prev => prev.map((u, i) => i === idx ? value : u));
+    setUrls(prev => prev.map((u, i) => i === idx ? { ...u, url: value } : u));
+  const updateUrlDate = (idx: number, value: string) =>
+    setUrls(prev => prev.map((u, i) => i === idx ? { ...u, date: value } : u));
+
+  const duplicateGroups = useMemo(
+    () => computeDuplicateGroups(results.filter(r => !r._is_np)),
+    [results]
+  );
+  const unresolvedConflicts = duplicateGroups.filter(g => g.needsManual);
+  const hasUnresolvedConflicts = unresolvedConflicts.length > 0;
+
+  /**
+   * Apply duplicate resolution to a fresh parsed list:
+   *  - Auto-resolvable groups: keep the row with the earliest play_date selected; deselect rest.
+   *  - Manual-conflict groups: deselect all rows in the group and tag them with _conflict_group.
+   *  - Singletons: stay selected as imported.
+   */
+  const applyDuplicateResolution = (rows: ParsedResult[]): ParsedResult[] => {
+    const groups = computeDuplicateGroups(rows);
+    const groupByUid = new Map<string, DuplicateGroup>();
+    for (const g of groups) {
+      for (const r of g.rows) groupByUid.set(r._uid, g);
+    }
+    return rows.map(r => {
+      const g = groupByUid.get(r._uid);
+      if (!g) return { ...r, _conflict_group: undefined };
+      if (g.needsManual) {
+        return { ...r, _selected: false, _conflict_group: g.key };
+      }
+      // auto-resolved: keep only the earliest date
+      const earliest = [...g.rows].sort((a, b) =>
+        (a.play_date! < b.play_date! ? -1 : a.play_date! > b.play_date! ? 1 : 0)
+      )[0];
+      return {
+        ...r,
+        _conflict_group: undefined,
+        _selected: r._uid === earliest._uid,
+      };
+    });
+  };
 
   const matchPlayers = async (parsed: ParsedResult[]) => {
     const { data: players } = await supabase.from('players').select('id, name, license');
@@ -78,15 +188,16 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     const matched = parsed.map(r => {
       const match = players?.find(
         p => (r.license && p.license === r.license) ||
-          p.name.toLowerCase() === r.name.toLowerCase()
+          normaliseName(p.name) === normaliseName(r.name)
       );
       if (!match && !r._is_np) w.push(`"${r.name}" no trobat a la base de dades`);
       return { ...r, _matched_player_id: match?.id };
     });
 
-    setResults(matched);
+    const withGroups = applyDuplicateResolution(matched);
+    setResults(withGroups);
     if (w.length > 0) setWarnings(w);
-    return matched;
+    return withGroups;
   };
 
   // --- Senior file cross-reference (Excel or PDF) ---
@@ -96,12 +207,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
     try {
       const isPdf = file.name.toLowerCase().endsWith('.pdf');
-      let seniorLicenses = new Set<string>();
-      let seniorNames = new Set<string>();
+      const seniorLicenses = new Set<string>();
+      const seniorNames = new Set<string>();
       let seniorCount = 0;
 
       if (isPdf) {
-        // Send PDF to edge function to extract senior names
         const base64 = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -123,7 +233,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           if (p.name) seniorNames.add(p.name.trim().toUpperCase());
         }
       } else {
-        // Excel
         const buffer = await file.arrayBuffer();
         const { results: seniorRows } = parseExcelResults(buffer);
         seniorCount = seniorRows.length;
@@ -133,7 +242,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         }
       }
 
-      // Cross-reference with main results
       let matched = 0;
       setResults(prev => prev.map(r => {
         const matchByLic = r.license && seniorLicenses.has(r.license.trim().toUpperCase());
@@ -170,6 +278,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const buffer = await file.arrayBuffer();
       const { results: excelResults, hasSeniorInfo } = parseExcelResults(buffer);
 
+      const playDate = excelPlayDate || null;
+
       const parsed: ParsedResult[] = excelResults
         .filter(r => !r.is_np)
         .map(r => ({
@@ -184,21 +294,27 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           scratch_score: r.scratch_score,
           scores: r.scores,
           source_url: `excel:${file.name}`,
+          play_date: playDate,
+          _uid: uid(),
           _selected: true,
           _is_np: false,
           _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
         }));
 
       setSource(`Excel: ${file.name}`);
+      setImportSource('excel');
       const matched = await matchPlayers(parsed);
 
       if (!hasSeniorInfo) {
         setNeedsSeniorFile(true);
       }
 
+      const groups = computeDuplicateGroups(matched);
+      const conflicts = groups.filter(g => g.needsManual).length;
+
       toast({
         title: `${matched.length} resultats importats des d'Excel`,
-        description: `${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''} Revisa abans de guardar.`,
+        description: `${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
@@ -211,7 +327,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
   // --- URL import ---
   const handleFetch = async () => {
-    const validUrls = urls.filter(u => u.trim());
+    const validUrls = urls.filter(u => u.url.trim());
     if (validUrls.length === 0) return;
     setLoading(true);
     setWarnings([]);
@@ -219,46 +335,47 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
     try {
       const responses = await Promise.all(
-        validUrls.map(async (url, urlIdx) => {
+        validUrls.map(async (entry, urlIdx) => {
           const { data, error } = await supabase.functions.invoke('parse-results', {
-            body: { url: url.trim(), format },
+            body: { url: entry.url.trim(), format },
           });
           if (error) throw new Error(`Error URL ${urlIdx + 1}: ${error.message}`);
           if (!data?.success) throw new Error(data?.error || `Error parsing URL ${urlIdx + 1}`);
-          return { ...data, urlIdx };
+          return { ...data, urlIdx, urlPlayDate: entry.date || null };
         })
       );
 
-      const seen = new Map<string, ParsedResult>();
+      const allParsed: ParsedResult[] = [];
       let detectedSource = '';
 
       for (const resp of responses) {
         detectedSource = detectedSource || resp.source;
+        // Per-URL play_date precedence: admin-entered date > game_date from API > result.play_date
+        const urlDate: string | null = resp.urlPlayDate || resp.game_date || null;
         for (const r of resp.results as ParsedResult[]) {
-          const key = (r.license || r.name).toLowerCase();
-          const existing = seen.get(key);
-          if (existing) {
-            if (r.stableford_points != null && existing.stableford_points != null) {
-              if (r.stableford_points > existing.stableford_points) seen.set(key, { ...r, _selected: true, _url_index: resp.urlIdx });
-            } else if (r.scratch_score != null && existing.scratch_score != null) {
-              if (r.scratch_score < existing.scratch_score) seen.set(key, { ...r, _selected: true, _url_index: resp.urlIdx });
-            }
-          } else {
-            seen.set(key, { ...r, _selected: true, _url_index: resp.urlIdx });
-          }
+          allParsed.push({
+            ...r,
+            play_date: urlDate || r.play_date || null,
+            age: null,
+            scores: r.scores ?? [],
+            _uid: uid(),
+            _selected: true,
+            _url_index: resp.urlIdx,
+          });
         }
       }
 
-      const parsed = Array.from(seen.values()).sort((a, b) => a.position - b.position);
+      const parsed = allParsed.sort((a, b) => a.position - b.position);
       setSource(detectedSource);
-      await matchPlayers(parsed);
+      setImportSource(detectedSource as 'golfdirecto' | 'teeone' | 'generic');
+      const matched = await matchPlayers(parsed);
 
       // Auto-import course par + handicap from GolfDirecto scorecards if missing
       let courseDataMsg = '';
       if (detectedSource === 'golfdirecto') {
-        const roundPar = (round as any).course_par;
-        const roundHcp = (round as any).course_handicap;
-        const roundHcpW = (round as any).course_handicap_women;
+        const roundPar = (round as Record<string, unknown>).course_par;
+        const roundHcp = (round as Record<string, unknown>).course_handicap;
+        const roundHcpW = (round as Record<string, unknown>).course_handicap_women;
         const hasPar = Array.isArray(roundPar) && roundPar.length === 18;
         const hasHcp = Array.isArray(roundHcp) && roundHcp.length === 18;
         const hasHcpW = Array.isArray(roundHcpW) && roundHcpW.length === 18;
@@ -277,7 +394,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         if (Object.keys(updates).length > 0) {
           const { error: updErr } = await supabase
             .from('rounds')
-            .update(updates as any)
+            .update(updates as Record<string, unknown>)
             .eq('id', round.id);
           if (!updErr) {
             const parts: string[] = [];
@@ -290,10 +407,13 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         }
       }
 
+      const groups = computeDuplicateGroups(matched);
+      const autoCount = groups.filter(g => g.autoResolved).length;
+      const conflictCount = groups.filter(g => g.needsManual).length;
       const totalResults = responses.reduce((sum, r) => sum + (r.count || 0), 0);
       toast({
-        title: `${parsed.length} resultats únics (${totalResults} total de ${validUrls.length} URL${validUrls.length > 1 ? 's' : ''})`,
-        description: `Font: ${detectedSource}.${courseDataMsg} Revisa abans de guardar.`,
+        title: `${matched.length} resultats llegits (${totalResults} brut, ${validUrls.length} URL${validUrls.length > 1 ? 's' : ''})`,
+        description: `Font: ${detectedSource}.${courseDataMsg}${autoCount > 0 ? ` ${autoCount} duplicats resolts per data.` : ''}${conflictCount > 0 ? ` ⚠ ${conflictCount} conflictes pendents.` : ''}`,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
@@ -304,14 +424,32 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   };
 
   const toggleResult = (idx: number) => {
-    setResults(prev => prev.map((r, i) =>
-      i === idx ? { ...r, _selected: !r._selected } : r
-    ));
+    setResults(prev => prev.map((r, i) => {
+      if (i !== idx) return r;
+      // Rows in unresolved conflicts must be resolved via the conflict UI
+      if (r._conflict_group) return r;
+      return { ...r, _selected: !r._selected };
+    }));
+  };
+
+  /** Manual conflict resolution: pick one row in the group, drop the conflict tag. */
+  const resolveConflict = (groupKey: string, chosenUid: string) => {
+    setResults(prev => prev.map(r => {
+      if (r._conflict_group !== groupKey) return r;
+      return {
+        ...r,
+        _selected: r._uid === chosenUid,
+        _conflict_group: undefined,
+      };
+    }));
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // Delete existing results if requested
+      if (hasUnresolvedConflicts) {
+        throw new Error('Hi ha jugadors amb conflictes de duplicats sense resoldre.');
+      }
+
       if (deleteExisting) {
         const { error: delError } = await supabase
           .from('results')
@@ -320,7 +458,23 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         if (delError) throw new Error(`Error eliminant resultats existents: ${delError.message}`);
       }
 
-      const selected = results.filter(r => r._selected);
+      const selected = results.filter(r => r._selected && !r._conflict_group);
+
+      // Build extra_play_count per duplicate key (count of dropped rows in same key)
+      const droppedByKey = new Map<string, number>();
+      const allByKey = new Map<string, ParsedResult[]>();
+      for (const r of results.filter(rr => !rr._is_np)) {
+        const k = dupKey(r);
+        const arr = allByKey.get(k) ?? [];
+        arr.push(r);
+        allByKey.set(k, arr);
+      }
+      for (const [k, arr] of allByKey.entries()) {
+        if (arr.length < 2) continue;
+        const keptCount = arr.filter(r => r._selected).length;
+        droppedByKey.set(k, Math.max(0, arr.length - keptCount));
+      }
+
       const newPlayers: string[] = [];
 
       for (const r of selected) {
@@ -339,7 +493,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             gender: r.gender === 'F' ? 'F' : r.gender === 'M' ? 'M' : null,
             is_senior: isSenior,
             birth_year: birthYear,
-          } as any)
+          })
           .select('id')
           .single();
 
@@ -348,22 +502,47 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         newPlayers.push(r.name);
       }
 
-      const payloads = selected.map(r => ({
+      // Detect already-existing results for these players (if not deleting first)
+      const duplicatedExisting: string[] = [];
+      if (!deleteExisting) {
+        for (const r of selected) {
+          if (r._matched_player_id && existingPlayerIds.has(r._matched_player_id)) {
+            duplicatedExisting.push(r.name);
+          }
+        }
+      }
+
+      const toInsert = selected.filter(
+        r => deleteExisting || !r._matched_player_id || !existingPlayerIds.has(r._matched_player_id)
+      );
+
+      const payloads = toInsert.map(r => ({
         round_id: round.id,
         player_id: r._matched_player_id!,
         stableford_points: r.stableford_points,
         scratch_score: r.scratch_score,
         handicap_at_round: r.handicap,
         source_url: r.source_url,
+        play_date: r.play_date,
+        extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
+        import_source: importSource || null,
         scorecard: r.scores.length > 0 ? { scores: r.scores, handicap_play: r.handicap_play } : null,
       }));
 
-      const { error } = await supabase.from('results').insert(payloads);
-      if (error) throw error;
+      if (payloads.length === 0 && duplicatedExisting.length > 0) {
+        throw new Error(
+          `Tots els jugadors seleccionats ja tenen resultat en aquesta jornada (${duplicatedExisting.length}). Marca "Eliminar resultats existents" per substituir-los.`
+        );
+      }
 
-      for (const r of selected) {
+      if (payloads.length > 0) {
+        const { error } = await supabase.from('results').insert(payloads);
+        if (error) throw error;
+      }
+
+      for (const r of toInsert) {
         if (r._matched_player_id) {
-          const updates: Record<string, any> = {};
+          const updates: Record<string, unknown> = {};
           if (r.handicap != null) updates.current_handicap = r.handicap;
           if (r.gender === 'F' || r.gender === 'M') updates.gender = r.gender;
           if (r._is_senior != null) updates.is_senior = r._is_senior;
@@ -374,29 +553,41 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           if (Object.keys(updates).length > 0) {
             await supabase
               .from('players')
-              .update(updates as any)
+              .update(updates)
               .eq('id', r._matched_player_id);
           }
         }
       }
 
+      const skipped = results.filter(r => !r._selected && !r._is_np);
       await supabase.from('import_logs').insert({
         round_id: round.id,
         source: source || (importTab === 'excel' ? 'excel' : 'url'),
-        source_url: importTab === 'excel' ? source : urls.filter(u => u.trim()).join(' | '),
-        records_imported: selected.length,
-        records_skipped: results.length - selected.length,
-        skipped_records: results.filter(r => !r._selected).map(r => ({ name: r.name, reason: 'deselected' })),
+        source_url: importTab === 'excel' ? source : urls.filter(u => u.url.trim()).map(u => u.url).join(' | '),
+        records_imported: payloads.length,
+        records_skipped: skipped.length,
+        skipped_records: skipped.map(r => ({
+          name: r.name,
+          license: r.license,
+          play_date: r.play_date,
+          stableford_points: r.stableford_points,
+          reason: 'duplicate_or_deselected',
+        })),
+        warnings: duplicatedExisting.length > 0
+          ? [`${duplicatedExisting.length} jugadors ja tenien resultat i s'han ignorat: ${duplicatedExisting.join(', ')}`]
+          : [],
         status: 'completed',
       });
 
-      return { imported: selected.length, newPlayers };
+      return { imported: payloads.length, newPlayers, duplicatedExisting };
     },
-    onSuccess: ({ imported, newPlayers }) => {
+    onSuccess: ({ imported, newPlayers, duplicatedExisting }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-rounds'] });
-      const msg = newPlayers.length > 0
-        ? `${imported} resultats importats. ${newPlayers.length} jugadors nous creats.`
-        : `${imported} resultats importats.`;
+      let msg = `${imported} resultats importats.`;
+      if (newPlayers.length > 0) msg += ` ${newPlayers.length} jugadors nous creats.`;
+      if (duplicatedExisting.length > 0) {
+        msg += ` ${duplicatedExisting.length} ignorats per ja existir.`;
+      }
       toast({ title: 'Importació completada', description: msg });
       onClose();
     },
@@ -405,10 +596,14 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     },
   });
 
+  const selectedCount = results.filter(r => r._selected && !r._conflict_group).length;
+  const visibleResults = results.filter(r => !r._conflict_group);
+
   return (
     <div className="space-y-4">
       <DialogDescription className="text-sm text-muted-foreground">
         Importa resultats des d'un fitxer Excel o des d'URLs (GolfDirecto / Teeone).
+        Si un jugador hi apareix més d'un cop, només es conserva el primer resultat (per data); en cas de dubte es bloqueja la importació per a resolució manual.
       </DialogDescription>
 
       {existingCount != null && existingCount > 0 && (
@@ -439,10 +634,20 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Fitxer Excel amb resultats (.xlsx)</Label>
             <p className="text-xs text-muted-foreground">
-              Puja l'Excel amb les columnes: Pos, Licencia, Nombre, Hex, NVH, Niv, Edad, Sex, Cat, Hpu, Total, H1-H18, Totalx.
-              Els jugadors N.P s'exclouran automàticament. Sènior = edat ≥ 65 o Niv = S.
+              Columnes: Pos, Licencia, Nombre, Hex, NVH, Niv, Edad, Sex, Cat, Hpu, Total, H1-H18, Totalx.
+              N.P exclosos. Sènior = edat ≥ 65 o Niv = S.
             </p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
+              <div className="space-y-1">
+                <Label htmlFor="excel-date" className="text-xs">Data de joc d'aquest fitxer</Label>
+                <Input
+                  id="excel-date"
+                  type="date"
+                  value={excelPlayDate}
+                  onChange={(e) => setExcelPlayDate(e.target.value)}
+                  className="h-9"
+                />
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -454,15 +659,13 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading}
-                className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {loading ? 'Llegint Excel...' : 'Seleccionar fitxer Excel'}
+                {loading ? 'Llegint...' : 'Seleccionar Excel'}
               </Button>
             </div>
           </div>
 
-          {/* Senior classification upload fallback */}
           {needsSeniorFile && results.length > 0 && (
             <Card className="border-amber-300 bg-amber-50/50">
               <CardContent className="py-3 space-y-2">
@@ -500,20 +703,26 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           )}
         </TabsContent>
 
-        {/* URL tab */}
         <TabsContent value="url" className="space-y-3 mt-3">
           <div className="space-y-2">
             <Label className="text-sm font-semibold">URLs dels resultats</Label>
             <p className="text-xs text-muted-foreground">
-              Afegeix una URL per cada dia de joc. Els resultats es fusionaran automàticament (millor resultat per jugador).
+              Afegeix una URL per cada dia de joc i indica'n la data. La data permet conservar automàticament el primer resultat quan un jugador apareix més d'un cop.
             </p>
-            {urls.map((url, idx) => (
+            {urls.map((entry, idx) => (
               <div key={idx} className="flex gap-2">
                 <Input
-                  value={url}
+                  value={entry.url}
                   onChange={(e) => updateUrl(idx, e.target.value)}
-                  placeholder={`URL dia ${idx + 1} — https://www.golfdirecto.com/micro/game/...`}
+                  placeholder={`URL dia ${idx + 1} — https://www.golfdirecto.com/...`}
                   className="flex-1"
+                />
+                <Input
+                  type="date"
+                  value={entry.date}
+                  onChange={(e) => updateUrlDate(idx, e.target.value)}
+                  className="w-[150px]"
+                  title="Data de joc"
                 />
                 {urls.length > 1 && (
                   <Button variant="ghost" size="icon" onClick={() => removeUrl(idx)}>
@@ -535,7 +744,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                   <SelectItem value="medal">Medal</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleFetch} disabled={loading || urls.every(u => !u.trim())} className="ml-auto">
+              <Button onClick={handleFetch} disabled={loading || urls.every(u => !u.url.trim())} className="ml-auto">
                 <Search className="h-4 w-4 mr-2" />
                 {loading ? 'Llegint...' : 'Llegir resultats'}
               </Button>
@@ -544,7 +753,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         </TabsContent>
       </Tabs>
 
-      {/* Warnings */}
       {warnings.length > 0 && (
         <Card className="border-yellow-300 bg-yellow-50">
           <CardContent className="py-3">
@@ -565,18 +773,62 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         </Card>
       )}
 
-      {/* Results preview */}
+      {/* Conflict resolution block */}
+      {unresolvedConflicts.length > 0 && (
+        <Card className="border-destructive bg-destructive/5">
+          <CardContent className="py-3 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+              <p className="text-sm font-semibold text-destructive">
+                Hi ha jugadors amb diversos resultats en aquesta jornada. Selecciona manualment quin resultat s'ha de conservar abans d'importar.
+              </p>
+            </div>
+            {unresolvedConflicts.map(group => (
+              <div key={group.key} className="border border-destructive/40 rounded-md p-3 space-y-2 bg-background">
+                <p className="text-xs font-semibold">
+                  {group.rows[0].name}
+                  {group.rows[0].license && <span className="ml-1 text-muted-foreground font-mono">({group.rows[0].license})</span>}
+                </p>
+                <RadioGroup onValueChange={(v) => resolveConflict(group.key, v)}>
+                  {group.rows.map(r => (
+                    <div key={r._uid} className="flex items-center gap-3 text-xs border rounded-md p-2">
+                      <RadioGroupItem value={r._uid} id={r._uid} />
+                      <label htmlFor={r._uid} className="flex-1 flex flex-wrap gap-x-4 gap-y-1 cursor-pointer">
+                        <span><span className="text-muted-foreground">Data:</span> {r.play_date || '—'}</span>
+                        <span><span className="text-muted-foreground">Pos:</span> {r.position || '—'}</span>
+                        <span><span className="text-muted-foreground">Hcp:</span> {r.handicap ?? '—'}</span>
+                        <span><span className="text-muted-foreground">Stb:</span> {r.stableford_points ?? '—'}</span>
+                        <span><span className="text-muted-foreground">Scr:</span> {r.scratch_score ?? '—'}</span>
+                        {r._url_index != null && (
+                          <span className="text-muted-foreground">URL #{r._url_index + 1}</span>
+                        )}
+                      </label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {results.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">
-              {results.filter(r => r._selected).length} / {results.length} resultats seleccionats
+              {selectedCount} / {visibleResults.length} resultats seleccionats
               {source && <Badge variant="outline" className="ml-2 text-xs">{source}</Badge>}
+              {unresolvedConflicts.length > 0 && (
+                <Badge variant="destructive" className="ml-2 text-xs">
+                  {unresolvedConflicts.length} conflictes
+                </Badge>
+              )}
             </p>
             <Button
               size="sm"
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || results.filter(r => r._selected).length === 0}
+              disabled={saveMutation.isPending || selectedCount === 0 || hasUnresolvedConflicts}
+              title={hasUnresolvedConflicts ? 'Resol els conflictes de duplicats primer' : ''}
             >
               <Check className="h-4 w-4 mr-2" />
               {saveMutation.isPending ? 'Guardant...' : 'Guardar resultats'}
@@ -591,6 +843,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                   <th className="p-2 text-left">Pos</th>
                   <th className="p-2 text-left">Jugador</th>
                   <th className="p-2 text-left">Llicència</th>
+                  <th className="p-2 text-left">Data</th>
                   <th className="p-2 text-right">Hcp</th>
                   <th className="p-2 text-right">Hpu</th>
                   <th className="p-2 text-right">Stb</th>
@@ -600,42 +853,50 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                 </tr>
               </thead>
               <tbody>
-                {results.map((r, idx) => (
-                  <tr
-                    key={idx}
-                    className={`border-b last:border-0 ${!r._selected ? 'opacity-40' : ''} ${r._matched_player_id ? '' : 'bg-yellow-50/50'}`}
-                  >
-                    <td className="p-2">
-                      <button
-                        onClick={() => toggleResult(idx)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        {r._selected ? <Check className="h-3 w-3 text-emerald-600" /> : <X className="h-3 w-3" />}
-                      </button>
-                    </td>
-                    <td className="p-2 font-mono">{r.position}</td>
-                    <td className="p-2 font-medium">
-                      {r.name}
-                      {r.gender && <span className="text-muted-foreground ml-1">({r.gender})</span>}
-                      {r._is_senior && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Sènior</Badge>}
-                    </td>
-                    <td className="p-2 font-mono text-muted-foreground">{r.license || '—'}</td>
-                    <td className="p-2 text-right font-mono">{r.handicap ?? '—'}</td>
-                    <td className="p-2 text-right font-mono">{r.handicap_play ?? '—'}</td>
-                    <td className="p-2 text-right font-mono font-bold">{r.stableford_points ?? '—'}</td>
-                    <td className="p-2 text-right font-mono text-muted-foreground">{r.scratch_score ?? '—'}</td>
-                    {importTab === 'excel' && (
-                      <td className="p-2 text-center font-mono text-muted-foreground">{r.age ?? '—'}</td>
-                    )}
-                    <td className="p-2 text-center">
-                      {r._matched_player_id ? (
-                        <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700">Trobat</Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700">Nou</Badge>
+                {visibleResults.map((r) => {
+                  const idx = results.indexOf(r);
+                  const alreadyExists = r._matched_player_id && existingPlayerIds.has(r._matched_player_id);
+                  return (
+                    <tr
+                      key={r._uid}
+                      className={`border-b last:border-0 ${!r._selected ? 'opacity-40' : ''} ${r._matched_player_id ? '' : 'bg-yellow-50/50'}`}
+                    >
+                      <td className="p-2">
+                        <button
+                          onClick={() => toggleResult(idx)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          {r._selected ? <Check className="h-3 w-3 text-emerald-600" /> : <X className="h-3 w-3" />}
+                        </button>
+                      </td>
+                      <td className="p-2 font-mono">{r.position}</td>
+                      <td className="p-2 font-medium">
+                        {r.name}
+                        {r.gender && <span className="text-muted-foreground ml-1">({r.gender})</span>}
+                        {r._is_senior && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Sènior</Badge>}
+                      </td>
+                      <td className="p-2 font-mono text-muted-foreground">{r.license || '—'}</td>
+                      <td className="p-2 font-mono text-muted-foreground">{r.play_date || '—'}</td>
+                      <td className="p-2 text-right font-mono">{r.handicap ?? '—'}</td>
+                      <td className="p-2 text-right font-mono">{r.handicap_play ?? '—'}</td>
+                      <td className="p-2 text-right font-mono font-bold">{r.stableford_points ?? '—'}</td>
+                      <td className="p-2 text-right font-mono text-muted-foreground">{r.scratch_score ?? '—'}</td>
+                      {importTab === 'excel' && (
+                        <td className="p-2 text-center font-mono text-muted-foreground">{r.age ?? '—'}</td>
                       )}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="p-2 text-center space-x-1">
+                        {r._matched_player_id ? (
+                          <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700">Trobat</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700">Nou</Badge>
+                        )}
+                        {alreadyExists && !deleteExisting && (
+                          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">Ja existeix</Badge>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
