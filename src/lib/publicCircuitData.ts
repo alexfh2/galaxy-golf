@@ -29,6 +29,7 @@ export type PublicResult = {
   scorecard: unknown;
   play_date: string | null;
   source_url: string | null;
+  extra_play_count?: number | null;
   created_at: string;
   updated_at: string;
   players_public: PublicPlayer | null;
@@ -45,9 +46,24 @@ export type PublicResult = {
   } | null;
 };
 
+export type PublicRoundCompetition = {
+  round_id: string;
+  competition_id: string;
+  stage: string;
+  counts_for_ranking: boolean;
+  competition_round_number: number | null;
+  competition: {
+    id: string;
+    slug: string;
+    name: string;
+    competition_type: string;
+  } | null;
+};
+
 export type PublicCircuitData = {
   players: PublicPlayer[];
   results: PublicResult[];
+  round_competitions: PublicRoundCompetition[];
 };
 
 export async function fetchPublicCircuitData(): Promise<PublicCircuitData> {
@@ -57,8 +73,10 @@ export async function fetchPublicCircuitData(): Promise<PublicCircuitData> {
 
   if (error) throw error;
 
+  const payload = data as PublicCircuitData | null;
   return {
-    players: ((data as PublicCircuitData | null)?.players || []) as PublicPlayer[],
-    results: ((data as PublicCircuitData | null)?.results || []) as PublicResult[],
+    players: (payload?.players || []) as PublicPlayer[],
+    results: (payload?.results || []) as PublicResult[],
+    round_competitions: (payload?.round_competitions || []) as PublicRoundCompetition[],
   };
 }
