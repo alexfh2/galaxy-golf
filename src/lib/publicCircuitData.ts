@@ -34,8 +34,6 @@ export type PublicResult = {
   players_public: PublicPlayer | null;
   rounds: {
     status: string;
-    is_master: boolean;
-    master_coefficient: number;
     name: string;
     round_number: number;
     date: string | null;
