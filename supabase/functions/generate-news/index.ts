@@ -61,6 +61,35 @@ serve(async (req) => {
       .eq("id", round.season_id)
       .single();
 
+    // Fetch competition context (Circuito GalaxyGolf / GalaxyCup + stage)
+    const { data: roundComps } = await supabase
+      .from("round_competitions")
+      .select("stage, competition:competitions(slug, name)")
+      .eq("round_id", round_id);
+
+    const competitionsCtx = (roundComps ?? []).map((rc: any) => {
+      const slug = rc.competition?.slug ?? "";
+      const name = rc.competition?.name ?? slug;
+      const stage = rc.stage ?? "regular";
+      const stageLabel =
+        stage === "major" ? "Major" :
+        stage === "playoff" ? "Playoff" :
+        stage === "final" ? "Gran Final" : "Regular";
+      return { slug, name, stage, stageLabel, label: `${name} · ${stageLabel}` };
+    });
+    const competitionLine = competitionsCtx.length
+      ? competitionsCtx.map((c) => c.label).join(" / ")
+      : "GalaxyGolf";
+    const hasMajor = competitionsCtx.some((c) => c.stage === "major");
+    const hasFinal = competitionsCtx.some((c) => c.stage === "final" || c.stage === "playoff");
+    const isCircuito = competitionsCtx.some((c) => c.slug === "circuito-galaxygolf");
+    const isGalaxyCup = competitionsCtx.some((c) => c.slug === "galaxycup");
+    const eventToneHint = hasFinal
+      ? "Es una prueba de Playoff/Gran Final: tono épico, decisivo, cierre de temporada."
+      : hasMajor
+        ? "Es una prueba Major: jornada de máxima categoría, redobla la importancia."
+        : "Jornada regular del circuito: tono cercano, deportivo y celebrativo.";
+
     // Build context for AI — Stableford only (no scratch)
     const topStableford = results.slice(0, 5);
     
@@ -95,40 +124,48 @@ serve(async (req) => {
       ? 'nota de premsa esportiva, formal i professional' 
       : 'engrescador per xarxes socials (WhatsApp/Instagram), amb emojis i to proper';
 
+
     const prompt = `Genera una notícia esportiva de golf en ${langLabel} amb to de ${toneLabel}.
-IMPORTANT: La competició és en modalitat STABLEFORD. NO mencionis resultats scratch ni cops totals. Tots els resultats són en punts Stableford.
-El circuit és el "Gastronòmic Golf Experience" — un circuit de golf amb gastronomia i grans premis.
 
-TEXT DE REFERÈNCIA D'ESTIL (adapta'l al golf i al Gastronòmic Golf Experience):
+CONTEXT DE MARCA — GalaxyGolf:
+- GalaxyGolf organitza dos circuits aquesta temporada: "Circuito GalaxyGolf" (els millors camps de Catalunya) i "GalaxyCup" (proves de divendres, dissabte i diumenge, individual o per parelles).
+- Aquesta jornada compta per a: ${competitionLine}.
+- ${eventToneHint}
+- ${isCircuito ? "Quan parlis del Circuito GalaxyGolf, recorda el caràcter de circuit que recorre els millors camps i premia la regularitat." : ""}
+- ${isGalaxyCup ? "Quan parlis de la GalaxyCup, destaca la proximitat i el format flexible (cap de setmana, individual o parelles)." : ""}
+
+ESTIL DE REDACCIÓ GALAXYGOLF (referència real del blog/Facebook):
+- Proper, càlid i directe, com parlant amb els jugadors del circuit ("els nostres jugadors", "el nostre circuit").
+- Frases curtes, energia positiva, sense floritures literàries.
+- Convidatori: recorda subtilment que poden seguir el circuit o inscriure's a futures jornades.
+- Modalitat STABLEFORD. NO mencionis cops scratch ni cops totals.
+
+TEXT DE REFERÈNCIA D'ESTRUCTURA (adapta a Stableford i a GalaxyGolf):
 ---
-Després de [X] intenses jornades, la classificació s'està consolidant i ja es perfilen els jugadors que lluitaran pel podi aquesta temporada.
+Després de [X] intenses jornades, la classificació es va consolidant i ja es perfilen els jugadors que lluitaran pel podi.
 
-Hándicap Inferior: la batalla dels millors!
-La competició no pot estar més ajustada. [Descripció del líder i perseguidors]
-
+Hándicap Inferior — la batalla dels millors:
 1. [Nom] encapçala amb [X] pts, mostrant una regularitat impressionant.
 2. Molt a prop, [Nom] amb [X] pts.
 3. La tercera posició és per a [Nom] amb [X] pts.
 
-TOP 10:
-[Llistat]
-
-Hándicap Superior: els qui millor dominen el camp!
+Hándicap Superior — els qui millor dominen el camp:
 [Mateixa estructura]
 
 Classificació Femenina:
-[Mateixa estructura amb top 3]
+[Guanyadora]
 
 Classificació Sènior (+65):
-[Mateixa estructura amb top 3]
+[Guanyador]
 
-[Si hi ha actuacions destacades: birdies, hole-in-ones, etc.]
+[Si hi ha actuacions destacades: birdies, etc.]
 
-Per a més detalls i classificacions actualitzades, visiteu la nostra web.
+Per a més detalls visiteu la nostra web.
 ---
 
 DADES DE LA JORNADA:
 - Jornada: ${round.name} (J${round.round_number})
+- Competició: ${competitionLine}
 - Temporada: ${season?.year || 'N/A'}
 - Club: ${round.club || 'N/A'}
 - Camp: ${round.course || 'N/A'}
@@ -160,20 +197,17 @@ ${notablePerformances ? `ACTUACIONS DESTACADES: ${notablePerformances}` : ''}
 Total participants: ${results.length}
 
 INSTRUCCIONS:
-- ABSOLUTAMENT CAP EMOJI. Ni un sol emoji en tot el text. Això és una nota de premsa professional per enviar a diaris i mitjans de comunicació.
-- To formal, sobri i periodístic. Sense exclamacions excessives.
-- Segueix l'estructura: introducció, després cada categoria amb descripció + top 3 (Hcp Baix i Alt) o guanyador/a (Femenina i Sènior)
-- Per a Hándicap Inferior i Hándicap Superior: inclou els 3 primers classificats amb comentaris personalitzats
-- Per a Femenina i Sènior: menciona NOMÉS el/la guanyador/a
-- OBLIGATORI: inclou SEMPRE les 4 categories si hi ha dades: Hándicap Inferior, Hándicap Superior, Femenina i Sènior
-- Separa cada secció/categoria amb una línia en blanc per facilitar la lectura
-- NO mencionIs resultats scratch ni cops totals
-- Si s'han proporcionat condicions meteorològiques, velocitat de greens o vent, integra-les amb naturalitat a la narració quan siguin rellevants (especialment si han estat dures: pluja, vent fort, greens molt ràpids, calor, etc.). Si són condicions normals, pots ometre-les o mencionar-les breument. No facis una secció separada de meteorologia.
-- Genera un títol atractiu
-- Un subtítol complementari
-- Un cos complet amb la narració per categories
-- 3-5 highlights (frases curtes de destacats)
-- Un extracte SEO de màxim 160 caràcters
+- ABSOLUTAMENT CAP EMOJI. Ni un sol emoji en tot el text.
+- Veu de marca GalaxyGolf: propera, directa, càlida, sense pomposa retòrica.
+- Inclou sempre el nom de la competició (${competitionLine}) a la introducció.
+- ${hasMajor ? "Subratlla que és una prova MAJOR del circuit." : ""}
+- ${hasFinal ? "Aquesta és la Gran Final / Playoff: destaca el desenllaç de temporada i els campions." : ""}
+- Estructura: introducció breu, després cada categoria amb top 3 (Hcp Baix i Alt) o guanyador/a (Femenina i Sènior).
+- OBLIGATORI: inclou SEMPRE les 4 categories si hi ha dades.
+- Separa cada secció amb una línia en blanc.
+- NO mencionis resultats scratch ni cops totals.
+- Si s'han proporcionat condicions del camp/meteorologia, integra-les amb naturalitat si són rellevants.
+- Genera un títol atractiu (sense emojis), un subtítol, un cos complet, 3-5 highlights curts i un extracte SEO ≤160 caràcters.
 
 Retorna EXCLUSIVAMENT un JSON vàlid amb aquest format:
 {

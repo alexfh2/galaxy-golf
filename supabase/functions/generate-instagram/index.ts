@@ -58,6 +58,29 @@ serve(async (req) => {
       .eq("id", round.season_id)
       .single();
 
+    // Competition context
+    const { data: roundComps } = await supabase
+      .from("round_competitions")
+      .select("stage, competition:competitions(slug, name)")
+      .eq("round_id", round_id);
+    const competitionsCtx = (roundComps ?? []).map((rc: any) => {
+      const slug = rc.competition?.slug ?? "";
+      const name = rc.competition?.name ?? slug;
+      const stage = rc.stage ?? "regular";
+      const stageLabel =
+        stage === "major" ? "Major" :
+        stage === "playoff" ? "Playoff" :
+        stage === "final" ? "Gran Final" : "Regular";
+      return { slug, name, stage, label: `${name} · ${stageLabel}` };
+    });
+    const competitionLine = competitionsCtx.length
+      ? competitionsCtx.map((c) => c.label).join(" / ")
+      : "GalaxyGolf";
+    const hasMajor = competitionsCtx.some((c) => c.stage === "major");
+    const hasFinal = competitionsCtx.some((c) => c.stage === "final" || c.stage === "playoff");
+    const isCircuito = competitionsCtx.some((c) => c.slug === "circuito-galaxygolf");
+    const isGalaxyCup = competitionsCtx.some((c) => c.slug === "galaxycup");
+
     // Categorize results
     const hcpLow = results
       .filter((r: any) => r.category === "hcp_low" || (r.handicap_at_round !== null && r.handicap_at_round <= 15.4))
@@ -88,50 +111,58 @@ serve(async (req) => {
 
     const langLabel = language === "ca" ? "català" : "castellà";
 
-    const prompt = `Genera un post d'Instagram en ${langLabel} per compartir els RESULTATS d'una jornada de golf del circuit Gastronòmic Golf Experience.
+    const competitionHashtags = [
+      "#GalaxyGolf",
+      isCircuito ? "#CircuitoGalaxyGolf" : "",
+      isGalaxyCup ? "#GalaxyCup" : "",
+      hasMajor ? "#Major" : "",
+      hasFinal ? "#GranFinal" : "",
+    ].filter(Boolean).join(" ");
 
-ESTRUCTURA DE REFERÈNCIA (adapta-la per a RESULTATS, no per a convocatòria):
-🏌️‍♂️✨ GASTRONÒMIC GOLF EXPERIENCE ✨🏌️‍♀️
-[Emoji + Nom del torneig/jornada]
+    const prompt = `Genera un post d'Instagram en ${langLabel} per compartir els RESULTATS d'una jornada de GalaxyGolf.
+
+CONTEXT DE MARCA — GalaxyGolf:
+- Compta per a: ${competitionLine}.
+- ${hasFinal ? "Prova de Playoff/Gran Final: tono èpic i celebratori." : hasMajor ? "Prova MAJOR del circuit: jornada destacada." : "Jornada regular del circuit."}
+- ${isCircuito ? "Circuito GalaxyGolf: els millors camps de Catalunya, regularitat i premi al final de temporada." : ""}
+- ${isGalaxyCup ? "GalaxyCup: format flexible cap de setmana, individual o parelles, ambient proper." : ""}
+- Veu: propera, càlida, celebrativa. Frases curtes. Emojis amb moderació.
+
+ESTRUCTURA DE REFERÈNCIA (adapta-la per a RESULTATS):
+🏌️‍♂️ ${competitionLine}
+[Nom de la jornada]
 📍 [Camp]
 📅 [Data]
 
-[1-2 frases resum engrescadores sobre com va anar la jornada]
+[1-2 frases breus i engrescadores sobre com va anar la jornada]
 
 🏆 RESULTATS
 
-🏌️ *Hándicap Inferior*
+*Hándicap Inferior (≤15,4)*
 🥇 [Nom] — [Punts] pts
 🥈 [Nom] — [Punts] pts
 🥉 [Nom] — [Punts] pts
 
-🏌️ *Hándicap Superior*
+*Hándicap Superior (≥15,5)*
 🥇 [Nom] — [Punts] pts
 🥈 [Nom] — [Punts] pts
 🥉 [Nom] — [Punts] pts
 
-👩 *Classificació Femenina*
+*Femenina*
 🥇 [Nom] — [Punts] pts
 
-👴 *Classificació Sènior (+65)*
+*Sènior (+65)*
 🥇 [Nom] — [Punts] pts
 
-[Si hi ha actuacions destacades com birdies, mencionar-les amb emojis]
+[Si hi ha actuacions destacades com birdies, menciona-les breument]
 
-[Frase de tancament engrescadora sobre la propera jornada o el circuit]
+[Frase de tancament: convida a la propera jornada o a inscriure's al circuit]
 
-🤝 Sponsors & Ordre de Mèrit
-@omodajaecoo.prunacargo
-@cavesbohigas
-@escampa_hotels
-@santipamiesjoiers
-@tancatdecodorniu
-@garmin_iberia
-@bonareaoficial_cat
-#GastronomicGolf #GolfiGastronomia #CircuitGastronomic
+${competitionHashtags}
 
 DADES DE LA JORNADA:
 - Jornada: ${round.name} (J${round.round_number})
+- Competició: ${competitionLine}
 - Temporada: ${season?.year || "N/A"}
 - Club: ${round.club || "N/A"}
 - Camp: ${round.course || "N/A"}
@@ -151,18 +182,16 @@ ${notablePerformances ? `ACTUACIONS DESTACADES: ${notablePerformances}` : ""}
 Total participants: ${results.length}
 
 INSTRUCCIONS:
-- Utilitza emojis de manera similar a l'estructura de referència
-- Per a Hándicap Inferior i Superior: inclou els 3 primers classificats (🥇🥈🥉)
-- Per a Femenina i Sènior: menciona NOMÉS el/la guanyador/a (🥇)
-- IMPORTANT: Deixa una línia en blanc entre cada secció/categoria per facilitar la lectura
-- Inclou SEMPRE els sponsors i hashtags al final
-- El to ha de ser celebratori i engrescador
-- Modalitat STABLEFORD, NO mencionIs resultats scratch
-
-- Si hi ha patrocinador, menciona'l
-- Retorna NOMÉS el text del post, sense JSON ni markdown
-
-Retorna el text complet del post d'Instagram.`;
+- Comença el post mencionant la competició (${competitionLine}).
+- Per a Hándicap Inferior i Superior: top 3 amb 🥇🥈🥉.
+- Per a Femenina i Sènior: només guanyador/a (🥇).
+- Línia en blanc entre seccions.
+- Inclou SEMPRE els hashtags GalaxyGolf al final: ${competitionHashtags}
+- Si hi ha patrocinador, menciona'l de forma natural.
+- Tono celebratori i proper, ${hasFinal ? "amb energia de cierre de temporada" : hasMajor ? "remarcant la importància del Major" : "convidant a la propera jornada"}.
+- Modalitat STABLEFORD. NO mencionis resultats scratch ni cops totals.
+- Emojis amb moderació, només els de l'estructura.
+- Retorna NOMÉS el text del post, sense JSON ni markdown.`;
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
