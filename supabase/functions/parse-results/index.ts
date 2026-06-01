@@ -87,6 +87,7 @@ interface GolfDirectoResult {
   course_par?: number[];
   course_handicap?: number[];
   course_handicap_women?: number[];
+  game_date?: string | null;
 }
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
