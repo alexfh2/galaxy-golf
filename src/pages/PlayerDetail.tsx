@@ -39,7 +39,7 @@ const PlayerDetail = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('results')
-        .select('*, rounds!inner(name, date, club, round_number, status, is_master, course_par, course_handicap, course_handicap_women)')
+        .select('*, rounds!inner(name, date, club, round_number, status, course_par, course_handicap, course_handicap_women)')
         .eq('player_id', id!)
         .eq('rounds.status', 'published')
         .order('rounds(round_number)');
@@ -106,7 +106,6 @@ const PlayerDetail = () => {
                       <tr key={r.id} className="border-b border-border/20 last:border-0 cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => scrollToAndOpen(r.id)}>
                         <td className="py-2 font-medium font-mono">
                           J{round?.round_number}
-                          {round?.is_master && <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 bg-accent/20 text-accent border-0">M</Badge>}
                         </td>
                         <td className="py-2 px-2 text-muted-foreground">{round?.club || round?.name || '—'}</td>
                         <td className="py-2 px-2 text-muted-foreground">
@@ -281,7 +280,7 @@ const PlayerDetail = () => {
                 <div className="flex items-center gap-2 text-left">
                   <Badge variant="outline" className="text-xs font-mono shrink-0">J{round?.round_number}</Badge>
                   <span className="font-semibold">{round?.name}</span>
-                  {round?.is_master && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-accent/20 text-accent border-0">MASTER</Badge>}
+                  
                   <span className="text-sm text-muted-foreground ml-2">
                     {round?.date ? format(new Date(round.date), 'dd MMM yyyy', { locale }) : ''}
                   </span>

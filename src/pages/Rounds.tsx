@@ -212,11 +212,11 @@ const Rounds = () => {
     if (!results) return {};
     const hcpLow = results.filter(r => {
       const hcp = categoryHcpMap.get(r.player_id) ?? r.handicap_at_round ?? ((r as any).players_public)?.current_handicap;
-      return hcp != null && hcp <= 15.0;
+      return hcp != null && hcp <= 15.4;
     }).sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const hcpHigh = results.filter(r => {
       const hcp = categoryHcpMap.get(r.player_id) ?? r.handicap_at_round ?? ((r as any).players_public)?.current_handicap;
-      return hcp != null && hcp > 15.0;
+      return hcp != null && hcp >= 15.5;
     }).sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const female = results.filter(r => ((r as any).players_public)?.gender === 'F')
       .sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
@@ -232,8 +232,8 @@ const Rounds = () => {
   const categorized = categorizeResults(roundResults);
 
   const roundCategories = [
-    { key: 'hcpLow', label: 'HCP Bajo (≤15)' },
-    { key: 'hcpHigh', label: 'HCP Alto (>15)' },
+    { key: 'hcpLow', label: 'Hándicap Inferior (≤15,4)' },
+    { key: 'hcpHigh', label: 'Hándicap Superior (≥15,5)' },
     { key: 'female', label: 'Femenino' },
     { key: 'senior', label: 'Sénior' },
     { key: 'scratch', label: 'Scratch' },
