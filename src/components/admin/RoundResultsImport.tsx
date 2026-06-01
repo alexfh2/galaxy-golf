@@ -440,7 +440,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       }
 
       const groups = computeDuplicateGroups(matched);
-      const autoCount = groups.filter(g => g.autoResolved).length;
+      const conflictCountLog = groups.filter(g => g.autoResolved).length; void conflictCountLog;
       const conflictCount = groups.filter(g => g.needsManual).length;
       const totalResults = responses.reduce((sum, r) => sum + (r.count || 0), 0);
       // Detailed auto-resolution summary (date vs URL order)
