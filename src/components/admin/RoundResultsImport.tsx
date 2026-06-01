@@ -553,7 +553,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           if (Object.keys(updates).length > 0) {
             await supabase
               .from('players')
-              .update(updates)
+              .update(updates as never)
               .eq('id', r._matched_player_id);
           }
         }
