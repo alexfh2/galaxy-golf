@@ -297,6 +297,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           scores: r.scores,
           source_url: `excel:${file.name}`,
           play_date: playDate,
+          source_category: r.category != null ? `Cat ${r.category}` : null,
           _uid: uid(),
           _selected: true,
           _is_np: false,
