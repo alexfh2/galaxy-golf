@@ -18,6 +18,7 @@ interface ParsedResult {
   scores: number[];
   source_url: string;
   play_date?: string | null;
+  category?: string | null; // Original source category (GolfDirecto/Teeone), kept verbatim for audit.
   _is_senior?: boolean;
 }
 
