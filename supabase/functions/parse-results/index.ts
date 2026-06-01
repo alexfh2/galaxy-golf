@@ -37,11 +37,15 @@ serve(async (req) => {
     const detectedSource = detectSource(url);
     let results: ParsedResult[];
     let categories: { id: string; name: string; count: number }[] | undefined;
+    let course_par: number[] | undefined;
+    let course_handicap: number[] | undefined;
 
     if (detectedSource === "golfdirecto") {
       const gd = await parseGolfDirecto(url, format);
       results = gd.results;
       categories = gd.categories;
+      course_par = gd.course_par;
+      course_handicap = gd.course_handicap;
     } else if (detectedSource === "teeone") {
       results = await parseTeeoneViaAPI(url, format);
     } else {
@@ -52,7 +56,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories }),
+      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -75,6 +79,8 @@ function detectSource(url: string): string {
 interface GolfDirectoResult {
   results: ParsedResult[];
   categories: { id: string; name: string; count: number }[];
+  course_par?: number[];
+  course_handicap?: number[];
 }
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
@@ -194,6 +200,8 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   }
 
   // Fetch hole-by-hole scorecards in parallel (batches of 10)
+  let coursePar: number[] | undefined;
+  let courseHandicap: number[] | undefined;
   const batchSize = 10;
   for (let i = 0; i < entryDataList.length; i += batchSize) {
     const batch = entryDataList.slice(i, i + batchSize);
@@ -224,6 +232,34 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
             ed.result.scratch_score = null;
           }
         }
+
+        // Extract course par + stroke-index (handicap) per hole — try common field names
+        if (!coursePar || !courseHandicap) {
+          const parCandidates = ["par", "Par", "PAR"];
+          const hcpCandidates = ["hcp", "handicap", "stroke", "strokeIndex", "si"];
+          const tryRead = (prefixList: string[]): number[] | null => {
+            for (const prefix of prefixList) {
+              const arr: number[] = [];
+              let ok = true;
+              for (let h = 1; h <= 18; h++) {
+                const v = score[`${prefix}${h}`];
+                const n = v != null ? Number(v) : NaN;
+                if (!Number.isFinite(n) || n <= 0) { ok = false; break; }
+                arr.push(n);
+              }
+              if (ok && arr.length === 18) return arr;
+            }
+            return null;
+          };
+          if (!coursePar) {
+            const p = tryRead(parCandidates);
+            if (p) coursePar = p;
+          }
+          if (!courseHandicap) {
+            const h = tryRead(hcpCandidates);
+            if (h) courseHandicap = h;
+          }
+        }
       } catch {
         // silently skip scorecard errors
       }
@@ -234,7 +270,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   const results = entryDataList.map((ed) => ed.result);
   results.sort((a, b) => a.position - b.position);
 
-  return { results, categories: allCategories };
+  return { results, categories: allCategories, course_par: coursePar, course_handicap: courseHandicap };
 }
 
 // ─── TEEONE ────────────────────────────────────────────────────────────────────
