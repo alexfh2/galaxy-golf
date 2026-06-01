@@ -410,12 +410,13 @@ export default function Rankings() {
                               {i + 1}
                             </TableCell>
                             <TableCell>
-                              <Link
-                                to={`/jugadors/${r.player_id}`}
-                                className="font-medium transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPlayerId(r.player_id)}
+                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
                               >
                                 {r.name}
-                              </Link>
+                              </button>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {getGalaxyGolfCategoryLabel(r.category)}
