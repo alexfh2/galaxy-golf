@@ -253,10 +253,41 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       setSource(detectedSource);
       await matchPlayers(parsed);
 
+      // Auto-import course par + handicap from GolfDirecto scorecards if missing
+      let courseDataMsg = '';
+      if (detectedSource === 'golfdirecto') {
+        const roundPar = (round as any).course_par;
+        const roundHcp = (round as any).course_handicap;
+        const hasPar = Array.isArray(roundPar) && roundPar.length === 18;
+        const hasHcp = Array.isArray(roundHcp) && roundHcp.length === 18;
+        const updates: Record<string, unknown> = {};
+        for (const resp of responses) {
+          if (!hasPar && !updates.course_par && Array.isArray(resp.course_par) && resp.course_par.length === 18) {
+            updates.course_par = resp.course_par;
+          }
+          if (!hasHcp && !updates.course_handicap && Array.isArray(resp.course_handicap) && resp.course_handicap.length === 18) {
+            updates.course_handicap = resp.course_handicap;
+          }
+        }
+        if (Object.keys(updates).length > 0) {
+          const { error: updErr } = await supabase
+            .from('rounds')
+            .update(updates as any)
+            .eq('id', round.id);
+          if (!updErr) {
+            const parts: string[] = [];
+            if (updates.course_par) parts.push('par');
+            if (updates.course_handicap) parts.push('handicap');
+            courseDataMsg = ` Dades del camp afegides (${parts.join(' + ')}).`;
+            queryClient.invalidateQueries({ queryKey: ['admin-rounds'] });
+          }
+        }
+      }
+
       const totalResults = responses.reduce((sum, r) => sum + (r.count || 0), 0);
       toast({
         title: `${parsed.length} resultats únics (${totalResults} total de ${validUrls.length} URL${validUrls.length > 1 ? 's' : ''})`,
-        description: `Font: ${detectedSource}. Revisa abans de guardar.`,
+        description: `Font: ${detectedSource}.${courseDataMsg} Revisa abans de guardar.`,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
