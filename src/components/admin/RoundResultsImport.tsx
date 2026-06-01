@@ -31,6 +31,8 @@ interface ParsedResult {
   scores: (number | null)[];
   source_url: string;
   play_date: string | null;
+  /** Original category label from the source (GolfDirecto category name, Excel "Cat" column, etc.). */
+  source_category: string | null;
   _uid: string;
   _selected: boolean;
   _conflict_group?: string; // dup key if this row is part of an unresolved conflict
