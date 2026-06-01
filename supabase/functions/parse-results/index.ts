@@ -39,6 +39,7 @@ serve(async (req) => {
     let categories: { id: string; name: string; count: number }[] | undefined;
     let course_par: number[] | undefined;
     let course_handicap: number[] | undefined;
+    let course_handicap_women: number[] | undefined;
 
     if (detectedSource === "golfdirecto") {
       const gd = await parseGolfDirecto(url, format);
@@ -46,6 +47,7 @@ serve(async (req) => {
       categories = gd.categories;
       course_par = gd.course_par;
       course_handicap = gd.course_handicap;
+      course_handicap_women = gd.course_handicap_women;
     } else if (detectedSource === "teeone") {
       results = await parseTeeoneViaAPI(url, format);
     } else {
@@ -56,7 +58,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap }),
+      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap, course_handicap_women }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
