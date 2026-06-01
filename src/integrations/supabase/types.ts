@@ -269,6 +269,8 @@ export type Database = {
           import_source: string | null
           is_female_prize: boolean
           is_senior_prize: boolean
+          official_category: string | null
+          official_position: number | null
           play_date: string | null
           player_id: string
           round_id: string
@@ -287,6 +289,8 @@ export type Database = {
           import_source?: string | null
           is_female_prize?: boolean
           is_senior_prize?: boolean
+          official_category?: string | null
+          official_position?: number | null
           play_date?: string | null
           player_id: string
           round_id: string
@@ -305,6 +309,8 @@ export type Database = {
           import_source?: string | null
           is_female_prize?: boolean
           is_senior_prize?: boolean
+          official_category?: string | null
+          official_position?: number | null
           play_date?: string | null
           player_id?: string
           round_id?: string

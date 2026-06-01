@@ -31,6 +31,8 @@ interface ParsedResult {
   scores: (number | null)[];
   source_url: string;
   play_date: string | null;
+  /** Original category label from the source (GolfDirecto category name, Excel "Cat" column, etc.). */
+  source_category: string | null;
   _uid: string;
   _selected: boolean;
   _conflict_group?: string; // dup key if this row is part of an unresolved conflict
@@ -295,6 +297,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           scores: r.scores,
           source_url: `excel:${file.name}`,
           play_date: playDate,
+          source_category: r.category != null ? `Cat ${r.category}` : null,
           _uid: uid(),
           _selected: true,
           _is_np: false,
@@ -352,10 +355,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         detectedSource = detectedSource || resp.source;
         // Per-URL play_date precedence: admin-entered date > game_date from API > result.play_date
         const urlDate: string | null = resp.urlPlayDate || resp.game_date || null;
-        for (const r of resp.results as ParsedResult[]) {
+        for (const r of resp.results as (ParsedResult & { category?: string | null })[]) {
           allParsed.push({
             ...r,
             play_date: urlDate || r.play_date || null,
+            source_category: r.source_category ?? r.category ?? null,
             age: null,
             scores: r.scores ?? [],
             _uid: uid(),
@@ -526,6 +530,10 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         play_date: r.play_date,
         extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
         import_source: importSource || null,
+        // Audit-only: official position and category as reported by the source (GolfDirecto/Excel).
+        // Never used as a primary ranking source — GalaxyGolf categories are computed independently.
+        official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
+        official_category: r.source_category ?? null,
         scorecard: r.scores.length > 0 ? { scores: r.scores, handicap_play: r.handicap_play } : null,
       }));
 

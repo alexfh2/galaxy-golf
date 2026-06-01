@@ -30,6 +30,10 @@ export type PublicResult = {
   play_date: string | null;
   source_url: string | null;
   extra_play_count?: number | null;
+  /** Audit-only: position reported by the source (GolfDirecto/Excel). Not used as primary ranking. */
+  official_position?: number | null;
+  /** Audit-only: original category label from the source (e.g. "Cat 1", GD category name). */
+  official_category?: string | null;
   created_at: string;
   updated_at: string;
   players_public: PublicPlayer | null;

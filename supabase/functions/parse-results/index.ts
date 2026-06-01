@@ -18,6 +18,7 @@ interface ParsedResult {
   scores: number[];
   source_url: string;
   play_date?: string | null;
+  category?: string | null; // Original source category (GolfDirecto/Teeone), kept verbatim for audit.
   _is_senior?: boolean;
 }
 
@@ -210,6 +211,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
         scores: [],
         source_url: url,
         play_date: gameDate,
+        category: selectedCat?.name ?? null,
         _is_senior: isSenior,
       },
     });
