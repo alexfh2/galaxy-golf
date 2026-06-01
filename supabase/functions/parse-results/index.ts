@@ -17,6 +17,7 @@ interface ParsedResult {
   scratch_score: number | null;
   scores: number[];
   source_url: string;
+  play_date?: string | null;
   _is_senior?: boolean;
 }
 
@@ -40,6 +41,7 @@ serve(async (req) => {
     let course_par: number[] | undefined;
     let course_handicap: number[] | undefined;
     let course_handicap_women: number[] | undefined;
+    let game_date: string | null = null;
 
     if (detectedSource === "golfdirecto") {
       const gd = await parseGolfDirecto(url, format);
@@ -48,6 +50,7 @@ serve(async (req) => {
       course_par = gd.course_par;
       course_handicap = gd.course_handicap;
       course_handicap_women = gd.course_handicap_women;
+      game_date = gd.game_date ?? null;
     } else if (detectedSource === "teeone") {
       results = await parseTeeoneViaAPI(url, format);
     } else {
@@ -58,7 +61,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap, course_handicap_women }),
+      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap, course_handicap_women, game_date }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -84,6 +87,7 @@ interface GolfDirectoResult {
   course_par?: number[];
   course_handicap?: number[];
   course_handicap_women?: number[];
+  game_date?: string | null;
 }
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
@@ -102,6 +106,14 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   if (!gameRes.ok) throw new Error(`Error obtenint info del torneig GolfDirecto: ${gameRes.status}`);
   const gameData = await gameRes.json();
   const game = gameData.data || gameData;
+
+  // Extract game date (YYYY-MM-DD) as best-effort play_date fallback
+  const rawDate = game.startDate || game.date || game.endDate || null;
+  let gameDate: string | null = null;
+  if (rawDate) {
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) gameDate = d.toISOString().slice(0, 10);
+  }
 
   const allCategories: { id: string; name: string; count: number }[] = (game.categories || []).map(
     (c: { _id: string; name: string; __playersCount: number }) => ({
@@ -197,6 +209,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
         scratch_score: scratchScore,
         scores: [],
         source_url: url,
+        play_date: gameDate,
         _is_senior: isSenior,
       },
     });
@@ -281,6 +294,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     course_par: coursePar,
     course_handicap: courseHandicap,
     course_handicap_women: courseHandicapWomen,
+    game_date: gameDate,
   };
 }
 

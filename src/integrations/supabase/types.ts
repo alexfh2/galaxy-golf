@@ -263,8 +263,10 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["player_category"] | null
           created_at: string
+          extra_play_count: number
           handicap_at_round: number | null
           id: string
+          import_source: string | null
           is_female_prize: boolean
           is_senior_prize: boolean
           play_date: string | null
@@ -279,8 +281,10 @@ export type Database = {
         Insert: {
           category?: Database["public"]["Enums"]["player_category"] | null
           created_at?: string
+          extra_play_count?: number
           handicap_at_round?: number | null
           id?: string
+          import_source?: string | null
           is_female_prize?: boolean
           is_senior_prize?: boolean
           play_date?: string | null
@@ -295,8 +299,10 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["player_category"] | null
           created_at?: string
+          extra_play_count?: number
           handicap_at_round?: number | null
           id?: string
+          import_source?: string | null
           is_female_prize?: boolean
           is_senior_prize?: boolean
           play_date?: string | null
