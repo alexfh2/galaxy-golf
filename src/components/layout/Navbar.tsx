@@ -4,7 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import LanguageSwitcher from './LanguageSwitcher';
-import ThemeToggle from './ThemeToggle';
+// ThemeToggle removed — app locked to dark mode
 
 const navItems = [
   { label: 'Rankings', path: '/ranquings' },
@@ -65,7 +65,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
-          <ThemeToggle isHome={isHome} />
+          {/* ThemeToggle hidden: app locked to dark mode */}
           <Link
             to="/admin"
             className="hidden sm:inline-flex items-center px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] border border-[hsl(var(--gg-copper))]/60 text-[hsl(var(--gg-copper))] hover:bg-[hsl(var(--gg-copper))]/10 transition-colors"
