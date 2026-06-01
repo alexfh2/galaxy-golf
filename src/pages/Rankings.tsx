@@ -211,9 +211,29 @@ function computeGalaxyCup(
     }
 
     for (const cat of ['hcp_low', 'hcp_high'] as Category[]) {
-      const sorted = byCat[cat].sort(
-        (a, b) => Number(b.stableford_points ?? 0) - Number(a.stableford_points ?? 0),
-      );
+      // Primary sort: Stableford desc within the GalaxyGolf category.
+      // Tiebreak (prudent): only use official_position from the source if ALL tied players
+      // share the same official_category — otherwise GD/Excel positions came from a different
+      // category split and are not comparable. official_* fields are audit data, never used
+      // as a direct ranking source.
+      const sorted = byCat[cat].sort((a, b) => {
+        const sa = Number(a.stableford_points ?? 0);
+        const sb = Number(b.stableford_points ?? 0);
+        if (sb !== sa) return sb - sa;
+        const ocA = a.official_category ?? null;
+        const ocB = b.official_category ?? null;
+        const opA = a.official_position ?? null;
+        const opB = b.official_position ?? null;
+        if (ocA && ocB && ocA === ocB && opA != null && opB != null) {
+          return opA - opB;
+        }
+        const hA = Number(a.handicap_at_round ?? 999);
+        const hB = Number(b.handicap_at_round ?? 999);
+        if (hA !== hB) return hA - hB;
+        const nA = a.players_public?.name ?? '';
+        const nB = b.players_public?.name ?? '';
+        return nA.localeCompare(nB, 'es');
+      });
       sorted.forEach((r, idx) => {
         const position = idx + 1;
         const points = position <= 20 ? table[position - 1] : 0;
