@@ -58,6 +58,27 @@ serve(async (req) => {
       .eq("id", round.season_id)
       .single();
 
+    // Competition context
+    const { data: roundComps } = await supabase
+      .from("round_competitions")
+      .select("stage, competition:competitions(slug, name)")
+      .eq("round_id", round_id);
+    const competitionsCtx = (roundComps ?? []).map((rc: any) => {
+      const slug = rc.competition?.slug ?? "";
+      const name = rc.competition?.name ?? slug;
+      const stage = rc.stage ?? "regular";
+      const stageLabel =
+        stage === "major" ? "Major" :
+        stage === "playoff" ? "Playoff" :
+        stage === "final" ? "Gran Final" : "Regular";
+      return { slug, name, stage, label: `${name} · ${stageLabel}` };
+    });
+    const competitionLine = competitionsCtx.length
+      ? competitionsCtx.map((c) => c.label).join(" / ")
+      : "GalaxyGolf";
+    const hasMajor = competitionsCtx.some((c) => c.stage === "major");
+    const hasFinal = competitionsCtx.some((c) => c.stage === "final" || c.stage === "playoff");
+
     // Categorize results
     const hcpLow = results
       .filter((r: any) => r.category === "hcp_low" || (r.handicap_at_round !== null && r.handicap_at_round <= 15.4))
