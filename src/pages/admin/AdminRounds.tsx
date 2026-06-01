@@ -87,6 +87,7 @@ const AdminRounds = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedSeason, setSelectedSeason] = useState<string>('');
+  const [competitionFilter, setCompetitionFilter] = useState<string>('all');
 
   // Import state
   const [importUrl, setImportUrl] = useState('https://galaxygolf.net');
