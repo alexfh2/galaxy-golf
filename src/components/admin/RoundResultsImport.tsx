@@ -394,7 +394,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         if (Object.keys(updates).length > 0) {
           const { error: updErr } = await supabase
             .from('rounds')
-            .update(updates as Record<string, unknown>)
+            .update(updates as never)
             .eq('id', round.id);
           if (!updErr) {
             const parts: string[] = [];
