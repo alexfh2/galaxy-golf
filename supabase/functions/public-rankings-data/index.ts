@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
 
     if (resultsError) throw resultsError;
     if (playersError) throw playersError;
+    if (roundCompsError) throw roundCompsError;
 
     const results: RankingResultRow[] = (resultsData || []).map((row: any) => ({
       id: row.id,
@@ -123,6 +124,7 @@ Deno.serve(async (req) => {
       scorecard: row.scorecard,
       play_date: row.play_date,
       source_url: row.source_url,
+      extra_play_count: row.extra_play_count ?? 0,
       created_at: row.created_at,
       updated_at: row.updated_at,
       rounds: row.rounds
@@ -169,7 +171,23 @@ Deno.serve(async (req) => {
       updated_at: player.updated_at,
     }));
 
-    return new Response(JSON.stringify({ players, results }), {
+    const round_competitions = (roundCompsData || []).map((row: any) => ({
+      round_id: row.round_id,
+      competition_id: row.competition_id,
+      stage: row.stage,
+      counts_for_ranking: row.counts_for_ranking,
+      competition_round_number: row.competition_round_number,
+      competition: row.competitions
+        ? {
+            id: row.competitions.id,
+            slug: row.competitions.slug,
+            name: row.competitions.name,
+            competition_type: row.competitions.competition_type,
+          }
+        : null,
+    }));
+
+    return new Response(JSON.stringify({ players, results, round_competitions }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
