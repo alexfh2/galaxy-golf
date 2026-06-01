@@ -70,7 +70,11 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    const [{ data: resultsData, error: resultsError }, { data: playersData, error: playersError }] = await Promise.all([
+    const [
+      { data: resultsData, error: resultsError },
+      { data: playersData, error: playersError },
+      { data: roundCompsData, error: roundCompsError },
+    ] = await Promise.all([
       adminClient
       .from("results")
       .select(`
@@ -86,6 +90,7 @@ Deno.serve(async (req) => {
         scorecard,
         play_date,
         source_url,
+        extra_play_count,
         created_at,
         updated_at,
         rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
@@ -97,6 +102,9 @@ Deno.serve(async (req) => {
         .from("players")
         .select("id, license, name, club, current_handicap, initial_handicap, gender, is_senior, photo_url, created_at, updated_at")
         .order("name"),
+      adminClient
+        .from("round_competitions")
+        .select("round_id, competition_id, stage, counts_for_ranking, competition_round_number, competitions!inner(id, slug, name, competition_type)"),
     ]);
 
     if (resultsError) throw resultsError;
