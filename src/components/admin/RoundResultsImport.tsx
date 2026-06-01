@@ -355,10 +355,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         detectedSource = detectedSource || resp.source;
         // Per-URL play_date precedence: admin-entered date > game_date from API > result.play_date
         const urlDate: string | null = resp.urlPlayDate || resp.game_date || null;
-        for (const r of resp.results as ParsedResult[]) {
+        for (const r of resp.results as (ParsedResult & { category?: string | null })[]) {
           allParsed.push({
             ...r,
             play_date: urlDate || r.play_date || null,
+            source_category: r.source_category ?? r.category ?? null,
             age: null,
             scores: r.scores ?? [],
             _uid: uid(),
