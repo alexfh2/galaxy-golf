@@ -209,6 +209,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
         scratch_score: scratchScore,
         scores: [],
         source_url: url,
+        play_date: gameDate,
         _is_senior: isSenior,
       },
     });
