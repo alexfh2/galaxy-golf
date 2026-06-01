@@ -94,28 +94,36 @@ serve(async (req) => {
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
 
     const langLabel = language === "ca" ? "català" : "castellà";
-    const publishedUrl = "https://verdant-stats.lovable.app/rankings";
+    const publishedUrl = "https://galaxygolf.lovable.app/ranquings";
 
-    const prompt = `Genera un missatge de WhatsApp en ${langLabel} per compartir els RESULTATS d'una jornada de golf del circuit Gastronòmic Golf Experience.
+    const prompt = `Genera un missatge de WhatsApp en ${langLabel} per compartir els RESULTATS d'una jornada de GalaxyGolf.
 
-IMPORTANT: La competició és en modalitat STABLEFORD. Tots els resultats són en PUNTS STABLEFORD, NO en cops. No mencionIs "cops" ni "scratch".
+CONTEXT DE MARCA — GalaxyGolf:
+- Aquesta jornada compta per a: ${competitionLine}.
+- ${hasFinal ? "És una prova de Playoff/Gran Final: tono decisiu i celebratori." : hasMajor ? "És una prova MAJOR: jornada destacada del circuit." : "Jornada regular del circuit."}
+- Veu de marca: propera, càlida, directa. Recorda subtilment que poden seguir el circuit a la web.
+- Modalitat STABLEFORD. NO mencionis "cops" ni "scratch".
 
-TEXT DE REFERÈNCIA (adapta l'estil però amb dades Stableford):
+TEXT DE REFERÈNCIA (adapta amb dades reals i estil GalaxyGolf):
 ---
-Resultats ${round.name} — Temporada ${season?.year || "N/A"}
+*Resultats ${round.name}* — ${competitionLine}
 
-RESULTATS DE LA ${round.name} DEL GASTRONÒMIC GOLF EXPERIENCE ${season?.year || ""}
-
-El ${round.club || "club"} ha acollit la ${round.name} del Gastronòmic Golf Experience, disputada el ${round.date}, amb la participació de ${results.length} jugadors.
+El ${round.club || "club"} ha acollit la ${round.name}, disputada el ${round.date} amb ${results.length} jugadors.
 ${round.sponsor ? `Jornada patrocinada per ${round.sponsor}.` : ""}
 
-En la classificació Hándicap Inferior (≤15,4), [NOM] s'ha imposat amb [X] punts Stableford, seguit de [NOM] ([X]) i [NOM] ([X]).
+*Hándicap Inferior (≤15,4)*
+1. [NOM] — [X] pts
+2. [NOM] — [X] pts
+3. [NOM] — [X] pts
 
-En la classificació Hándicap Superior (≥15,5), [NOM] s'ha imposat amb [X] punts, seguit de [NOM] ([X]) i [NOM] ([X]).
-${females.length > 0 ? `\nEn la classificació Femenina, [NOM] s'ha imposat amb [X] punts.` : ""}
-${seniors.length > 0 ? `\nEn la classificació Sènior (+65), [NOM] s'ha imposat amb [X] punts.` : ""}
+*Hándicap Superior (≥15,5)*
+1. [NOM] — [X] pts
+2. [NOM] — [X] pts
+3. [NOM] — [X] pts
+${females.length > 0 ? `\n*Femenina*\n1. [NOM] — [X] pts` : ""}
+${seniors.length > 0 ? `\n*Sènior (+65)*\n1. [NOM] — [X] pts` : ""}
 
-Les classificacions completes i estadístiques detallades es poden consultar a: ${publishedUrl}
+Classificacions completes: ${publishedUrl}
 ---
 
 DADES REALS:
@@ -131,15 +139,17 @@ ${seniors.length > 0 ? `CLASSIFICACIÓ SÈNIOR (+65) — Guanyador:\n1. ${senior
 Total participants: ${results.length}
 
 INSTRUCCIONS:
-- Segueix EXACTAMENT l'estructura del text de referència: títol, introducció, resultats per categories, link final
-- Per a Hándicap Inferior i Superior: inclou els 3 primers classificats
-- Per a Femenina i Sènior: menciona NOMÉS el/la guanyador/a
-- IMPORTANT: Deixa una línia en blanc entre cada secció/categoria per facilitar la lectura
-- Utilitza format *negretes* de WhatsApp per al títol i noms de categories
-- To formal i informatiu, sense emojis excessius (només algun puntual si escau)
-- SEMPRE punts Stableford, MAI cops ni scratch
-- Inclou el link a les classificacions al final: ${publishedUrl}
-- Retorna NOMÉS el text del missatge, sense JSON ni markdown`;
+- Segueix l'estructura del text de referència adaptada a GalaxyGolf.
+- Comença mencionant la competició: ${competitionLine}.
+- ${hasMajor ? "Subratlla que és una prova MAJOR." : ""}
+- ${hasFinal ? "Aquesta és la Gran Final/Playoff: tono decisiu." : ""}
+- Per a Hándicap Inferior i Superior: top 3. Per a Femenina i Sènior: només guanyador/a.
+- Línia en blanc entre seccions.
+- Format *negretes* de WhatsApp per al títol i noms de categories.
+- To proper i clar, sense emojis excessius (cap o molt pocs).
+- SEMPRE punts Stableford, MAI cops ni scratch.
+- Inclou el link al final: ${publishedUrl}
+- Retorna NOMÉS el text del missatge, sense JSON ni markdown.`;
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
