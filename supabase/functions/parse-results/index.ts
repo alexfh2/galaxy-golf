@@ -107,6 +107,14 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   const gameData = await gameRes.json();
   const game = gameData.data || gameData;
 
+  // Extract game date (YYYY-MM-DD) as best-effort play_date fallback
+  const rawDate = game.startDate || game.date || game.endDate || null;
+  let gameDate: string | null = null;
+  if (rawDate) {
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) gameDate = d.toISOString().slice(0, 10);
+  }
+
   const allCategories: { id: string; name: string; count: number }[] = (game.categories || []).map(
     (c: { _id: string; name: string; __playersCount: number }) => ({
       id: c._id,
