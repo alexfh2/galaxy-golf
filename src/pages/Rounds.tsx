@@ -63,7 +63,7 @@ const Rounds = () => {
 
   const filterOptions: { value: CompetitionFilter; label: string }[] = [
     { value: 'all', label: 'Todas las pruebas' },
-    { value: 'circuito-galaxygolf', label: 'Circuito GalaxyGolf' },
+    { value: 'circuito-galaxygolf', label: 'Circuito GALAXY GOLF' },
     { value: 'galaxycup', label: 'GalaxyCup' },
   ];
 
@@ -348,7 +348,7 @@ const Rounds = () => {
                 Calendario GALAXY GOLF
               </h1>
               <p className="text-sm lg:text-base text-[hsl(var(--gg-ivory))]/70 leading-relaxed max-w-xl">
-                Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
+                Consulta todas las pruebas del Circuito GALAXY GOLF y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
               </p>
             </div>
             <button

@@ -33,7 +33,7 @@ export default function Players() {
           </h1>
           <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">
             Consulta el historial y las estadísticas de los participantes del Circuito
-            GalaxyGolf y la GalaxyCup.
+            GALAXY GOLF y la GalaxyCup.
           </p>
         </div>
       </section>
@@ -74,7 +74,7 @@ export default function Players() {
                     TEMPORADA ANUAL
                   </p>
                   <h3 className="mt-2 font-display text-3xl text-foreground">
-                    Circuito GalaxyGolf
+                    Circuito GALAXY GOLF
                   </h3>
                 </div>
                 <CalendarDays className="h-6 w-6 text-[hsl(var(--gg-green))]" />
