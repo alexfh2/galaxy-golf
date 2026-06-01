@@ -443,9 +443,23 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const autoCount = groups.filter(g => g.autoResolved).length;
       const conflictCount = groups.filter(g => g.needsManual).length;
       const totalResults = responses.reduce((sum, r) => sum + (r.count || 0), 0);
+      // Detailed auto-resolution summary (date vs URL order)
+      const autoGroups = groups.filter(g => g.autoResolved);
+      let autoMsg = '';
+      if (autoGroups.length > 0) {
+        const byDate = autoGroups.filter(g => {
+          const sorted = [...g.rows].sort(compareFirstResult);
+          return sorted[0].play_date !== sorted[1].play_date;
+        }).length;
+        const byUrl = autoGroups.length - byDate;
+        const parts: string[] = [];
+        if (byDate > 0) parts.push(`${byDate} per data més antiga`);
+        if (byUrl > 0) parts.push(`${byUrl} per ordre d'URL (#1 abans que #2…)`);
+        autoMsg = ` ${autoGroups.length} duplicat${autoGroups.length > 1 ? 's' : ''} resolt${autoGroups.length > 1 ? 's' : ''} automàticament (${parts.join(', ')}).`;
+      }
       toast({
         title: `${matched.length} resultats llegits (${totalResults} brut, ${validUrls.length} URL${validUrls.length > 1 ? 's' : ''})`,
-        description: `Font: ${detectedSource}.${courseDataMsg}${autoCount > 0 ? ` ${autoCount} duplicats resolts per data.` : ''}${conflictCount > 0 ? ` ⚠ ${conflictCount} conflictes pendents.` : ''}`,
+        description: `Font: ${detectedSource}.${courseDataMsg}${autoMsg}${conflictCount > 0 ? ` ⚠ ${conflictCount} conflicte${conflictCount > 1 ? 's' : ''} pendent${conflictCount > 1 ? 's' : ''} de resolució manual.` : ''}`,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
