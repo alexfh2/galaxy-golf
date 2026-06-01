@@ -530,6 +530,10 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         play_date: r.play_date,
         extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
         import_source: importSource || null,
+        // Audit-only: official position and category as reported by the source (GolfDirecto/Excel).
+        // Never used as a primary ranking source — GalaxyGolf categories are computed independently.
+        official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
+        official_category: r.source_category ?? null,
         scorecard: r.scores.length > 0 ? { scores: r.scores, handicap_play: r.handicap_play } : null,
       }));
 
