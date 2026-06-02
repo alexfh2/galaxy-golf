@@ -387,7 +387,7 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
   );
 }
 
-type RoundCol = { round_id: string; round_number: number | null; label: string; full: string; isMajor?: boolean };
+type RoundCol = { round_id: string; label: string; sort: number; full: string; isMajor?: boolean };
 
 function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
   const map = new Map<string, RoundCol>();
@@ -396,17 +396,15 @@ function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
       if (!map.has(h.round_id)) {
         map.set(h.round_id, {
           round_id: h.round_id,
-          round_number: h.round_number,
-          label: h.label,
+          label: h.colLabel,
+          sort: h.colSort,
           full: h.fullLabel,
           isMajor: h.isMajor,
         });
       }
     }
   }
-  return [...map.values()].sort(
-    (a, b) => (a.round_number ?? 9999) - (b.round_number ?? 9999),
-  );
+  return [...map.values()].sort((a, b) => a.sort - b.sort);
 }
 
 function CategoryTabs({
