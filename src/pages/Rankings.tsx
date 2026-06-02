@@ -871,7 +871,8 @@ export function GalaxyCupRankingPage() {
     return { totalPruebas: ids.size, totalMajors: majors.size };
   }, [rows]);
   const categoryLabel = getGalaxyGolfCategoryLabel(category);
-  const leader = filtered[0] ?? null;
+  const leaderLow = rows.find((r) => r.category === 'hcp_low') ?? null;
+  const leaderHigh = rows.find((r) => r.category === 'hcp_high') ?? null;
 
   return (
     <>
@@ -889,11 +890,22 @@ export function GalaxyCupRankingPage() {
         eyebrowAccent="copper"
         eyebrowSize="lg"
         leaderCard={
-          <LeaderCard
-            name={leader?.name ?? null}
-            points={leader?.points ?? null}
-            categoryLabel={categoryLabel}
+          <LeadersCard
             accent="copper"
+            leaders={[
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_low'),
+                name: leaderLow?.name ?? null,
+                points: leaderLow?.points ?? null,
+                highlight: category === 'hcp_low',
+              },
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_high'),
+                name: leaderHigh?.name ?? null,
+                points: leaderHigh?.points ?? null,
+                highlight: category === 'hcp_high',
+              },
+            ]}
           />
         }
       />
