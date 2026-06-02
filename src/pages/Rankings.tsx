@@ -495,14 +495,31 @@ export function CircuitoRankingPage() {
   const filtered = rows.filter((r) => r.category === category);
   const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
 
+  const totalPruebas = useMemo(() => {
+    const ids = new Set<string>();
+    for (const r of rows) for (const h of r.history) ids.add(h.round_id);
+    return ids.size;
+  }, [rows]);
+  const leader = rows[0];
+
+  const heroStats = rows.length
+    ? [
+        { value: leader ? leader.name.split(' ')[0] : '—', label: 'Líder actual' },
+        { value: leader ? leader.total : '—', label: 'Puntos líder' },
+        { value: totalPruebas, label: 'Pruebas disputadas' },
+        { value: rows.length, label: 'Jugadores' },
+      ]
+    : undefined;
+
   return (
     <>
       <PageHeader
         eyebrow="TEMPORADA 2026"
-        title="Circuito GalaxyGolf"
-        text="Ranking anual del Circuito GalaxyGolf con las pruebas regulares y la clasificación acumulada."
+        title="Circuito GalaxyGolf 2026"
+        text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
+        stats={heroStats}
       />
-      <section className="bg-background py-12">
+      <section className="bg-background py-14">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <EmptyMessage>Cargando ranking...</EmptyMessage>
@@ -520,40 +537,46 @@ export function CircuitoRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-lg border border-border bg-card overflow-x-auto">
+                <div className="rounded-sm border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 overflow-x-auto shadow-[0_8px_40px_-20px_hsl(var(--gg-navy))]">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Pos.</TableHead>
-                        <TableHead className="min-w-[180px]">Jugador</TableHead>
+                      <TableRow className="border-b border-[hsl(var(--gg-gold))]/20 hover:bg-transparent">
+                        <TableHead className="w-14 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pos.</TableHead>
+                        <TableHead className="min-w-[180px] text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Jugador</TableHead>
                         {roundCols.map((c) => (
                           <TableHead
                             key={c.round_id}
                             title={c.full}
-                            className="text-center whitespace-nowrap px-2"
+                            className="text-center whitespace-nowrap px-2 text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--gg-ivory))]/55"
                           >
                             {c.label}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center">Pruebas</TableHead>
-                        <TableHead className="text-center">Mejores 7</TableHead>
-                        <TableHead className="text-center">Bonus</TableHead>
-                        <TableHead className="text-center font-semibold">Total</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pruebas</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Mejores 7</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Bonus</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-gold))]">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filtered.map((r, i) => {
                         const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                        const isLeader = i === 0;
                         return (
-                          <TableRow key={r.player_id} className="group">
-                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                          <TableRow
+                            key={r.player_id}
+                            className={`group border-b border-[hsl(var(--gg-gold))]/10 ${
+                              isLeader ? 'bg-[hsl(var(--gg-green))]/20 hover:bg-[hsl(var(--gg-green))]/25' : 'hover:bg-[hsl(var(--gg-navy))]/60'
+                            }`}
+                          >
+                            <TableCell className="font-display text-lg text-[hsl(var(--gg-gold))]">
                               {i + 1}
                             </TableCell>
                             <TableCell>
                               <button
                                 type="button"
                                 onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                                className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
                               >
                                 {r.name}
                               </button>
@@ -561,15 +584,15 @@ export function CircuitoRankingPage() {
                             {roundCols.map((c) => {
                               const v = byRid.get(c.round_id);
                               return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm">
-                                  {v != null ? v : <span className="text-muted-foreground">—</span>}
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-ivory))]/85">
+                                  {v != null ? v : <span className="text-[hsl(var(--gg-ivory))]/25">—</span>}
                                 </TableCell>
                               );
                             })}
-                            <TableCell className="text-center">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center">{r.best7}</TableCell>
-                            <TableCell className="text-center">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
+                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/85">{r.best7}</TableCell>
+                            <TableCell className="text-center text-[hsl(var(--gg-copper))]">+{r.bonus}</TableCell>
+                            <TableCell className="text-center font-display text-lg text-[hsl(var(--gg-gold))]">
                               {r.total}
                             </TableCell>
                           </TableRow>
@@ -579,8 +602,8 @@ export function CircuitoRankingPage() {
                   </Table>
                 </div>
               )}
-              <p className="mt-6 text-xs text-muted-foreground italic">
-                Ranking regular provisional. La Gran Final se implementará en una fase posterior.
+              <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
+                Ranking regular provisional · La Gran Final se implementará en una fase posterior.
               </p>
             </>
           )}
