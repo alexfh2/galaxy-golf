@@ -664,6 +664,37 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       }
 
       const skipped = results.filter(r => !r._selected && !r._is_np);
+
+      // Defensive validation: flag suspiciously low stableford totals when a full
+      // 18-hole scorecard exists. Likely a parser column-misalignment (e.g. category
+      // position read into stableford_points). Only a warning — does not block import.
+      const suspiciousLowStb: string[] = [];
+      for (const p of payloads) {
+        const stb = p.stableford_points;
+        const sc = p.scorecard as { scores?: unknown[]; hole_points?: unknown[] } | null;
+        const holes = Array.isArray(sc?.scores)
+          ? sc!.scores!.length
+          : Array.isArray(sc?.hole_points)
+            ? sc!.hole_points!.length
+            : 0;
+        if (stb != null && stb < 10 && holes >= 18) {
+          const name = toInsert.find(r => r._matched_player_id === p.player_id)?.name ?? p.player_id;
+          suspiciousLowStb.push(`${name} (${stb} pts amb tarjeta completa)`);
+        }
+      }
+
+      const allWarnings: string[] = [];
+      if (duplicatedExisting.length > 0) {
+        allWarnings.push(
+          `${duplicatedExisting.length} jugadors ja tenien resultat i s'han ignorat: ${duplicatedExisting.join(', ')}`
+        );
+      }
+      if (suspiciousLowStb.length > 0) {
+        allWarnings.push(
+          `⚠ Stableford sospitosament baix (possible error d'importació): ${suspiciousLowStb.join('; ')}`
+        );
+      }
+
       await supabase.from('import_logs').insert({
         round_id: round.id,
         source: source || (importTab === 'excel' ? 'excel' : 'url'),
@@ -677,9 +708,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           stableford_points: r.stableford_points,
           reason: 'duplicate_or_deselected',
         })),
-        warnings: duplicatedExisting.length > 0
-          ? [`${duplicatedExisting.length} jugadors ja tenien resultat i s'han ignorat: ${duplicatedExisting.join(', ')}`]
-          : [],
+        warnings: allWarnings,
+
         status: 'completed',
       });
 
