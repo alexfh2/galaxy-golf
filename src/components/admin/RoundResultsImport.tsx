@@ -311,7 +311,12 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
     try {
       const buffer = await file.arrayBuffer();
-      const { results: excelResults, hasSeniorInfo } = parseExcelResults(buffer);
+      const {
+        results: excelResults,
+        hasSeniorInfo,
+        warnings: parserWarnings,
+        mode: parsedMode,
+      } = parseExcelResults(buffer, { holeMode: excelHoleMode });
 
       const playDate = excelPlayDate || null;
 
@@ -335,6 +340,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           _selected: true,
           _is_np: false,
           _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
+          _hole_mode: parsedMode,
+          _hole_stableford: r.hole_stableford,
         }));
 
       setSource(`Excel: ${file.name}`);
@@ -345,13 +352,22 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         setNeedsSeniorFile(true);
       }
 
+      if (parserWarnings.length > 0) {
+        setWarnings(prev => [...parserWarnings, ...prev]);
+      }
+
       const groups = computeDuplicateGroups(matched);
       const conflicts = groups.filter(g => g.needsManual).length;
 
+      const modeLabel = parsedMode === 'stableford_points'
+        ? 'Excel interpretat com punts Stableford per forat'
+        : 'Excel interpretat com cops per forat';
+
       toast({
         title: `${matched.length} resultats importats des d'Excel`,
-        description: `${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
+        description: `${modeLabel}. ${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
       });
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
       toast({ title: "Error llegint Excel", description: message, variant: 'destructive' });
