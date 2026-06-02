@@ -320,41 +320,44 @@ const Rounds = () => {
   return (
     <div className="animate-fade-in">
       {/* ——— EDITORIAL HEADER ——— */}
-      <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
-        {/* orbital decorations */}
-        <span
+      <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
+        <div
           aria-hidden
-          className="pointer-events-none absolute -top-32 -right-24 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroCalendar.url})` }}
         />
-        <span
+        <div
           aria-hidden
-          className="pointer-events-none absolute -top-10 -right-10 h-3 w-3 rounded-full bg-[hsl(var(--gg-gold))]/70"
-        />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute bottom-6 left-1/3 h-1.5 w-1.5 rounded-full bg-[hsl(var(--gg-gold))]/50"
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, hsl(var(--gg-bg-light)) 0%, hsl(var(--gg-bg-light) / 0.92) 35%, hsl(var(--gg-bg-light) / 0.55) 60%, hsl(var(--gg-bg-light) / 0.15) 100%)',
+          }}
         />
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-gold))]/40 to-transparent"
         />
 
-        <div className="container relative py-16 lg:py-20">
+        <div className="container relative py-14 lg:py-20">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
             <div className="max-w-2xl">
-              <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
-                Temporada 2026
+              <p className="mb-4 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
+                TEMPORADA 2026
               </p>
-              <h1 className="font-display text-4xl lg:text-6xl font-medium leading-[1] mb-5 text-[hsl(var(--gg-ivory))]">
-                Calendario GALAXY GOLF
+              <h1
+                className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))] mb-5"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
+              >
+                Calendario
               </h1>
-              <p className="text-sm lg:text-base text-[hsl(var(--gg-ivory))]/70 leading-relaxed max-w-xl">
-                Consulta todas las pruebas del Circuito GALAXY GOLF y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
+              <p className="text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light max-w-xl">
+                Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
               </p>
             </div>
             <button
               onClick={downloadAllIcs}
-              className="self-start lg:self-end inline-flex items-center gap-2 px-6 py-3 text-[11px] font-semibold tracking-[0.22em] uppercase border border-[hsl(var(--gg-gold))]/50 text-[hsl(var(--gg-gold))] hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
+              className="self-start lg:self-end inline-flex items-center gap-2 px-6 py-3 text-[11px] font-semibold tracking-[0.22em] uppercase border border-[hsl(var(--gg-green))]/60 text-[hsl(var(--gg-green))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors bg-[hsl(var(--gg-surface-light))]/70 backdrop-blur-sm"
             >
               <CalendarPlus className="h-4 w-4" />
               Descargar calendario
