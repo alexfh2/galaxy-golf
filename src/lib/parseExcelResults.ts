@@ -144,11 +144,33 @@ function findHeaderRow(ws: XLSX.WorkSheet, range: XLSX.Range): number {
   return 0; // default to first row
 }
 
+export interface ExcelDiagnosticDiscrepancy {
+  name: string;
+  holes: (number | null)[];
+  computed: number;
+  excel: number;
+  diff: number;
+}
+
+export interface ExcelDiagnostics {
+  holeColumns: { index: number; name: string }[];
+  totalColumn: { index: number; name: string } | null;
+  scratchColumn: { index: number; name: string } | null;
+  nameColumn: { index: number; name: string } | null;
+  playerCount: number;
+  withTotalCount: number;
+  discrepancyCount: number;
+  discrepancyRatio: number;
+  massDiscrepancy: boolean;
+  discrepancies: ExcelDiagnosticDiscrepancy[];
+}
+
 export interface ExcelParseOutput {
   results: ExcelParsedResult[];
-  hasSeniorInfo: boolean; // true if age or niv columns were detected
+  hasSeniorInfo: boolean;
   mode: HoleMode;
   warnings: string[];
+  diagnostics: ExcelDiagnostics;
 }
 
 export interface ExcelParseOptions {
@@ -176,7 +198,8 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
   let totalHoleValues = 0;
   let onesCount = 0;
   let highStbCount = 0; // values > 5 in stableford mode
-  const discrepancies: { name: string; excel: number; computed: number }[] = [];
+  const discrepancies: ExcelDiagnosticDiscrepancy[] = [];
+  let withTotalCount = 0;
 
   for (let r = headerRow + 1; r <= range.e.r; r++) {
     const getVal = (c: number | null) => {
@@ -259,6 +282,7 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         computedTotalStableford = validHoles.reduce((s, n) => s + n, 0);
       }
       if (excelTotalStableford != null) {
+        withTotalCount++;
         stablefordPoints = excelTotalStableford;
         if (
           computedTotalStableford != null &&
@@ -266,8 +290,10 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         ) {
           discrepancies.push({
             name,
+            holes: holeValues,
             excel: excelTotalStableford,
             computed: computedTotalStableford,
+            diff: excelTotalStableford - computedTotalStableford,
           });
         }
       } else if (computedTotalStableford != null) {
@@ -337,6 +363,30 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
   }
 
   const hasSeniorInfo = cols.age !== null || cols.niv !== null;
-  return { results, hasSeniorInfo, mode, warnings };
+
+  const headerName = (c: number | null): string => {
+    if (c == null) return '';
+    const cell = ws[XLSX.utils.encode_cell({ r: headerRow, c })];
+    return cell?.v != null ? String(cell.v).trim() : '';
+  };
+
+  const playerCount = results.filter((r) => !r.is_np).length;
+  const discrepancyRatio =
+    withTotalCount > 0 ? discrepancies.length / withTotalCount : 0;
+
+  const diagnostics: ExcelDiagnostics = {
+    holeColumns: cols.holeColumns.map((c) => ({ index: c, name: headerName(c) })),
+    totalColumn: cols.total != null ? { index: cols.total, name: headerName(cols.total) } : null,
+    scratchColumn: cols.scratch != null ? { index: cols.scratch, name: headerName(cols.scratch) } : null,
+    nameColumn: cols.name != null ? { index: cols.name, name: headerName(cols.name) } : null,
+    playerCount,
+    withTotalCount,
+    discrepancyCount: discrepancies.length,
+    discrepancyRatio,
+    massDiscrepancy: discrepancyRatio > 0.1,
+    discrepancies,
+  };
+
+  return { results, hasSeniorInfo, mode, warnings, diagnostics };
 }
 

@@ -13,7 +13,7 @@ import { Check, X, AlertTriangle, Search, Plus, Trash2, Upload, FileSpreadsheet 
 import { DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { parseExcelResults, type HoleMode } from '@/lib/parseExcelResults';
+import { parseExcelResults, type HoleMode, type ExcelDiagnostics } from '@/lib/parseExcelResults';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
@@ -147,6 +147,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [existingPlayerIds, setExistingPlayerIds] = useState<Set<string>>(new Set());
   const [needsSeniorFile, setNeedsSeniorFile] = useState(false);
   const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
+  const [excelDiagnostics, setExcelDiagnostics] = useState<ExcelDiagnostics | null>(null);
+  const [stablefordTotalSource, setStablefordTotalSource] = useState<'excel' | 'sum'>('excel');
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -308,6 +310,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     setWarnings([]);
     setResults([]);
     setNeedsSeniorFile(false);
+    setExcelDiagnostics(null);
 
     try {
       const buffer = await file.arrayBuffer();
@@ -316,7 +319,14 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         hasSeniorInfo,
         warnings: parserWarnings,
         mode: parsedMode,
+        diagnostics,
       } = parseExcelResults(buffer, { holeMode: excelHoleMode });
+
+      setExcelDiagnostics(diagnostics);
+      // Default: if a total column exists, prefer it; otherwise fall back to sum
+      const defaultSource: 'excel' | 'sum' = diagnostics.totalColumn ? 'excel' : 'sum';
+      setStablefordTotalSource(defaultSource);
+
 
       const playDate = excelPlayDate || null;
 
@@ -583,33 +593,45 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         r => deleteExisting || !r._matched_player_id || !existingPlayerIds.has(r._matched_player_id)
       );
 
-      const payloads = toInsert.map(r => ({
-        round_id: round.id,
-        player_id: r._matched_player_id!,
-        stableford_points: r.stableford_points,
-        scratch_score: r.scratch_score,
-        handicap_at_round: r.handicap,
-        source_url: r.source_url,
-        play_date: r.play_date,
-        extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
-        import_source: importSource || null,
-        // Audit-only: official position and category as reported by the source (GolfDirecto/Excel).
-        // Never used as a primary ranking source — GalaxyGolf categories are computed independently.
-        official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
-        official_category: r.source_category ?? null,
-        scorecard: r._hole_mode === 'stableford_points'
-          ? (r._hole_stableford && r._hole_stableford.length > 0
-              ? {
-                  mode: 'stableford_points',
-                  hole_points: r._hole_stableford,
-                  handicap_play: r.handicap_play,
-                  note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
-                }
-              : null)
-          : (r.scores.length > 0
-              ? { scores: r.scores, handicap_play: r.handicap_play }
-              : null),
-      }));
+      const payloads = toInsert.map(r => {
+        // Override stableford_points with computed sum when admin chose that source.
+        let stb = r.stableford_points;
+        if (
+          r._hole_mode === 'stableford_points' &&
+          stablefordTotalSource === 'sum' &&
+          r._hole_stableford && r._hole_stableford.length > 0
+        ) {
+          const valid = r._hole_stableford.filter((v): v is number => v != null);
+          stb = valid.length > 0 ? valid.reduce((s, n) => s + n, 0) : null;
+        }
+        return {
+          round_id: round.id,
+          player_id: r._matched_player_id!,
+          stableford_points: stb,
+          scratch_score: r.scratch_score,
+          handicap_at_round: r.handicap,
+          source_url: r.source_url,
+          play_date: r.play_date,
+          extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
+          import_source: importSource || null,
+          official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
+          official_category: r.source_category ?? null,
+          scorecard: r._hole_mode === 'stableford_points'
+            ? (r._hole_stableford && r._hole_stableford.length > 0
+                ? {
+                    mode: 'stableford_points',
+                    hole_points: r._hole_stableford,
+                    handicap_play: r.handicap_play,
+                    total_source: stablefordTotalSource,
+                    note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
+                  }
+                : null)
+            : (r.scores.length > 0
+                ? { scores: r.scores, handicap_play: r.handicap_play }
+                : null),
+        };
+      });
+
 
       if (payloads.length === 0 && duplicatedExisting.length > 0) {
         throw new Error(
@@ -853,6 +875,147 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         </TabsContent>
       </Tabs>
 
+      {importTab === 'excel' && excelHoleMode === 'stableford_points' && excelDiagnostics && (
+        <Card className="border-amber-400/50 bg-amber-50/5">
+          <CardContent className="py-3 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs font-bold text-amber-300 mb-1">
+                  Diagnòstic Excel — Mode "Punts Stableford per forat"
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Revisa que les columnes detectades com a forats i com a total siguin les correctes
+                  abans d'importar.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="rounded-md border border-border/60 bg-background/40 p-2 space-y-1">
+                <p className="font-semibold">
+                  Columnes detectades com a forats ({excelDiagnostics.holeColumns.length})
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {excelDiagnostics.holeColumns.map((h) => (
+                    <Badge key={h.index} variant="outline" className="font-mono text-[10px]">
+                      [{h.index}] {h.name || '—'}
+                    </Badge>
+                  ))}
+                </div>
+                {excelDiagnostics.holeColumns.length !== 18 && (
+                  <p className="text-[11px] text-destructive font-semibold">
+                    ⚠ S'esperaven 18 columnes, detectades {excelDiagnostics.holeColumns.length}
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-md border border-border/60 bg-background/40 p-2 space-y-1">
+                <p className="font-semibold">Columna total Stableford</p>
+                {excelDiagnostics.totalColumn ? (
+                  <Badge variant="outline" className="font-mono text-[10px]">
+                    [{excelDiagnostics.totalColumn.index}] {excelDiagnostics.totalColumn.name}
+                  </Badge>
+                ) : (
+                  <p className="text-destructive text-[11px]">No s'ha detectat columna total</p>
+                )}
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  Jugadors amb total: {excelDiagnostics.withTotalCount} / {excelDiagnostics.playerCount}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Discrepàncies: <span className={excelDiagnostics.massDiscrepancy ? 'text-destructive font-bold' : 'font-semibold'}>
+                    {excelDiagnostics.discrepancyCount}
+                  </span> ({(excelDiagnostics.discrepancyRatio * 100).toFixed(1)}%)
+                </p>
+              </div>
+            </div>
+
+            {excelDiagnostics.discrepancies.length > 0 && (
+              <div className="rounded-md border border-border/60 bg-background/40 p-2">
+                <p className="text-xs font-semibold mb-2">
+                  Primeres {Math.min(5, excelDiagnostics.discrepancies.length)} discrepàncies
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="text-[11px] w-full font-mono">
+                    <thead className="text-muted-foreground">
+                      <tr>
+                        <th className="text-left pr-2">Jugador</th>
+                        <th className="text-left pr-2">Valors 18 forats</th>
+                        <th className="text-right pr-2">Suma</th>
+                        <th className="text-right pr-2">Excel</th>
+                        <th className="text-right">Δ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {excelDiagnostics.discrepancies.slice(0, 5).map((d, i) => (
+                        <tr key={i} className="border-t border-border/30">
+                          <td className="pr-2 py-1">{d.name}</td>
+                          <td className="pr-2 py-1">
+                            [{d.holes.map((v) => (v == null ? '—' : v)).join(', ')}]
+                          </td>
+                          <td className="pr-2 py-1 text-right">{d.computed}</td>
+                          <td className="pr-2 py-1 text-right">{d.excel}</td>
+                          <td className="text-right font-bold text-amber-400">
+                            {d.diff > 0 ? `+${d.diff}` : d.diff}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {excelDiagnostics.massDiscrepancy && (
+              <div className="rounded-md border border-destructive/60 bg-destructive/10 p-2">
+                <p className="text-xs font-bold text-destructive">
+                  ⚠ Hi ha massa discrepàncies entre els punts per forat i el total Stableford.
+                  Revisa el mapeig de columnes abans d'importar.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-1.5 rounded-md border border-border/60 bg-background/40 p-2">
+              <Label className="text-xs font-semibold">Font del total Stableford</Label>
+              <RadioGroup
+                value={stablefordTotalSource}
+                onValueChange={(v) => setStablefordTotalSource(v as 'excel' | 'sum')}
+                className="space-y-1"
+              >
+                <div className="flex items-start gap-2 text-xs">
+                  <RadioGroupItem
+                    value="excel"
+                    id="stb-src-excel"
+                    disabled={!excelDiagnostics.totalColumn}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="stb-src-excel" className="cursor-pointer">
+                    Usar total Stableford de l'Excel
+                    {excelDiagnostics.totalColumn && (
+                      <span className="text-muted-foreground ml-1">
+                        (columna "{excelDiagnostics.totalColumn.name}")
+                      </span>
+                    )}
+                  </label>
+                </div>
+                <div className="flex items-start gap-2 text-xs">
+                  <RadioGroupItem value="sum" id="stb-src-sum" className="mt-0.5" />
+                  <label htmlFor="stb-src-sum" className="cursor-pointer">
+                    Usar suma de punts per forat
+                    {excelDiagnostics.massDiscrepancy && (
+                      <span className="text-destructive ml-1 font-semibold">
+                        (bloquejat: discrepàncies massives)
+                      </span>
+                    )}
+                  </label>
+                </div>
+              </RadioGroup>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {warnings.length > 0 && (
         <Card className="border-yellow-300 bg-yellow-50">
           <CardContent className="py-3">
@@ -941,8 +1104,22 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             <Button
               size="sm"
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || selectedCount === 0 || hasUnresolvedConflicts}
-              title={hasUnresolvedConflicts ? 'Resol els conflictes de duplicats primer' : ''}
+              disabled={
+                saveMutation.isPending ||
+                selectedCount === 0 ||
+                hasUnresolvedConflicts ||
+                (importSource === 'excel' &&
+                  results[0]?._hole_mode === 'stableford_points' &&
+                  stablefordTotalSource === 'sum' &&
+                  excelDiagnostics?.massDiscrepancy === true)
+              }
+              title={
+                hasUnresolvedConflicts
+                  ? 'Resol els conflictes de duplicats primer'
+                  : excelDiagnostics?.massDiscrepancy && stablefordTotalSource === 'sum'
+                  ? `Hi ha massa discrepàncies. Canvia a "Usar total Stableford de l'Excel" o revisa el mapeig.`
+                  : ''
+              }
             >
               <Check className="h-4 w-4 mr-2" />
               {saveMutation.isPending ? 'Guardant...' : 'Guardar resultats'}
