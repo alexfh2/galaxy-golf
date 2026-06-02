@@ -401,20 +401,21 @@ function CategoryTabs({
 }) {
   const activeBg =
     accent === 'copper'
-      ? 'data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-navy))]'
-      : 'data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))]';
+      ? 'data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]'
+      : 'data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]';
+  const inactive = 'text-[hsl(var(--gg-navy-deep))]/65 hover:text-[hsl(var(--gg-navy-deep))]';
   return (
     <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-8">
-      <TabsList className="bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 p-1 h-auto rounded-sm">
+      <TabsList className="bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm shadow-[0_2px_10px_-6px_rgba(11,19,36,0.18)]">
         <TabsTrigger
           value="hcp_low"
-          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
+          className={`text-[11px] font-semibold uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${inactive} ${activeBg}`}
         >
           Hándicap Inferior
         </TabsTrigger>
         <TabsTrigger
           value="hcp_high"
-          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
+          className={`text-[11px] font-semibold uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${inactive} ${activeBg}`}
         >
           Hándicap Superior
         </TabsTrigger>
