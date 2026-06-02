@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import LanguageSwitcher from './LanguageSwitcher';
+import logoOficial from '@/assets/galaxygolf-logo-oficial.png.asset.json';
 // ThemeToggle removed — app locked to dark mode
 
 const navItems = [
@@ -14,12 +15,22 @@ const navItems = [
   { label: 'Jugadores', path: '/jugadors' },
 ] as const;
 
+// Fallback tipográfico (se conserva por si el logo oficial no encaja en algún contexto)
 const Wordmark = ({ className = '' }: { className?: string }) => (
   <span
     className={`font-display tracking-[0.22em] uppercase font-medium text-[hsl(var(--gg-gold))] ${className}`}
   >
     GALAXY GOLF
   </span>
+);
+
+const LogoOficial = ({ className = '' }: { className?: string }) => (
+  <img
+    src={logoOficial.url}
+    alt="GalaxyGolf"
+    className={`object-contain w-auto ${className}`}
+    draggable={false}
+  />
 );
 
 const Navbar = () => {
@@ -38,8 +49,8 @@ const Navbar = () => {
       }`}
     >
       <div className="container flex h-20 items-center justify-between py-4">
-        <Link to="/" className="flex items-center">
-          <Wordmark className="text-xl sm:text-2xl" />
+        <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
+          <LogoOficial className="h-7 sm:h-9 max-h-9" />
         </Link>
 
         {/* Desktop Nav */}
