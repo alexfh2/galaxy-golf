@@ -232,8 +232,6 @@ function computeGalaxyCup(
 ): GalaxyCupRow[] {
   // round → stage (regular|major) para GalaxyCup
   const roundStage = new Map<string, 'regular' | 'major'>();
-  // round → stage (regular|major) para GalaxyCup
-  const roundStage = new Map<string, 'regular' | 'major'>();
   const galaxyCupMeta = new Map<string, { stage: string; n: number | null }>();
   for (const rc of roundComps) {
     if (rc.competition?.slug !== 'galaxycup') continue;
