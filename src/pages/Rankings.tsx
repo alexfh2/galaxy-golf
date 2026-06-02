@@ -507,15 +507,15 @@ function PageHeader({
             src={bgImage}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-cover opacity-60"
+            className="absolute inset-0 w-full h-full object-cover opacity-75"
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))]/95 via-[hsl(var(--gg-navy))]/65 to-[hsl(var(--gg-navy))]/30"
+            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))]/92 via-[hsl(var(--gg-navy))]/55 to-[hsl(var(--gg-navy))]/20"
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/20 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-[hsl(var(--gg-navy))]/10"
           />
         </>
       )}
@@ -531,13 +531,16 @@ function PageHeader({
         aria-hidden
         className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/30"
       />
-      <div className="container relative mx-auto px-4 py-10 md:py-14">
+      <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
             <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
               {eyebrow}
             </p>
-            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
+            <h1
+              className="font-display font-light leading-[1.05] text-[hsl(var(--gg-ivory))]"
+              style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
+            >
               {title}
             </h1>
             <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75 font-light">
@@ -591,7 +594,7 @@ function DashboardCard({
 
 function DashboardStrip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="container mx-auto px-4 -mt-10 md:-mt-14 relative z-10 mb-12">
+    <div className="container mx-auto px-4 -mt-10 md:-mt-14 relative z-10 mb-16">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">{children}</div>
     </div>
   );
@@ -646,7 +649,7 @@ export function CircuitoRankingPage() {
         <DashboardCard
           label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas del Circuito publicadas"
+          hint="Jornadas con resultados publicadas"
         />
         <DashboardCard
           label="Jugadores en ranking"
@@ -656,13 +659,13 @@ export function CircuitoRankingPage() {
         <DashboardCard
           label="Sistema de puntuación"
           value="Mejores 7"
-          hint="Se suman los 7 mejores resultados"
+          hint="Suma de los 7 mejores resultados"
           accent="muted"
         />
         <DashboardCard
           label="Gran Final"
           value="Pendiente"
-          hint="Por confirmar en fase posterior"
+          hint="Por confirmar"
           accent="muted"
         />
       </DashboardStrip>
@@ -825,18 +828,18 @@ export function GalaxyCupRankingPage() {
         <DashboardCard
           label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas GalaxyCup publicadas"
+          hint="Jornadas con resultados publicadas"
         />
         <DashboardCard
           label="Majors puntuables"
           value={totalMajors || '—'}
-          hint="Puntuación incrementada"
+          hint="Puntuación mayor en torneos especiales"
           accent="copper"
         />
         <DashboardCard
           label="Ruta a Playoffs"
           value="Fase regular"
-          hint="Playoffs por confirmar"
+          hint="En curso"
           accent="muted"
         />
       </DashboardStrip>
