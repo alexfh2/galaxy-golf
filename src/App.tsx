@@ -42,7 +42,10 @@ const App = () => (
             {/* Public routes */}
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
+              <Route path="/circuito-galaxygolf" element={<CircuitoRanking />} />
+              <Route path="/galaxycup" element={<GalaxyCupRanking />} />
               <Route path="/ranquings" element={<Rankings />} />
+              <Route path="/rankings" element={<Rankings />} />
               <Route path="/jornades" element={<Rounds />} />
               <Route path="/jugadors" element={<Players />} />
               <Route path="/jugadors/:id" element={<PlayerDetail />} />
