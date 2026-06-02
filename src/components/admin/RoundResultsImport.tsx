@@ -147,6 +147,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [existingPlayerIds, setExistingPlayerIds] = useState<Set<string>>(new Set());
   const [needsSeniorFile, setNeedsSeniorFile] = useState(false);
   const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
+  const [excelDiagnostics, setExcelDiagnostics] = useState<ExcelDiagnostics | null>(null);
+  const [stablefordTotalSource, setStablefordTotalSource] = useState<'excel' | 'sum'>('excel');
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
