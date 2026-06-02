@@ -64,6 +64,7 @@ interface CircuitoRow {
   name: string;
   category: Category;
   firstHcp: number;
+  lastHcp: number | null;
   rounds_played: number;
   best7: number;
   bonus: number;
@@ -76,12 +77,30 @@ interface GalaxyCupRow {
   name: string;
   category: Category;
   firstHcp: number;
+  lastHcp: number | null;
   rounds_played: number;
   majors_played: number;
   points: number;
   best_position: number | null;
   best_was_major: boolean;
   history: HistoryItem[];
+}
+
+/** Último hándicap conocido en la lista de resultados del jugador (informativo). */
+function computeLastHcp(list: PublicResult[]): number | null {
+  const sortedDesc = [...list].sort((a, b) =>
+    sortKey(b).localeCompare(sortKey(a)),
+  );
+  const found = sortedDesc.find((r) => r.handicap_at_round != null);
+  if (!found) return null;
+  const n = Number(found.handicap_at_round);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Formato español con coma decimal y un decimal: 10,1 */
+function fmtHcp(h: number | null): string | null {
+  if (h == null || !Number.isFinite(h)) return null;
+  return h.toFixed(1).replace('.', ',');
 }
 
 function fmtDate(d?: string | null): string {
