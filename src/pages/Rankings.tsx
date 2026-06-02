@@ -541,18 +541,7 @@ function PageHeader({
           )}
         </>
       )}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/20"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/15"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/25"
-      />
+      {/* grafismos circulares eliminados — pedido cliente: hero más limpio */}
       <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
