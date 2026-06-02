@@ -296,59 +296,46 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
         </div>
 
         <div className="px-6 py-5 space-y-5">
-          {/* Category positions */}
-          {mainCategory && (
+          {/* Posiciones por competición */}
+          {hasAnyRanking && (
             <div>
-              <h4 className="font-display font-semibold text-sm mb-3 text-foreground">{t('rankings.position')}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Main category */}
-                <div className="border border-border/50 rounded-lg p-4 bg-secondary/30">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                    {mainCategory.label}
-                  </div>
-                  <div className="flex items-end justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-accent" strokeWidth={1.5} />
-                      <span className="font-display font-extrabold text-2xl text-foreground tabular-nums">
-                        {mainCategory.pos?.pos ?? '—'}
-                      </span>
-                      <span className="text-xs text-muted-foreground mb-0.5">
-                        / {mainCategory.pos?.of ?? '—'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono font-bold text-base text-foreground">{mainCategory.pos?.total ?? '—'}</div>
-                      <div className="text-[10px] text-muted-foreground leading-none">{t('common.points')}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Subcategories */}
-                {subCategories.map((sub) => (
-                  <div key={sub.label} className="border border-border/50 rounded-lg p-4 bg-secondary/30">
+              <div className="flex items-baseline justify-between mb-3">
+                <h4 className="font-display font-semibold text-sm text-foreground">{t('rankings.position')}</h4>
+                {categoryLabel && (
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                    {categoryLabel}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {rankingCells.map((cell) => (
+                  <div key={cell.label} className="border border-border/50 rounded-lg p-4 bg-secondary/30">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                      {sub.label}
+                      {cell.label}
                     </div>
-                    <div className="flex items-end justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-accent" strokeWidth={1.5} />
-                        <span className="font-display font-extrabold text-2xl text-foreground tabular-nums">
-                          {sub.pos?.pos ?? '—'}
-                        </span>
-                        <span className="text-xs text-muted-foreground mb-0.5">
-                          / {sub.pos?.of ?? '—'}
-                        </span>
+                    {cell.pos ? (
+                      <div className="flex items-end justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Trophy className="h-5 w-5 text-accent" strokeWidth={1.5} />
+                          <span className="font-display font-extrabold text-2xl text-foreground tabular-nums">
+                            {cell.pos.pos}
+                          </span>
+                          <span className="text-xs text-muted-foreground mb-0.5">/ {cell.pos.of}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono font-bold text-base text-foreground">{cell.pos.total}</div>
+                          <div className="text-[10px] text-muted-foreground leading-none">{t('common.points')}</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-mono font-bold text-base text-foreground">{sub.pos?.total ?? '—'}</div>
-                        <div className="text-[10px] text-muted-foreground leading-none">{t('common.points')}</div>
-                      </div>
-                    </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground italic h-[44px] flex items-center">—</div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           )}
+
 
           {/* HCP Evolution */}
           {(() => {
