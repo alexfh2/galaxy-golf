@@ -64,6 +64,7 @@ interface CircuitoRow {
   name: string;
   category: Category;
   firstHcp: number;
+  lastHcp: number | null;
   rounds_played: number;
   best7: number;
   bonus: number;
@@ -76,12 +77,30 @@ interface GalaxyCupRow {
   name: string;
   category: Category;
   firstHcp: number;
+  lastHcp: number | null;
   rounds_played: number;
   majors_played: number;
   points: number;
   best_position: number | null;
   best_was_major: boolean;
   history: HistoryItem[];
+}
+
+/** Último hándicap conocido en la lista de resultados del jugador (informativo). */
+function computeLastHcp(list: PublicResult[]): number | null {
+  const sortedDesc = [...list].sort((a, b) =>
+    sortKey(b).localeCompare(sortKey(a)),
+  );
+  const found = sortedDesc.find((r) => r.handicap_at_round != null);
+  if (!found) return null;
+  const n = Number(found.handicap_at_round);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Formato español con coma decimal y un decimal: 10,1 */
+function fmtHcp(h: number | null): string | null {
+  if (h == null || !Number.isFinite(h)) return null;
+  return h.toFixed(1).replace('.', ',');
 }
 
 function fmtDate(d?: string | null): string {
@@ -198,6 +217,7 @@ function computeCircuito(
       name: player.name,
       category,
       firstHcp,
+      lastHcp: computeLastHcp(list),
       rounds_played: list.length,
       best7,
       bonus,
@@ -341,6 +361,7 @@ function computeGalaxyCup(
       name: player.name,
       category: playerCategory.get(pid)!,
       firstHcp: playerFirstHcp.get(pid) ?? 999,
+      lastHcp: computeLastHcp(byPlayerAll.get(pid) ?? []),
       rounds_played: awards.length,
       majors_played: majorsByPlayer.get(pid) ?? 0,
       points,
@@ -745,7 +766,12 @@ export function CircuitoRankingPage() {
                                 onClick={() => setSelectedPlayerId(r.player_id)}
                                 className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
                               >
-                                {r.name}
+                                <span>{r.name}</span>
+                                {fmtHcp(r.lastHcp) && (
+                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
+                                    ({fmtHcp(r.lastHcp)})
+                                  </span>
+                                )}
                               </button>
                             </TableCell>
                             {roundCols.map((c) => {
@@ -925,7 +951,12 @@ export function GalaxyCupRankingPage() {
                                 onClick={() => setSelectedPlayerId(r.player_id)}
                                 className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
                               >
-                                {r.name}
+                                <span>{r.name}</span>
+                                {fmtHcp(r.lastHcp) && (
+                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-ivory))]/55">
+                                    ({fmtHcp(r.lastHcp)})
+                                  </span>
+                                )}
                               </button>
                             </TableCell>
                             {roundCols.map((c) => {
