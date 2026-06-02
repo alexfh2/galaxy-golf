@@ -15,31 +15,11 @@ const navItems = [
   { label: 'Jugadores', path: '/jugadors' },
 ] as const;
 
-// Fallback tipográfico (se conserva por si el logo oficial no encaja en algún contexto)
-const Wordmark = ({ className = '' }: { className?: string }) => (
-  <span
-    className={`font-display tracking-[0.22em] uppercase font-medium text-[hsl(var(--gg-gold))] ${className}`}
-  >
-    GALAXY GOLF
-  </span>
-);
-
-// Logo monocromo dorado sobre navy v2 — fondo #041633, encaja con --gg-navbar-navy
-const LogoGoldNavy = ({ className = '' }: { className?: string }) => (
+const Logo = ({ className = '' }: { className?: string }) => (
   <img
-    src={logoGoldNavyV2.url}
+    src={logoGalaxyGolf.url}
     alt="GalaxyGolf"
     className={`object-contain w-auto select-none ${className}`}
-    draggable={false}
-  />
-);
-
-// Logo oficial azul/verde — conservado como referencia / fallback opcional
-const LogoOficial = ({ className = '' }: { className?: string }) => (
-  <img
-    src={logoOficial.url}
-    alt="GalaxyGolf"
-    className={`object-contain w-auto ${className}`}
     draggable={false}
   />
 );
@@ -61,7 +41,7 @@ const Navbar = () => {
     >
       <div className="container flex h-20 items-center py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
-          <Wordmark className="text-xl sm:text-2xl" />
+          <Logo className="h-12 sm:h-14" />
         </Link>
 
         {/* Desktop Nav */}
