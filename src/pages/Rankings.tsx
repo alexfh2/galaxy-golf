@@ -625,7 +625,12 @@ export function CircuitoRankingPage() {
     <>
       <PageHeader
         eyebrow="TEMPORADA 2026"
-        title="Circuito GalaxyGolf 2026"
+        title={
+          <>
+            Circuito GalaxyGolf
+            <span className="block text-[hsl(var(--gg-gold))]/90">2026</span>
+          </>
+        }
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
         bgImage={heroCircuito}
         leaderCard={
@@ -639,15 +644,9 @@ export function CircuitoRankingPage() {
       />
       <DashboardStrip>
         <DashboardCard
-          label="Líder actual"
-          value={leader ? leader.name.split(' ')[0] : '—'}
-          hint={leader ? `${leader.total} pts · ${categoryLabel}` : 'Ranking pendiente'}
-          accent="gold"
-        />
-        <DashboardCard
-          label="Pruebas publicadas"
+          label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas del Circuito"
+          hint="Jornadas del Circuito publicadas"
         />
         <DashboardCard
           label="Jugadores en ranking"
@@ -655,9 +654,15 @@ export function CircuitoRankingPage() {
           hint={categoryLabel}
         />
         <DashboardCard
-          label="Mejores 7"
-          value="Best 7"
-          hint="Computan los 7 mejores resultados"
+          label="Sistema de puntuación"
+          value="Mejores 7"
+          hint="Se suman los 7 mejores resultados"
+          accent="muted"
+        />
+        <DashboardCard
+          label="Gran Final"
+          value="Pendiente"
+          hint="Por confirmar en fase posterior"
           accent="muted"
         />
       </DashboardStrip>
