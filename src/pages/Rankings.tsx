@@ -424,7 +424,7 @@ export default function Rankings() {
                             <TableCell className="text-center">{r.rounds_played}</TableCell>
                             <TableCell className="text-center">{r.best7}</TableCell>
                             <TableCell className="text-center">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))]">
+                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
                               {r.total}
                             </TableCell>
                           </TableRow>
