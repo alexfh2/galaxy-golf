@@ -164,12 +164,11 @@ const Index = () => {
   );
 };
 
-function StaticStat({ value, label, icon }: { value: string; label: string; icon?: React.ReactNode }) {
+function StaticStat({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col items-center gap-2">
-      {icon}
-      <span className="font-display text-5xl text-[hsl(var(--gg-ivory))]">{value}</span>
-      <span className="text-[11px] font-semibold tracking-[0.25em] uppercase text-[hsl(var(--gg-gold))]/80">
+      <span className="font-display text-5xl text-[hsl(var(--gg-navy-deep))]">{value}</span>
+      <span className="text-[11px] font-semibold tracking-[0.25em] uppercase text-[hsl(var(--gg-green))]">
         {label}
       </span>
     </div>
