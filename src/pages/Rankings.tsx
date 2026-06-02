@@ -799,7 +799,12 @@ export function GalaxyCupRankingPage() {
     <>
       <PageHeader
         eyebrow="RACE TO THE PLAYOFFS"
-        title="GalaxyCup 2026"
+        title={
+          <>
+            GalaxyCup
+            <span className="block text-[hsl(var(--gg-copper))]/95">2026</span>
+          </>
+        }
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
         bgImage={heroGalaxyCup}
         leaderCard={
@@ -813,26 +818,25 @@ export function GalaxyCupRankingPage() {
       />
       <DashboardStrip>
         <DashboardCard
-          label="Líder actual"
-          value={leader ? leader.name.split(' ')[0] : '—'}
-          hint={leader ? `${leader.points} pts · ${categoryLabel}` : 'Ranking pendiente'}
-          accent="gold"
+          label="Jugadores en ranking"
+          value={filtered.length || '—'}
+          hint={categoryLabel}
         />
         <DashboardCard
-          label="Pruebas publicadas"
+          label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas GalaxyCup"
+          hint="Jornadas GalaxyCup publicadas"
         />
         <DashboardCard
-          label="Majors jugados"
+          label="Majors puntuables"
           value={totalMajors || '—'}
-          hint="Bonus de puntos"
+          hint="Puntuación incrementada"
           accent="copper"
         />
         <DashboardCard
-          label="Playoffs"
-          value="—"
-          hint="Pendientes de implementación"
+          label="Ruta a Playoffs"
+          value="Fase regular"
+          hint="Playoffs por confirmar"
           accent="muted"
         />
       </DashboardStrip>
@@ -844,7 +848,7 @@ export function GalaxyCupRankingPage() {
             <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
           ) : (
             <>
-              <CategoryTabs category={category} onChange={setCategory} />
+              <CategoryTabs category={category} onChange={setCategory} accent="copper" />
               {rows.length === 0 ? (
                 <EmptyMessage>
                   Todavía no hay resultados publicados de la GalaxyCup.
