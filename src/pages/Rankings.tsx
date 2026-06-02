@@ -217,6 +217,7 @@ function computeCircuito(
       name: player.name,
       category,
       firstHcp,
+      lastHcp: computeLastHcp(list),
       rounds_played: list.length,
       best7,
       bonus,
