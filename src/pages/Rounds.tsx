@@ -376,7 +376,7 @@ const Rounds = () => {
                     onClick={() => setFilter(opt.value)}
                     className={`px-4 py-2 text-[11px] font-semibold tracking-[0.18em] uppercase transition-all ${
                       active
-                        ? 'bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] border border-[hsl(var(--gg-gold))]/60'
+                        ? 'bg-[hsl(var(--gg-green))] text-[#FFFDF8] border border-[hsl(var(--gg-gold))]/60'
                         : 'text-[hsl(var(--gg-ivory))]/60 hover:text-[hsl(var(--gg-gold))] border border-transparent'
                     }`}
                   >
