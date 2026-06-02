@@ -146,6 +146,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [existingCount, setExistingCount] = useState<number | null>(null);
   const [existingPlayerIds, setExistingPlayerIds] = useState<Set<string>>(new Set());
   const [needsSeniorFile, setNeedsSeniorFile] = useState(false);
+  const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
