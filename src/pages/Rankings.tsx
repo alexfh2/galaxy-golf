@@ -24,6 +24,8 @@ import {
   getGalaxyGolfCategoryByHandicap,
   getGalaxyGolfCategoryLabel,
 } from '@/lib/playerCategoryHandicap';
+import heroCircuito from '@/assets/hero-circuito.jpg';
+import heroGalaxyCup from '@/assets/hero-galaxycup.jpg';
 
 /* ============================================================
  * Rankings GalaxyGolf 2026
@@ -415,15 +417,65 @@ function CategoryTabs({
   );
 }
 
-function HeroStat({ value, label }: { value: React.ReactNode; label: string }) {
+type Accent = 'green' | 'copper';
+
+function LeaderCard({
+  name,
+  points,
+  categoryLabel,
+  accent,
+}: {
+  name: string | null;
+  points: number | null;
+  categoryLabel: string;
+  accent: Accent;
+}) {
+  const accentColor = accent === 'green' ? 'hsl(var(--gg-green))' : 'hsl(var(--gg-copper))';
   return (
-    <div className="border-l border-[hsl(var(--gg-gold))]/25 pl-5">
-      <div className="font-display text-3xl md:text-4xl text-[hsl(var(--gg-gold))] leading-none">
-        {value}
+    <div
+      className="relative w-full max-w-sm border border-[hsl(var(--gg-gold))]/25 bg-[hsl(var(--gg-navy))]/70 backdrop-blur-sm p-7 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
+      style={{ borderTop: `2px solid ${accentColor}` }}
+    >
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+          Líder actual
+        </span>
+        <span className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] border border-[hsl(var(--gg-gold))]/40 px-2 py-[2px]">
+          #1
+        </span>
       </div>
-      <div className="mt-2 text-[10px] uppercase tracking-[0.25em] text-[hsl(var(--gg-ivory))]/55">
-        {label}
-      </div>
+      {name ? (
+        <>
+          <div className="font-display text-2xl md:text-[26px] leading-tight text-[hsl(var(--gg-ivory))]">
+            {name}
+          </div>
+          <div className="mt-5 flex items-end justify-between border-t border-[hsl(var(--gg-gold))]/15 pt-4">
+            <div>
+              <div className="text-[9px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/45">
+                Categoría
+              </div>
+              <div className="mt-1 text-[12px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/85">
+                {categoryLabel}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-display text-3xl text-[hsl(var(--gg-gold))] leading-none">
+                {points}
+              </div>
+              <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+                pts
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="py-4">
+          <div className="font-display text-xl text-[hsl(var(--gg-ivory))]/75">Ranking pendiente</div>
+          <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/45">
+            Sin resultados en {categoryLabel}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -432,15 +484,35 @@ function PageHeader({
   eyebrow,
   title,
   text,
-  stats,
+  bgImage,
+  leaderCard,
 }: {
   eyebrow: string;
   title: string;
   text: string;
-  stats?: { value: React.ReactNode; label: string }[];
+  bgImage?: string;
+  leaderCard?: React.ReactNode;
 }) {
   return (
     <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
+      {bgImage && (
+        <>
+          <img
+            src={bgImage}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover opacity-35"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/85 to-[hsl(var(--gg-navy))]/55"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-transparent"
+          />
+        </>
+      )}
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
@@ -451,31 +523,71 @@ function PageHeader({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/40"
+        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/30"
       />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--gg-green)/0.25),transparent_60%)]"
-      />
-      <div className="container relative mx-auto px-4 py-16 md:py-24">
-        <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
-          {eyebrow}
-        </p>
-        <h1 className="font-display text-5xl md:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
-          {title}
-        </h1>
-        <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/70 font-light">
-          {text}
-        </p>
-        {stats && stats.length > 0 && (
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 max-w-3xl">
-            {stats.map((s, i) => (
-              <HeroStat key={i} value={s.value} label={s.label} />
-            ))}
+      <div className="container relative mx-auto px-4 py-14 md:py-20">
+        <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
+          <div>
+            <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
+              {eyebrow}
+            </p>
+            <h1 className="font-display text-5xl md:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
+              {title}
+            </h1>
+            <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75 font-light">
+              {text}
+            </p>
           </div>
-        )}
+          {leaderCard && (
+            <div className="flex lg:justify-end">{leaderCard}</div>
+          )}
+        </div>
       </div>
     </section>
+  );
+}
+
+function DashboardCard({
+  label,
+  value,
+  hint,
+  accent = 'gold',
+}: {
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  accent?: 'gold' | 'copper' | 'green' | 'muted';
+}) {
+  const valueColor =
+    accent === 'copper'
+      ? 'text-[hsl(var(--gg-copper))]'
+      : accent === 'green'
+      ? 'text-[hsl(var(--gg-ivory))]'
+      : accent === 'muted'
+      ? 'text-[hsl(var(--gg-ivory))]/85'
+      : 'text-[hsl(var(--gg-gold))]';
+  return (
+    <div className="border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/55 p-6 transition-colors hover:border-[hsl(var(--gg-gold))]/40">
+      <div className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+        {label}
+      </div>
+      <div className={`mt-3 font-display text-3xl md:text-[34px] leading-none ${valueColor}`}>
+        {value}
+      </div>
+      {hint && (
+        <div className="mt-3 text-[11px] tracking-wide text-[hsl(var(--gg-ivory))]/55">
+          {hint}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DashboardStrip({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="container mx-auto px-4 -mt-10 md:-mt-14 relative z-10 mb-12">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">{children}</div>
+    </div>
   );
 }
 
@@ -500,16 +612,8 @@ export function CircuitoRankingPage() {
     for (const r of rows) for (const h of r.history) ids.add(h.round_id);
     return ids.size;
   }, [rows]);
-  const leader = rows[0];
-
-  const heroStats = rows.length
-    ? [
-        { value: leader ? leader.name.split(' ')[0] : '—', label: 'Líder actual' },
-        { value: leader ? leader.total : '—', label: 'Puntos líder' },
-        { value: totalPruebas, label: 'Pruebas disputadas' },
-        { value: rows.length, label: 'Jugadores' },
-      ]
-    : undefined;
+  const categoryLabel = getGalaxyGolfCategoryLabel(category);
+  const leader = filtered[0] ?? null;
 
   return (
     <>
@@ -517,9 +621,41 @@ export function CircuitoRankingPage() {
         eyebrow="TEMPORADA 2026"
         title="Circuito GalaxyGolf 2026"
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
-        stats={heroStats}
+        bgImage={heroCircuito}
+        leaderCard={
+          <LeaderCard
+            name={leader?.name ?? null}
+            points={leader?.total ?? null}
+            categoryLabel={categoryLabel}
+            accent="green"
+          />
+        }
       />
-      <section className="bg-background py-14">
+      <DashboardStrip>
+        <DashboardCard
+          label="Líder actual"
+          value={leader ? leader.name.split(' ')[0] : '—'}
+          hint={leader ? `${leader.total} pts · ${categoryLabel}` : 'Ranking pendiente'}
+          accent="gold"
+        />
+        <DashboardCard
+          label="Pruebas publicadas"
+          value={totalPruebas || '—'}
+          hint="Jornadas del Circuito"
+        />
+        <DashboardCard
+          label="Jugadores en ranking"
+          value={filtered.length || '—'}
+          hint={categoryLabel}
+        />
+        <DashboardCard
+          label="Mejores 7"
+          value="Best 7"
+          hint="Computan los 7 mejores resultados"
+          accent="muted"
+        />
+      </DashboardStrip>
+      <section className="bg-background pb-14">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <EmptyMessage>Cargando ranking...</EmptyMessage>
@@ -645,16 +781,8 @@ export function GalaxyCupRankingPage() {
     }
     return { totalPruebas: ids.size, totalMajors: majors.size };
   }, [rows]);
-  const leader = rows[0];
-
-  const heroStats = rows.length
-    ? [
-        { value: leader ? leader.name.split(' ')[0] : '—', label: 'Líder actual' },
-        { value: leader ? leader.points : '—', label: 'Puntos líder' },
-        { value: totalPruebas, label: 'Pruebas disputadas' },
-        { value: totalMajors, label: 'Majors jugados' },
-      ]
-    : undefined;
+  const categoryLabel = getGalaxyGolfCategoryLabel(category);
+  const leader = filtered[0] ?? null;
 
   return (
     <>
@@ -662,9 +790,42 @@ export function GalaxyCupRankingPage() {
         eyebrow="RACE TO THE PLAYOFFS"
         title="GalaxyCup 2026"
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
-        stats={heroStats}
+        bgImage={heroGalaxyCup}
+        leaderCard={
+          <LeaderCard
+            name={leader?.name ?? null}
+            points={leader?.points ?? null}
+            categoryLabel={categoryLabel}
+            accent="copper"
+          />
+        }
       />
-      <section className="bg-background py-14">
+      <DashboardStrip>
+        <DashboardCard
+          label="Líder actual"
+          value={leader ? leader.name.split(' ')[0] : '—'}
+          hint={leader ? `${leader.points} pts · ${categoryLabel}` : 'Ranking pendiente'}
+          accent="gold"
+        />
+        <DashboardCard
+          label="Pruebas publicadas"
+          value={totalPruebas || '—'}
+          hint="Jornadas GalaxyCup"
+        />
+        <DashboardCard
+          label="Majors jugados"
+          value={totalMajors || '—'}
+          hint="Bonus de puntos"
+          accent="copper"
+        />
+        <DashboardCard
+          label="Playoffs"
+          value="—"
+          hint="Pendientes de implementación"
+          accent="muted"
+        />
+      </DashboardStrip>
+      <section className="bg-background pb-14">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <EmptyMessage>Cargando ranking...</EmptyMessage>
