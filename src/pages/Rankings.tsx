@@ -340,19 +340,18 @@ function computeGalaxyCup(
     for (const a of awards) {
       if (!best || a.position < best.position) best = a;
     }
-    const history: HistoryItem[] = [...awards]
-      .sort((a, b) => (a.result.rounds?.round_number ?? 0) - (b.result.rounds?.round_number ?? 0))
-      .map((a) => {
-        const lbl = roundLabel(a.result);
-        return {
-          round_id: a.result.round_id,
-          round_number: lbl.n,
-          label: lbl.short,
-          fullLabel: `${lbl.full} · ${a.position}º · ${a.points} pts`,
-          stableford: a.points,
-          isMajor: a.isMajor,
-        };
-      });
+    const history: HistoryItem[] = awards.map((a) => {
+      const meta = galaxyCupMeta.get(a.result.round_id) ?? { stage: 'regular', n: null };
+      const col = galaxyCupColumn(meta.stage, meta.n);
+      return {
+        round_id: a.result.round_id,
+        colLabel: col.label,
+        colSort: col.sort,
+        fullLabel: `${galaxyCupFullLabel(a.result, meta.stage, meta.n)} · ${a.position}º · ${a.points} pts`,
+        stableford: a.points,
+        isMajor: a.isMajor,
+      };
+    });
     rows.push({
       player_id: pid,
       name: player.name,
