@@ -11,6 +11,8 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import Index from "./pages/Index";
 import Rankings from "./pages/Rankings";
+import CircuitoRanking from "./pages/CircuitoRanking";
+import GalaxyCupRanking from "./pages/GalaxyCupRanking";
 import Rounds from "./pages/Rounds";
 import Players from "./pages/Players";
 import PlayerDetail from "./pages/PlayerDetail";
