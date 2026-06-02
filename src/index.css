@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* Editorial Noir — dark atmospheric palette */
-    --background: 220 14% 8%;
+    --background: 218 86% 11%; /* #041633 — navy del logo */
     --foreground: 40 18% 85%;
 
     --card: 220 12% 11%;
