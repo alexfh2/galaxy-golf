@@ -282,6 +282,7 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         computedTotalStableford = validHoles.reduce((s, n) => s + n, 0);
       }
       if (excelTotalStableford != null) {
+        withTotalCount++;
         stablefordPoints = excelTotalStableford;
         if (
           computedTotalStableford != null &&
@@ -289,8 +290,10 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         ) {
           discrepancies.push({
             name,
+            holes: holeValues,
             excel: excelTotalStableford,
             computed: computedTotalStableford,
+            diff: excelTotalStableford - computedTotalStableford,
           });
         }
       } else if (computedTotalStableford != null) {
