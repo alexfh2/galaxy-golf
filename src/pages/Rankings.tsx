@@ -221,7 +221,7 @@ function computeGalaxyCup(
   }
 
   // Asignar puntos por jornada + categoría
-  type Award = { points: number; position: number; isMajor: boolean };
+  type Award = { points: number; position: number; isMajor: boolean; result: PublicResult };
   const awardsByPlayer = new Map<string, Award[]>();
   const majorsByPlayer = new Map<string, number>();
 
@@ -247,11 +247,6 @@ function computeGalaxyCup(
     }
 
     for (const cat of ['hcp_low', 'hcp_high'] as Category[]) {
-      // Primary sort: Stableford desc within the GalaxyGolf category.
-      // Tiebreak (prudent): only use official_position from the source if ALL tied players
-      // share the same official_category — otherwise GD/Excel positions came from a different
-      // category split and are not comparable. official_* fields are audit data, never used
-      // as a direct ranking source.
       const sorted = byCat[cat].sort((a, b) => {
         const sa = Number(a.stableford_points ?? 0);
         const sb = Number(b.stableford_points ?? 0);
@@ -274,7 +269,7 @@ function computeGalaxyCup(
         const position = idx + 1;
         const points = position <= 20 ? table[position - 1] : 0;
         const arr = awardsByPlayer.get(r.player_id) ?? [];
-        arr.push({ points, position, isMajor });
+        arr.push({ points, position, isMajor, result: r });
         awardsByPlayer.set(r.player_id, arr);
         if (isMajor) {
           majorsByPlayer.set(r.player_id, (majorsByPlayer.get(r.player_id) ?? 0) + 1);
@@ -292,12 +287,26 @@ function computeGalaxyCup(
     for (const a of awards) {
       if (!best || a.position < best.position) best = a;
     }
+    const history: HistoryItem[] = [...awards]
+      .sort((a, b) => (a.result.rounds?.round_number ?? 0) - (b.result.rounds?.round_number ?? 0))
+      .map((a) => {
+        const lbl = roundLabel(a.result);
+        return {
+          round_id: a.result.round_id,
+          round_number: lbl.n,
+          label: lbl.short,
+          fullLabel: `${lbl.full} · ${a.position}º · ${a.points} pts`,
+          stableford: a.points,
+          isMajor: a.isMajor,
+        };
+      });
     rows.push({
       player_id: pid,
       name: player.name,
       category: playerCategory.get(pid)!,
       firstHcp: playerFirstHcp.get(pid) ?? 999,
       rounds_played: awards.length,
+
       majors_played: majorsByPlayer.get(pid) ?? 0,
       points,
       best_position: best?.position ?? null,
