@@ -51,8 +51,8 @@ const sortKey = (r: PublicResult) => {
 
 interface HistoryItem {
   round_id: string;
-  round_number: number | null;
-  label: string;
+  colLabel: string;
+  colSort: number;
   fullLabel: string;
   stableford: number;
   isMajor?: boolean;
@@ -83,15 +83,57 @@ interface GalaxyCupRow {
   history: HistoryItem[];
 }
 
-function roundLabel(r: PublicResult): { short: string; full: string; n: number | null } {
-  const club = r.rounds?.club?.trim();
-  const course = r.rounds?.course?.trim();
-  const name = r.rounds?.name?.trim();
-  const n = r.rounds?.round_number ?? null;
-  const short = club || course || name || (n ? `J${n}` : '—');
-  const full = [n ? `J${n}` : null, club || course, name].filter(Boolean).join(' · ') || short;
-  return { short, full, n };
+function fmtDate(d?: string | null): string {
+  if (!d) return '';
+  const [y, m, dd] = d.split('-');
+  if (!y || !m || !dd) return d;
+  return `${dd}/${m}/${y}`;
 }
+
+function venueName(r: PublicResult): string {
+  return (
+    r.rounds?.club?.trim() ||
+    r.rounds?.course?.trim() ||
+    r.rounds?.name?.trim() ||
+    '—'
+  );
+}
+
+const CIRCUITO_STAGE_ORDER: Record<string, number> = { regular: 0, final: 1 };
+const GALAXYCUP_STAGE_ORDER: Record<string, number> = { regular: 0, major: 1, playoff: 2 };
+
+function circuitoColumn(stage: string, n: number | null): { label: string; sort: number } {
+  if (stage === 'final') return { label: 'Final', sort: 10_000 + (n ?? 0) };
+  return { label: n ? `P${n}` : 'P?', sort: (CIRCUITO_STAGE_ORDER[stage] ?? 9) * 1000 + (n ?? 999) };
+}
+
+function galaxyCupColumn(stage: string, n: number | null): { label: string; sort: number } {
+  const sortBase = (GALAXYCUP_STAGE_ORDER[stage] ?? 9) * 1000 + (n ?? 999);
+  if (stage === 'major') return { label: n ? `M${n}` : 'M?', sort: sortBase };
+  if (stage === 'playoff') return { label: n ? `PO${n}` : 'PO?', sort: sortBase };
+  return { label: n ? `P${n}` : 'P?', sort: sortBase };
+}
+
+function circuitoFullLabel(r: PublicResult, stage: string, n: number | null): string {
+  const stageLabel =
+    stage === 'final' ? 'Circuito Final' : `Circuito P${n ?? '?'}`;
+  return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function galaxyCupFullLabel(r: PublicResult, stage: string, n: number | null): string {
+  const stageLabel =
+    stage === 'major'
+      ? `GalaxyCup Major P${n ?? '?'}`
+      : stage === 'playoff'
+        ? `GalaxyCup Playoff P${n ?? '?'}`
+        : `GalaxyCup P${n ?? '?'}`;
+  return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 
 function computeCircuito(
   results: PublicResult[],
