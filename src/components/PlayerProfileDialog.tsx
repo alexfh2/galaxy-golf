@@ -40,7 +40,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     queryFn: async () => {
       const { data } = await supabase
         .from('results')
-        .select('*, rounds!inner(name, date, club, round_number, status, course_par, course_handicap, course_handicap_women)')
+        .select('*, rounds!inner(id, name, date, club, round_number, status, course_par, course_handicap, course_handicap_women)')
         .eq('player_id', playerId!)
         .eq('rounds.status', 'published')
         .order('rounds(round_number)');
@@ -63,6 +63,13 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
       const { data } = await supabase.from('seasons').select('rules_config').eq('active', true).single();
       return data;
     },
+    enabled: open,
+  });
+
+  const { data: roundComps } = useQuery({
+    queryKey: [...publicCircuitDataQueryKey, 'dialog-round-comps'],
+    queryFn: fetchPublicCircuitData,
+    select: (data) => data.round_competitions,
     enabled: open,
   });
 
@@ -125,6 +132,22 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
       categoryHcp: categoryHcpMap.get(playerId) ?? null,
     };
   }, [allResults, playerId, bestN]);
+
+  const roundCompMap = useMemo(() => {
+    const map = new Map<string, { name: string; competition_type: string }[]>();
+    for (const rc of (roundComps || [])) {
+      if (!map.has(rc.round_id)) map.set(rc.round_id, []);
+      if (rc.competition) map.get(rc.round_id)!.push(rc.competition);
+    }
+    return map;
+  }, [roundComps]);
+
+  const getRoundCompetitionLabel = (roundId: string): { label: string; variant: 'cup' | 'circuit' | null } => {
+    const comps = roundCompMap.get(roundId) || [];
+    const names = comps.map(c => c.name);
+    if (names.some(n => n.toLowerCase().includes('cup'))) return { label: 'GalaxyCup', variant: 'cup' };
+    if (names.some(n => n.toLowerCase().includes('circuito'))) return { label: 'Circuito', variant: 'circuit' };
+  };
 
   if (!player) {
     return (
@@ -422,7 +445,22 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                         <div className="flex items-center gap-2 text-left flex-1 min-w-0">
                           <Badge variant="outline" className="text-[10px] font-mono shrink-0 px-1.5 py-0 border-accent/30">J{round?.round_number}</Badge>
                           <span className="font-medium text-sm truncate text-foreground">{round?.name}</span>
-                          
+                          {(() => {
+                            const comp = getRoundCompetitionLabel(round?.id);
+                            if (!comp.label) return null;
+                            return (
+                              <Badge
+                                variant="secondary"
+                                className={`text-[9px] font-bold shrink-0 px-1.5 py-0 ${
+                                  comp.variant === 'cup'
+                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                }`}
+                              >
+                                {comp.label}
+                              </Badge>
+                            );
+                          })()}
                           <span className="text-xs text-muted-foreground ml-auto mr-2 shrink-0">
                             {round?.date ? format(new Date(round.date), 'dd MMM', { locale }) : ''}
                           </span>
