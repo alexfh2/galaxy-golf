@@ -88,7 +88,7 @@ const Navbar = () => {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <LanguageSwitcher />
           {/* ThemeToggle hidden: app locked to dark mode */}
           <Link
