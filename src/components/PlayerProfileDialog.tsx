@@ -445,7 +445,22 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                         <div className="flex items-center gap-2 text-left flex-1 min-w-0">
                           <Badge variant="outline" className="text-[10px] font-mono shrink-0 px-1.5 py-0 border-accent/30">J{round?.round_number}</Badge>
                           <span className="font-medium text-sm truncate text-foreground">{round?.name}</span>
-                          
+                          {(() => {
+                            const comp = getRoundCompetitionLabel(round?.id);
+                            if (!comp.label) return null;
+                            return (
+                              <Badge
+                                variant="secondary"
+                                className={`text-[9px] font-bold shrink-0 px-1.5 py-0 ${
+                                  comp.variant === 'cup'
+                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                }`}
+                              >
+                                {comp.label}
+                              </Badge>
+                            );
+                          })()}
                           <span className="text-xs text-muted-foreground ml-auto mr-2 shrink-0">
                             {round?.date ? format(new Date(round.date), 'dd MMM', { locale }) : ''}
                           </span>
