@@ -1104,8 +1104,22 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             <Button
               size="sm"
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || selectedCount === 0 || hasUnresolvedConflicts}
-              title={hasUnresolvedConflicts ? 'Resol els conflictes de duplicats primer' : ''}
+              disabled={
+                saveMutation.isPending ||
+                selectedCount === 0 ||
+                hasUnresolvedConflicts ||
+                (importSource === 'excel' &&
+                  results[0]?._hole_mode === 'stableford_points' &&
+                  stablefordTotalSource === 'sum' &&
+                  excelDiagnostics?.massDiscrepancy === true)
+              }
+              title={
+                hasUnresolvedConflicts
+                  ? 'Resol els conflictes de duplicats primer'
+                  : excelDiagnostics?.massDiscrepancy && stablefordTotalSource === 'sum'
+                  ? 'Hi ha massa discrepàncies. Canvia a "Usar total Stableford de l\\'Excel" o revisa el mapeig.'
+                  : ''
+              }
             >
               <Check className="h-4 w-4 mr-2" />
               {saveMutation.isPending ? 'Guardant...' : 'Guardar resultats'}
