@@ -828,18 +828,18 @@ export function GalaxyCupRankingPage() {
         <DashboardCard
           label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas GalaxyCup publicadas"
+          hint="Jornadas con resultados publicadas"
         />
         <DashboardCard
           label="Majors puntuables"
           value={totalMajors || '—'}
-          hint="Puntuación incrementada"
+          hint="Puntuación mayor en torneos especiales"
           accent="copper"
         />
         <DashboardCard
           label="Ruta a Playoffs"
           value="Fase regular"
-          hint="Playoffs por confirmar"
+          hint="En curso"
           accent="muted"
         />
       </DashboardStrip>
