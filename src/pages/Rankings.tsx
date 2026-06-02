@@ -601,7 +601,7 @@ export default function Rankings() {
                               title={c.full}
                               className="text-center whitespace-nowrap px-2"
                             >
-                              {c.round_number ? `J${c.round_number}` : c.label}
+                              {c.label}
                               {c.isMajor && (
                                 <span className="ml-1 text-[9px] uppercase text-[hsl(var(--gg-copper))]">M</span>
                               )}
