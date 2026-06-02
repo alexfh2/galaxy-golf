@@ -781,16 +781,8 @@ export function GalaxyCupRankingPage() {
     }
     return { totalPruebas: ids.size, totalMajors: majors.size };
   }, [rows]);
-  const leader = rows[0];
-
-  const heroStats = rows.length
-    ? [
-        { value: leader ? leader.name.split(' ')[0] : '—', label: 'Líder actual' },
-        { value: leader ? leader.points : '—', label: 'Puntos líder' },
-        { value: totalPruebas, label: 'Pruebas disputadas' },
-        { value: totalMajors, label: 'Majors jugados' },
-      ]
-    : undefined;
+  const categoryLabel = getGalaxyGolfCategoryLabel(category);
+  const leader = filtered[0] ?? null;
 
   return (
     <>
@@ -798,9 +790,42 @@ export function GalaxyCupRankingPage() {
         eyebrow="RACE TO THE PLAYOFFS"
         title="GalaxyCup 2026"
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
-        stats={heroStats}
+        bgImage={heroGalaxyCup}
+        leaderCard={
+          <LeaderCard
+            name={leader?.name ?? null}
+            points={leader?.points ?? null}
+            categoryLabel={categoryLabel}
+            accent="copper"
+          />
+        }
       />
-      <section className="bg-background py-14">
+      <DashboardStrip>
+        <DashboardCard
+          label="Líder actual"
+          value={leader ? leader.name.split(' ')[0] : '—'}
+          hint={leader ? `${leader.points} pts · ${categoryLabel}` : 'Ranking pendiente'}
+          accent="gold"
+        />
+        <DashboardCard
+          label="Pruebas publicadas"
+          value={totalPruebas || '—'}
+          hint="Jornadas GalaxyCup"
+        />
+        <DashboardCard
+          label="Majors jugados"
+          value={totalMajors || '—'}
+          hint="Bonus de puntos"
+          accent="copper"
+        />
+        <DashboardCard
+          label="Playoffs"
+          value="—"
+          hint="Pendientes de implementación"
+          accent="muted"
+        />
+      </DashboardStrip>
+      <section className="bg-background pb-14">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <EmptyMessage>Cargando ranking...</EmptyMessage>
