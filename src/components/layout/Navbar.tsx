@@ -4,7 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import LanguageSwitcher from './LanguageSwitcher';
-import logoGoldNavy from '@/assets/galaxygolf-logo-gold-navy.png.asset.json';
+import logoGoldNavyV2 from '@/assets/galaxygolf-logo-gold-navy-v2.png.asset.json';
 import logoOficial from '@/assets/galaxygolf-logo-oficial.png.asset.json';
 // ThemeToggle removed — app locked to dark mode
 
@@ -25,10 +25,10 @@ const Wordmark = ({ className = '' }: { className?: string }) => (
   </span>
 );
 
-// Logo monocromo dorado sobre navy — encaja con --gg-navbar-navy
+// Logo monocromo dorado sobre navy v2 — fondo #041633, encaja con --gg-navbar-navy
 const LogoGoldNavy = ({ className = '' }: { className?: string }) => (
   <img
-    src={logoGoldNavy.url}
+    src={logoGoldNavyV2.url}
     alt="GalaxyGolf"
     className={`object-contain w-auto select-none ${className}`}
     draggable={false}
@@ -62,7 +62,7 @@ const Navbar = () => {
     >
       <div className="container flex h-20 items-center justify-between py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
-          <LogoGoldNavy className="h-8 sm:h-10 max-h-10" />
+          <LogoGoldNavy className="h-7 sm:h-9 max-h-9" />
         </Link>
 
         {/* Desktop Nav */}
