@@ -26,7 +26,7 @@ import { computeCircuito, computeGalaxyCup } from '@/pages/Rankings';
 type Category = 'hcp_low' | 'hcp_high';
 type CategoryFilter = 'all' | Category;
 type CompetitionFilter = 'all' | 'circuito' | 'galaxycup';
-type SortMode = 'name' | 'circuito' | 'galaxycup' | 'hcp' | 'rounds';
+type SortMode = 'default' | 'name' | 'circuito' | 'galaxycup' | 'hcp' | 'rounds';
 
 interface PlayerRow {
   player_id: string;
