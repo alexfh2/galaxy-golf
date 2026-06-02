@@ -66,7 +66,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1 ml-6">
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.path;
             return (
