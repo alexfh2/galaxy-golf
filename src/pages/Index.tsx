@@ -15,23 +15,25 @@ const Index = () => {
         <div className="absolute inset-0">
           <img src={heroBg} alt="" className="w-full h-full object-cover object-center" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/85 to-[hsl(var(--gg-navy))]/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-[hsl(var(--gg-navy))]/40" />
+        {/* Overlay lateral cálido para apoyo del titular */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/95 from-0% via-[hsl(var(--gg-bg-light))]/70 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%" />
+        {/* Fundido inferior con el fondo de página */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent" />
 
         <div className="relative z-10 container py-16 max-w-3xl">
           <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
             Temporada 2026
           </p>
-          <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-5 text-[hsl(var(--gg-ivory))]">
+          <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-5 text-[hsl(var(--gg-navy-deep))]">
             La temporada<br />está en juego
           </h1>
-          <p className="text-base lg:text-lg text-[hsl(var(--gg-ivory))]/75 leading-relaxed mb-8 max-w-xl">
+          <p className="text-base lg:text-lg text-[hsl(var(--gg-text-muted))] leading-relaxed mb-8 max-w-xl">
             Sigue los torneos, el calendario y las clasificaciones del Circuito GALAXY GOLF y la GalaxyCup 2026.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               to="/jornades"
-              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-green))]/90 transition-colors"
+              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-surface-light))] text-[11px] font-semibold uppercase tracking-[0.22em] shadow-[0_8px_24px_-12px_rgba(11,19,36,0.4)] hover:bg-[hsl(var(--gg-green))]/85 transition-colors"
             >
               Ver calendario
               <ArrowRight className="h-4 w-4" />
@@ -39,7 +41,7 @@ const Index = () => {
             <button
               type="button"
               onClick={scrollToCompeticiones}
-              className="inline-flex items-center justify-center gap-3 px-7 py-4 border border-[hsl(var(--gg-gold))]/50 text-[hsl(var(--gg-gold))] text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
+              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-surface-light))]/70 backdrop-blur-[2px] border border-[hsl(var(--gg-navy-deep))]/30 text-[hsl(var(--gg-navy-deep))] text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-surface-light))] hover:border-[hsl(var(--gg-gold))] transition-colors"
             >
               Ver competiciones
               <ArrowRight className="h-4 w-4" />
@@ -81,33 +83,33 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Circuito GalaxyGolf */}
-          <article className="relative overflow-hidden border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-green))]/40 p-10 flex flex-col group hover:border-[hsl(var(--gg-gold))]/50 transition-colors">
+          <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/25 bg-[hsl(var(--gg-green))]/12 p-10 flex flex-col group hover:border-[hsl(var(--gg-green))]/50 transition-colors shadow-[0_2px_24px_-12px_rgba(11,19,36,0.18)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-gold))]/60 to-transparent" />
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-12 w-12 rounded-full border border-[hsl(var(--gg-gold))]/50 flex items-center justify-center">
-                <span className="font-display text-xl text-[hsl(var(--gg-gold))]">G</span>
+              <div className="h-12 w-12 rounded-full border border-[hsl(var(--gg-green))]/50 flex items-center justify-center bg-[hsl(var(--gg-surface-light))]/60">
+                <span className="font-display text-xl text-[hsl(var(--gg-green))]">G</span>
               </div>
-              <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]/80">
+              <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))]">
                 Temporada 2026
               </p>
             </div>
-            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-ivory))]">Circuito GALAXY GOLF</h3>
-            <p className="text-[hsl(var(--gg-ivory))]/70 leading-relaxed mb-6">
+            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-navy-deep))]">Circuito GALAXY GOLF</h3>
+            <p className="text-[hsl(var(--gg-navy-deep))]/80 leading-relaxed mb-6">
               Ranking anual, pruebas regulares y Gran Final.
             </p>
-            <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-gold))]/40 text-[hsl(var(--gg-gold))]">
+            <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-green))]/40 text-[hsl(var(--gg-green))] bg-[hsl(var(--gg-surface-light))]/50">
               12 pruebas + Gran Final
             </span>
             <div className="mt-auto flex items-center gap-6">
               <Link
                 to="/circuito-galaxygolf"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver ranking <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 to="/jornades"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/60 hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver calendario
               </Link>
@@ -115,16 +117,16 @@ const Index = () => {
           </article>
 
           {/* GalaxyCup */}
-          <article className="relative overflow-hidden border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))] p-10 flex flex-col group hover:border-[hsl(var(--gg-gold))]/50 transition-colors">
-            <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-copper))]/60 to-transparent" />
+          <article className="relative overflow-hidden border border-[hsl(var(--gg-copper))]/25 bg-[hsl(var(--gg-surface-light))] p-10 flex flex-col group hover:border-[hsl(var(--gg-copper))]/55 transition-colors shadow-[0_2px_24px_-12px_rgba(11,19,36,0.18)]">
+            <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-copper))]/70 to-transparent" />
             <div className="flex items-center gap-4 mb-6">
               <Trophy className="h-10 w-10 text-[hsl(var(--gg-copper))]" strokeWidth={1.2} />
               <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))]">
                 Race to the Playoffs
               </p>
             </div>
-            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-ivory))]">GalaxyCup</h3>
-            <p className="text-[hsl(var(--gg-ivory))]/70 leading-relaxed mb-6">
+            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-navy-deep))]">GalaxyCup</h3>
+            <p className="text-[hsl(var(--gg-navy-deep))]/80 leading-relaxed mb-6">
               Competición por puntos con Majors y Playoffs.
             </p>
             <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))]">
@@ -133,13 +135,13 @@ const Index = () => {
             <div className="mt-auto flex items-center gap-6">
               <Link
                 to="/galaxycup"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver ranking <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 to="/jornades"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/60 hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver calendario
               </Link>

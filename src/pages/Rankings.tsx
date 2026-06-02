@@ -439,36 +439,42 @@ function LeaderCard({
   const accentColor = accent === 'green' ? 'hsl(var(--gg-green))' : 'hsl(var(--gg-copper))';
   return (
     <div
-      className="relative w-full max-w-sm border border-[hsl(var(--gg-gold))]/25 bg-[hsl(var(--gg-navy))]/70 backdrop-blur-sm p-7 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
+      className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))]/95 backdrop-blur-md p-7 shadow-[0_24px_60px_-24px_rgba(11,19,36,0.35)]"
       style={{ borderTop: `2px solid ${accentColor}` }}
     >
       <div className="flex items-center justify-between mb-5">
-        <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+        <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/55">
           Líder actual
         </span>
-        <span className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] border border-[hsl(var(--gg-gold))]/40 px-2 py-[2px]">
+        <span
+          className="text-[10px] uppercase tracking-[0.22em] px-2 py-[2px] border"
+          style={{ color: accentColor, borderColor: accentColor + '55' }}
+        >
           #1
         </span>
       </div>
       {name ? (
         <>
-          <div className="font-display text-2xl md:text-[26px] leading-tight text-[hsl(var(--gg-ivory))]">
+          <div className="font-display text-2xl md:text-[26px] leading-tight text-[hsl(var(--gg-navy-deep))]">
             {name}
           </div>
-          <div className="mt-5 flex items-end justify-between border-t border-[hsl(var(--gg-gold))]/15 pt-4">
+          <div className="mt-5 flex items-end justify-between border-t border-[hsl(var(--gg-navy-deep))]/10 pt-4">
             <div>
-              <div className="text-[9px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/45">
+              <div className="text-[9px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/50">
                 Categoría
               </div>
-              <div className="mt-1 text-[12px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/85">
+              <div className="mt-1 text-[12px] uppercase tracking-[0.18em] text-[hsl(var(--gg-navy-deep))]/85">
                 {categoryLabel}
               </div>
             </div>
             <div className="text-right">
-              <div className="font-display text-3xl text-[hsl(var(--gg-gold))] leading-none">
+              <div
+                className="font-display text-3xl leading-none"
+                style={{ color: accentColor }}
+              >
                 {points}
               </div>
-              <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+              <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/55">
                 pts
               </div>
             </div>
@@ -476,8 +482,8 @@ function LeaderCard({
         </>
       ) : (
         <div className="py-4">
-          <div className="font-display text-xl text-[hsl(var(--gg-ivory))]/75">Ranking pendiente</div>
-          <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/45">
+          <div className="font-display text-xl text-[hsl(var(--gg-navy-deep))]/70">Ranking pendiente</div>
+          <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/50">
             Sin resultados en {categoryLabel}
           </div>
         </div>
@@ -492,44 +498,60 @@ function PageHeader({
   text,
   bgImage,
   leaderCard,
+  overlayStrength = 'soft',
 }: {
   eyebrow: string;
   title: React.ReactNode;
   text: string;
   bgImage?: string;
   leaderCard?: React.ReactNode;
+  overlayStrength?: 'soft' | 'strong';
 }) {
+  const isStrong = overlayStrength === 'strong';
   return (
-    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
+    <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
       {bgImage && (
         <>
           <img
             src={bgImage}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-cover opacity-75"
+            className="absolute inset-0 w-full h-full object-cover opacity-90"
           />
+          {/* Capa lateral marfil — apoyo del titular */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))]/92 via-[hsl(var(--gg-navy))]/55 to-[hsl(var(--gg-navy))]/20"
+            className={`absolute inset-0 bg-gradient-to-r ${
+              isStrong
+                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/80 via-45% to-[hsl(var(--gg-bg-light))]/25 to-100%'
+                : 'from-[hsl(var(--gg-bg-light))]/92 from-0% via-[hsl(var(--gg-bg-light))]/65 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%'
+            }`}
           />
+          {/* Fundido inferior */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-[hsl(var(--gg-navy))]/10"
+            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
           />
+          {/* Refuerzo localizado bajo el bloque titular */}
+          {isStrong && (
+            <div
+              aria-hidden
+              className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent"
+            />
+          )}
         </>
       )}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
+        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/20"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/10"
+        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/15"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/30"
+        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/25"
       />
       <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
@@ -538,12 +560,12 @@ function PageHeader({
               {eyebrow}
             </p>
             <h1
-              className="font-display font-light leading-[1.05] text-[hsl(var(--gg-ivory))]"
+              className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))]"
               style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
             >
               {title}
             </h1>
-            <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75 font-light">
+            <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light">
               {text}
             </p>
           </div>
@@ -810,6 +832,7 @@ export function GalaxyCupRankingPage() {
         }
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
         bgImage={heroGalaxyCup}
+        overlayStrength="strong"
         leaderCard={
           <LeaderCard
             name={leader?.name ?? null}
