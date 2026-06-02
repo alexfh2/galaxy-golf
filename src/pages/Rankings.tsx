@@ -702,25 +702,25 @@ export function CircuitoRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-sm border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 overflow-x-auto shadow-[0_8px_40px_-20px_hsl(var(--gg-navy))]">
+                <div className="rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-[hsl(var(--gg-gold))]/20 hover:bg-transparent">
-                        <TableHead className="w-14 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pos.</TableHead>
-                        <TableHead className="min-w-[180px] text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Jugador</TableHead>
+                      <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                        <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pos.</TableHead>
+                        <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Jugador</TableHead>
                         {roundCols.map((c) => (
                           <TableHead
                             key={c.round_id}
                             title={c.full}
-                            className="text-center whitespace-nowrap px-2 text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--gg-ivory))]/55"
+                            className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-green))]/85"
                           >
                             {c.label}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pruebas</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Mejores 7</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Bonus</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-gold))]">Total</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pruebas</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Mejores 7</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Bonus</TableHead>
+                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -730,18 +730,20 @@ export function CircuitoRankingPage() {
                         return (
                           <TableRow
                             key={r.player_id}
-                            className={`group border-b border-[hsl(var(--gg-gold))]/10 ${
-                              isLeader ? 'bg-[hsl(var(--gg-green))]/20 hover:bg-[hsl(var(--gg-green))]/25' : 'hover:bg-[hsl(var(--gg-navy))]/60'
+                            className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
+                              isLeader
+                                ? 'bg-[hsl(var(--gg-green))]/10 hover:bg-[hsl(var(--gg-green))]/14'
+                                : 'hover:bg-[hsl(var(--gg-bg-light))]'
                             }`}
                           >
-                            <TableCell className="font-display text-lg text-[hsl(var(--gg-gold))]">
+                            <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
                               {i + 1}
                             </TableCell>
                             <TableCell>
                               <button
                                 type="button"
                                 onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
+                                className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
                               >
                                 {r.name}
                               </button>
@@ -749,15 +751,15 @@ export function CircuitoRankingPage() {
                             {roundCols.map((c) => {
                               const v = byRid.get(c.round_id);
                               return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-ivory))]/85">
-                                  {v != null ? v : <span className="text-[hsl(var(--gg-ivory))]/25">—</span>}
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                                  {v != null ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
                                 </TableCell>
                               );
                             })}
-                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/85">{r.best7}</TableCell>
-                            <TableCell className="text-center text-[hsl(var(--gg-copper))]">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-display text-lg text-[hsl(var(--gg-gold))]">
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.best7}</TableCell>
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">+{r.bonus}</TableCell>
+                            <TableCell className="text-center font-sans font-bold text-xl text-[hsl(var(--gg-copper))] tabular-nums">
                               {r.total}
                             </TableCell>
                           </TableRow>
