@@ -15,8 +15,10 @@ const Index = () => {
         <div className="absolute inset-0">
           <img src={heroBg} alt="" className="w-full h-full object-cover object-center" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/85 to-[hsl(var(--gg-navy))]/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-[hsl(var(--gg-navy))]/40" />
+        {/* Overlay lateral cálido para apoyo del titular */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/95 from-0% via-[hsl(var(--gg-bg-light))]/70 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%" />
+        {/* Fundido inferior con el fondo de página */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent" />
 
         <div className="relative z-10 container py-16 max-w-3xl">
           <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
