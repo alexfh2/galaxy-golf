@@ -142,13 +142,15 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     return map;
   }, [roundComps]);
 
-  const getRoundCompetitionLabel = (roundId: string): { label: string; variant: 'cup' | 'circuit' | null } => {
+  const getRoundCompetitionLabels = (roundId: string): Array<{ label: string; variant: 'cup' | 'circuit' }> => {
     const comps = roundCompMap.get(roundId) || [];
-    const names = comps.map(c => c.name);
-    if (names.some(n => n.toLowerCase().includes('cup'))) return { label: 'GalaxyCup', variant: 'cup' };
-    if (names.some(n => n.toLowerCase().includes('circuito'))) return { label: 'Circuito', variant: 'circuit' };
-    return { label: '', variant: null };
+    const names = comps.map(c => c.name?.toLowerCase() ?? '');
+    const out: Array<{ label: string; variant: 'cup' | 'circuit' }> = [];
+    if (names.some(n => n.includes('cup'))) out.push({ label: 'GalaxyCup', variant: 'cup' });
+    if (names.some(n => n.includes('circuito') || n.includes('galaxygolf'))) out.push({ label: 'Circuito', variant: 'circuit' });
+    return out;
   };
+
 
   if (!player) {
     return (
