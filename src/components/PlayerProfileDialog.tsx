@@ -449,10 +449,11 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                           <Badge variant="outline" className="text-[10px] font-mono shrink-0 px-1.5 py-0 border-accent/30">J{round?.round_number}</Badge>
                           <span className="font-medium text-sm truncate text-foreground">{round?.name}</span>
                           {(() => {
-                            const comp = getRoundCompetitionLabel(round?.id);
-                            if (!comp.label) return null;
-                            return (
+                            const comps = getRoundCompetitionLabels(round?.id);
+                            if (!comps.length) return null;
+                            return comps.map(comp => (
                               <Badge
+                                key={comp.variant}
                                 variant="secondary"
                                 className={`text-[9px] font-bold shrink-0 px-1.5 py-0 ${
                                   comp.variant === 'cup'
@@ -462,7 +463,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                               >
                                 {comp.label}
                               </Badge>
-                            );
+                            ));
                           })()}
                           <span className="text-xs text-muted-foreground ml-auto mr-2 shrink-0">
                             {round?.date ? format(new Date(round.date), 'dd MMM', { locale }) : ''}
