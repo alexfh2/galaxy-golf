@@ -256,19 +256,14 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     { label: 'Mitjana Pars 5', value: formatParAvg(5), count: parGroupStats[5].count, par: 5 },
   ];
 
-  // Determine main category (by HCP) and subcategories
-  // Categoría fijada por el HCP de la primera ronda jugada (consistente con Rankings).
-  const hcp = positions?.categoryHcp ?? player.current_handicap;
-  const mainCategory =
-    hcp != null && hcp <= 15.4
-      ? { key: 'hcpLow', label: 'Hándicap Inferior (≤15,4)', pos: positions?.hcpLow }
-      : hcp != null
-      ? { key: 'hcpHigh', label: 'Hándicap Superior (≥15,5)', pos: positions?.hcpHigh }
-      : null;
+  // Posiciones por competición (Circuito y GalaxyCup) dentro de la categoría del jugador
+  const categoryLabel = positions?.categoryLabel ?? null;
+  const rankingCells: { label: string; pos: { pos: number; total: number; of: number } | null }[] = [
+    { label: 'Circuito GalaxyGolf', pos: positions?.circuito ?? null },
+    { label: 'GalaxyCup', pos: positions?.galaxyCup ?? null },
+  ];
+  const hasAnyRanking = !!(positions?.circuito || positions?.galaxyCup);
 
-  const subCategories: { label: string; pos: { pos: number; total: number; of: number } | null | undefined }[] = [];
-  if (player.gender === 'F') subCategories.push({ label: 'Femení', pos: positions?.female });
-  if (player.is_senior) subCategories.push({ label: 'Sènior', pos: positions?.senior });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
