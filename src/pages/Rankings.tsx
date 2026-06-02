@@ -759,7 +759,7 @@ export function CircuitoRankingPage() {
                             <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
                             <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.best7}</TableCell>
                             <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-sans font-bold text-xl text-[hsl(var(--gg-copper))] tabular-nums">
+                            <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-base">
                               {r.total}
                             </TableCell>
                           </TableRow>
