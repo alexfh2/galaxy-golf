@@ -396,12 +396,35 @@ function CategoryTabs({
   onChange: (c: Category) => void;
 }) {
   return (
-    <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-6">
-      <TabsList className="bg-[hsl(var(--gg-navy))]/10">
-        <TabsTrigger value="hcp_low">Hándicap Inferior</TabsTrigger>
-        <TabsTrigger value="hcp_high">Hándicap Superior</TabsTrigger>
+    <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-8">
+      <TabsList className="bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 p-1 h-auto rounded-sm">
+        <TabsTrigger
+          value="hcp_low"
+          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+        >
+          Hándicap Inferior
+        </TabsTrigger>
+        <TabsTrigger
+          value="hcp_high"
+          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+        >
+          Hándicap Superior
+        </TabsTrigger>
       </TabsList>
     </Tabs>
+  );
+}
+
+function HeroStat({ value, label }: { value: React.ReactNode; label: string }) {
+  return (
+    <div className="border-l border-[hsl(var(--gg-gold))]/25 pl-5">
+      <div className="font-display text-3xl md:text-4xl text-[hsl(var(--gg-gold))] leading-none">
+        {value}
+      </div>
+      <div className="mt-2 text-[10px] uppercase tracking-[0.25em] text-[hsl(var(--gg-ivory))]/55">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -409,27 +432,48 @@ function PageHeader({
   eyebrow,
   title,
   text,
+  stats,
 }: {
   eyebrow: string;
   title: string;
   text: string;
+  stats?: { value: React.ReactNode; label: string }[];
 }) {
   return (
-    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
+    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full border border-[hsl(var(--gg-gold))]/20"
+        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-40 -left-20 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-green))]/40"
+        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/10"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/40"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--gg-green)/0.25),transparent_60%)]"
       />
       <div className="container relative mx-auto px-4 py-16 md:py-24">
-        <p className="mb-4 text-xs font-medium tracking-[0.3em] text-[hsl(var(--gg-gold))]">
+        <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
           {eyebrow}
         </p>
-        <h1 className="font-display text-4xl md:text-6xl font-light leading-tight">{title}</h1>
-        <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">{text}</p>
+        <h1 className="font-display text-5xl md:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
+          {title}
+        </h1>
+        <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/70 font-light">
+          {text}
+        </p>
+        {stats && stats.length > 0 && (
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 max-w-3xl">
+            {stats.map((s, i) => (
+              <HeroStat key={i} value={s.value} label={s.label} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
