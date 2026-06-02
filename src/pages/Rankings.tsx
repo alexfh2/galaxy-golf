@@ -51,8 +51,8 @@ const sortKey = (r: PublicResult) => {
 
 interface HistoryItem {
   round_id: string;
-  round_number: number | null;
-  label: string;
+  colLabel: string;
+  colSort: number;
   fullLabel: string;
   stableford: number;
   isMajor?: boolean;
@@ -83,31 +83,79 @@ interface GalaxyCupRow {
   history: HistoryItem[];
 }
 
-function roundLabel(r: PublicResult): { short: string; full: string; n: number | null } {
-  const club = r.rounds?.club?.trim();
-  const course = r.rounds?.course?.trim();
-  const name = r.rounds?.name?.trim();
-  const n = r.rounds?.round_number ?? null;
-  const short = club || course || name || (n ? `J${n}` : '—');
-  const full = [n ? `J${n}` : null, club || course, name].filter(Boolean).join(' · ') || short;
-  return { short, full, n };
+function fmtDate(d?: string | null): string {
+  if (!d) return '';
+  const [y, m, dd] = d.split('-');
+  if (!y || !m || !dd) return d;
+  return `${dd}/${m}/${y}`;
 }
+
+function venueName(r: PublicResult): string {
+  return (
+    r.rounds?.club?.trim() ||
+    r.rounds?.course?.trim() ||
+    r.rounds?.name?.trim() ||
+    '—'
+  );
+}
+
+const CIRCUITO_STAGE_ORDER: Record<string, number> = { regular: 0, final: 1 };
+const GALAXYCUP_STAGE_ORDER: Record<string, number> = { regular: 0, major: 1, playoff: 2 };
+
+function circuitoColumn(stage: string, n: number | null): { label: string; sort: number } {
+  if (stage === 'final') return { label: 'Final', sort: 10_000 + (n ?? 0) };
+  return { label: n ? `P${n}` : 'P?', sort: (CIRCUITO_STAGE_ORDER[stage] ?? 9) * 1000 + (n ?? 999) };
+}
+
+function galaxyCupColumn(stage: string, n: number | null): { label: string; sort: number } {
+  const sortBase = (GALAXYCUP_STAGE_ORDER[stage] ?? 9) * 1000 + (n ?? 999);
+  if (stage === 'major') return { label: n ? `M${n}` : 'M?', sort: sortBase };
+  if (stage === 'playoff') return { label: n ? `PO${n}` : 'PO?', sort: sortBase };
+  return { label: n ? `P${n}` : 'P?', sort: sortBase };
+}
+
+function circuitoFullLabel(r: PublicResult, stage: string, n: number | null): string {
+  const stageLabel =
+    stage === 'final' ? 'Circuito Final' : `Circuito P${n ?? '?'}`;
+  return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function galaxyCupFullLabel(r: PublicResult, stage: string, n: number | null): string {
+  const stageLabel =
+    stage === 'major'
+      ? `GalaxyCup Major P${n ?? '?'}`
+      : stage === 'playoff'
+        ? `GalaxyCup Playoff P${n ?? '?'}`
+        : `GalaxyCup P${n ?? '?'}`;
+  return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 
 function computeCircuito(
   results: PublicResult[],
   roundComps: PublicRoundCompetition[],
 ): CircuitoRow[] {
-  // round_ids válidos: circuito-galaxygolf · regular · counts_for_ranking
+  // Asociaciones del Circuito (regular cuenta para ranking; mapa de etiquetas
+  // incluye también 'final' por si en el futuro se muestra como columna).
+  const circuitoAssoc = roundComps.filter(
+    (rc) => rc.competition?.slug === 'circuito-galaxygolf',
+  );
   const validRoundIds = new Set(
-    roundComps
-      .filter(
-        (rc) =>
-          rc.competition?.slug === 'circuito-galaxygolf' &&
-          rc.stage === 'regular' &&
-          rc.counts_for_ranking,
-      )
+    circuitoAssoc
+      .filter((rc) => rc.stage === 'regular' && rc.counts_for_ranking)
       .map((rc) => rc.round_id),
   );
+  const circuitoMeta = new Map<string, { stage: string; n: number | null }>();
+  for (const rc of circuitoAssoc) {
+    circuitoMeta.set(rc.round_id, {
+      stage: rc.stage,
+      n: rc.competition_round_number ?? null,
+    });
+  }
 
   const filtered = results.filter(
     (r) => validRoundIds.has(r.round_id) && r.stableford_points != null,
@@ -143,18 +191,18 @@ function computeCircuito(
       0,
     );
 
-    const history: HistoryItem[] = [...list]
-      .sort((a, b) => (a.rounds?.round_number ?? 0) - (b.rounds?.round_number ?? 0))
-      .map((r) => {
-        const lbl = roundLabel(r);
-        return {
-          round_id: r.round_id,
-          round_number: lbl.n,
-          label: lbl.short,
-          fullLabel: lbl.full,
-          stableford: Number(r.stableford_points ?? 0),
-        };
-      });
+    const history: HistoryItem[] = list.map((r) => {
+      const meta = circuitoMeta.get(r.round_id) ?? { stage: 'regular', n: null };
+      const col = circuitoColumn(meta.stage, meta.n);
+      return {
+        round_id: r.round_id,
+        colLabel: col.label,
+        colSort: col.sort,
+        fullLabel: circuitoFullLabel(r, meta.stage, meta.n),
+        stableford: Number(r.stableford_points ?? 0),
+      };
+    });
+
 
     rows.push({
       player_id: pid,
@@ -184,9 +232,14 @@ function computeGalaxyCup(
 ): GalaxyCupRow[] {
   // round → stage (regular|major) para GalaxyCup
   const roundStage = new Map<string, 'regular' | 'major'>();
+  const galaxyCupMeta = new Map<string, { stage: string; n: number | null }>();
   for (const rc of roundComps) {
+    if (rc.competition?.slug !== 'galaxycup') continue;
+    galaxyCupMeta.set(rc.round_id, {
+      stage: rc.stage,
+      n: rc.competition_round_number ?? null,
+    });
     if (
-      rc.competition?.slug === 'galaxycup' &&
       rc.counts_for_ranking &&
       (rc.stage === 'regular' || rc.stage === 'major')
     ) {
@@ -287,19 +340,18 @@ function computeGalaxyCup(
     for (const a of awards) {
       if (!best || a.position < best.position) best = a;
     }
-    const history: HistoryItem[] = [...awards]
-      .sort((a, b) => (a.result.rounds?.round_number ?? 0) - (b.result.rounds?.round_number ?? 0))
-      .map((a) => {
-        const lbl = roundLabel(a.result);
-        return {
-          round_id: a.result.round_id,
-          round_number: lbl.n,
-          label: lbl.short,
-          fullLabel: `${lbl.full} · ${a.position}º · ${a.points} pts`,
-          stableford: a.points,
-          isMajor: a.isMajor,
-        };
-      });
+    const history: HistoryItem[] = awards.map((a) => {
+      const meta = galaxyCupMeta.get(a.result.round_id) ?? { stage: 'regular', n: null };
+      const col = galaxyCupColumn(meta.stage, meta.n);
+      return {
+        round_id: a.result.round_id,
+        colLabel: col.label,
+        colSort: col.sort,
+        fullLabel: `${galaxyCupFullLabel(a.result, meta.stage, meta.n)} · ${a.position}º · ${a.points} pts`,
+        stableford: a.points,
+        isMajor: a.isMajor,
+      };
+    });
     rows.push({
       player_id: pid,
       name: player.name,
@@ -335,7 +387,7 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
   );
 }
 
-type RoundCol = { round_id: string; round_number: number | null; label: string; full: string; isMajor?: boolean };
+type RoundCol = { round_id: string; label: string; sort: number; full: string; isMajor?: boolean };
 
 function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
   const map = new Map<string, RoundCol>();
@@ -344,17 +396,15 @@ function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
       if (!map.has(h.round_id)) {
         map.set(h.round_id, {
           round_id: h.round_id,
-          round_number: h.round_number,
-          label: h.label,
+          label: h.colLabel,
+          sort: h.colSort,
           full: h.fullLabel,
           isMajor: h.isMajor,
         });
       }
     }
   }
-  return [...map.values()].sort(
-    (a, b) => (a.round_number ?? 9999) - (b.round_number ?? 9999),
-  );
+  return [...map.values()].sort((a, b) => a.sort - b.sort);
 }
 
 function CategoryTabs({
@@ -473,7 +523,7 @@ export default function Rankings() {
                               title={c.full}
                               className="text-center whitespace-nowrap px-2"
                             >
-                              {c.round_number ? `J${c.round_number}` : c.label}
+                              {c.label}
                             </TableHead>
                           ))}
                           <TableHead className="text-center">Pruebas</TableHead>
@@ -551,7 +601,7 @@ export default function Rankings() {
                               title={c.full}
                               className="text-center whitespace-nowrap px-2"
                             >
-                              {c.round_number ? `J${c.round_number}` : c.label}
+                              {c.label}
                               {c.isMajor && (
                                 <span className="ml-1 text-[9px] uppercase text-[hsl(var(--gg-copper))]">M</span>
                               )}
