@@ -8,6 +8,7 @@ import { fetchPublicCircuitData, publicCircuitDataQueryKey } from '@/lib/publicC
 import { buildPlayerCategoryHandicapMap } from '@/lib/playerCategoryHandicap';
 import { computeScratchStableford } from '@/lib/scratchStableford';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
+import heroCalendar from '@/assets/hero-calendar.png.asset.json';
 
 type CompetitionSlug = 'circuito-galaxygolf' | 'galaxycup';
 type Stage = 'regular' | 'major' | 'playoff' | 'final';
