@@ -51,17 +51,17 @@ const Index = () => {
       </section>
 
       {/* ——— SPONSORS STRIP (institucional, discreto) ——— */}
-      <section className="border-y border-[hsl(var(--gg-gold))]/15 bg-[hsl(var(--gg-navy))]">
+      <section className="border-y border-[hsl(var(--gg-green))]/20 bg-[hsl(var(--gg-bg-light))]">
         <div className="container py-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]/70 shrink-0">
+            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] shrink-0">
               Patrocinadores oficiales
             </p>
             <div className="flex-1 grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-3 items-center">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-7 flex items-center justify-center text-[10px] font-semibold tracking-[0.22em] uppercase text-[hsl(var(--gg-ivory))]/30"
+                  className="h-7 flex items-center justify-center text-[10px] font-semibold tracking-[0.22em] uppercase text-[hsl(var(--gg-navy-deep))]/40"
                 >
                   Sponsor
                 </div>
@@ -74,11 +74,11 @@ const Index = () => {
       {/* ——— COMPETICIONES ——— */}
       <section id="competiciones" className="container py-14">
         <div className="flex items-center gap-4 mb-8">
-          <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/20" />
-          <h2 className="text-[11px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]">
+          <div className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
+          <h2 className="text-[11px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))]">
             Competiciones 2026
           </h2>
-          <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/20" />
+          <div className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
