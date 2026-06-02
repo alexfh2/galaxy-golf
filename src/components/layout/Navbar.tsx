@@ -85,7 +85,7 @@ const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-72 bg-background border-border">
               <SheetTitle>
-                <Wordmark className="text-lg" />
+                <Logo className="h-10" />
               </SheetTitle>
               <nav className="mt-8 flex flex-col gap-0.5">
                 {navItems.map((item, idx) => (
