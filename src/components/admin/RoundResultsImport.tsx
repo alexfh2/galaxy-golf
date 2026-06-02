@@ -13,7 +13,7 @@ import { Check, X, AlertTriangle, Search, Plus, Trash2, Upload, FileSpreadsheet 
 import { DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { parseExcelResults } from '@/lib/parseExcelResults';
+import { parseExcelResults, type HoleMode } from '@/lib/parseExcelResults';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
@@ -40,6 +40,10 @@ interface ParsedResult {
   _url_index?: number;
   _is_np?: boolean;
   _is_senior?: boolean;
+  /** Excel-only: tells the save mutation how to serialise the scorecard. */
+  _hole_mode?: HoleMode;
+  /** Excel-only: stableford points per hole when _hole_mode === 'stableford_points'. */
+  _hole_stableford?: (number | null)[];
 }
 
 interface Props {
@@ -142,6 +146,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [existingCount, setExistingCount] = useState<number | null>(null);
   const [existingPlayerIds, setExistingPlayerIds] = useState<Set<string>>(new Set());
   const [needsSeniorFile, setNeedsSeniorFile] = useState(false);
+  const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -306,7 +311,12 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
     try {
       const buffer = await file.arrayBuffer();
-      const { results: excelResults, hasSeniorInfo } = parseExcelResults(buffer);
+      const {
+        results: excelResults,
+        hasSeniorInfo,
+        warnings: parserWarnings,
+        mode: parsedMode,
+      } = parseExcelResults(buffer, { holeMode: excelHoleMode });
 
       const playDate = excelPlayDate || null;
 
@@ -330,6 +340,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           _selected: true,
           _is_np: false,
           _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
+          _hole_mode: parsedMode,
+          _hole_stableford: r.hole_stableford,
         }));
 
       setSource(`Excel: ${file.name}`);
@@ -340,13 +352,22 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         setNeedsSeniorFile(true);
       }
 
+      if (parserWarnings.length > 0) {
+        setWarnings(prev => [...parserWarnings, ...prev]);
+      }
+
       const groups = computeDuplicateGroups(matched);
       const conflicts = groups.filter(g => g.needsManual).length;
 
+      const modeLabel = parsedMode === 'stableford_points'
+        ? 'Excel interpretat com punts Stableford per forat'
+        : 'Excel interpretat com cops per forat';
+
       toast({
         title: `${matched.length} resultats importats des d'Excel`,
-        description: `${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
+        description: `${modeLabel}. ${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
       });
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconegut';
       toast({ title: "Error llegint Excel", description: message, variant: 'destructive' });
@@ -576,7 +597,18 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         // Never used as a primary ranking source — GalaxyGolf categories are computed independently.
         official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
         official_category: r.source_category ?? null,
-        scorecard: r.scores.length > 0 ? { scores: r.scores, handicap_play: r.handicap_play } : null,
+        scorecard: r._hole_mode === 'stableford_points'
+          ? (r._hole_stableford && r._hole_stableford.length > 0
+              ? {
+                  mode: 'stableford_points',
+                  hole_points: r._hole_stableford,
+                  handicap_play: r.handicap_play,
+                  note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
+                }
+              : null)
+          : (r.scores.length > 0
+              ? { scores: r.scores, handicap_play: r.handicap_play }
+              : null),
       }));
 
       if (payloads.length === 0 && duplicatedExisting.length > 0) {
@@ -687,6 +719,24 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
               Columnes: Pos, Licencia, Nombre, Hex, NVH, Niv, Edad, Sex, Cat, Hpu, Total, H1-H18, Totalx.
               N.P exclosos. Sènior = edat ≥ 65 o Niv = S.
             </p>
+
+            <div className="space-y-1.5 rounded-md border border-border/60 bg-muted/30 p-3">
+              <Label className="text-xs font-semibold">Format de columnes per forat</Label>
+              <Select value={excelHoleMode} onValueChange={(v) => setExcelHoleMode(v as HoleMode)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="strokes">Cops per forat (per defecte)</SelectItem>
+                  <SelectItem value="stableford_points">Punts Stableford per forat</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Selecciona "Punts Stableford per forat" si l'Excel ja conté els punts obtinguts en cada forat,
+                no els cops realitzats. En aquest mode no es calculen birdies, eagles ni scratch oficial.
+              </p>
+            </div>
+
             <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
               <div className="space-y-1">
                 <Label htmlFor="excel-date" className="text-xs">Data de joc d'aquest fitxer</Label>
@@ -868,6 +918,20 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             <p className="text-sm font-semibold">
               {selectedCount} / {visibleResults.length} resultats seleccionats
               {source && <Badge variant="outline" className="ml-2 text-xs">{source}</Badge>}
+              {importSource === 'excel' && results.some(r => r._hole_mode) && (
+                <Badge
+                  variant="outline"
+                  className={`ml-2 text-xs ${
+                    results[0]?._hole_mode === 'stableford_points'
+                      ? 'border-amber-400/60 text-amber-300'
+                      : 'border-emerald-400/60 text-emerald-300'
+                  }`}
+                >
+                  {results[0]?._hole_mode === 'stableford_points'
+                    ? 'Excel: punts Stableford per forat'
+                    : 'Excel: cops per forat'}
+                </Badge>
+              )}
               {unresolvedConflicts.length > 0 && (
                 <Badge variant="destructive" className="ml-2 text-xs">
                   {unresolvedConflicts.length} conflictes

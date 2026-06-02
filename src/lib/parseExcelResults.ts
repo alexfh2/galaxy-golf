@@ -1,5 +1,7 @@
 import * as XLSX from 'xlsx';
 
+export type HoleMode = 'strokes' | 'stableford_points';
+
 export interface ExcelParsedResult {
   position: number;
   name: string;
@@ -11,10 +13,18 @@ export interface ExcelParsedResult {
   category: number | null;
   stableford_points: number | null;
   scratch_score: number | null;
+  /** Strokes per hole. Empty when mode === 'stableford_points'. */
   scores: (number | null)[];
+  /** Stableford points per hole. Empty when mode === 'strokes'. */
+  hole_stableford: (number | null)[];
+  /** Stableford total as found in the Excel "Total/Stb" column (audit). */
+  excel_total_stableford: number | null;
+  /** Sum of hole_stableford when mode === 'stableford_points'. */
+  computed_total_stableford: number | null;
   is_np: boolean;
   is_senior: boolean;
 }
+
 
 // Normalize header text for matching
 function norm(s: string): string {
@@ -137,9 +147,16 @@ function findHeaderRow(ws: XLSX.WorkSheet, range: XLSX.Range): number {
 export interface ExcelParseOutput {
   results: ExcelParsedResult[];
   hasSeniorInfo: boolean; // true if age or niv columns were detected
+  mode: HoleMode;
+  warnings: string[];
 }
 
-export function parseExcelResults(buffer: ArrayBuffer): ExcelParseOutput {
+export interface ExcelParseOptions {
+  holeMode?: HoleMode;
+}
+
+export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptions): ExcelParseOutput {
+  const mode: HoleMode = options?.holeMode ?? 'strokes';
   const wb = XLSX.read(buffer, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) throw new Error('No s\'ha trobat cap fulla al fitxer Excel');
@@ -153,7 +170,13 @@ export function parseExcelResults(buffer: ArrayBuffer): ExcelParseOutput {
   }
 
   const results: ExcelParsedResult[] = [];
+  const warnings: string[] = [];
   let posCounter = 0;
+  // Aggregates for global warnings
+  let totalHoleValues = 0;
+  let onesCount = 0;
+  let highStbCount = 0; // values > 5 in stableford mode
+  const discrepancies: { name: string; excel: number; computed: number }[] = [];
 
   for (let r = headerRow + 1; r <= range.e.r; r++) {
     const getVal = (c: number | null) => {
@@ -175,7 +198,6 @@ export function parseExcelResults(buffer: ArrayBuffer): ExcelParseOutput {
     const name = String(nameVal).trim();
     if (!name) continue;
 
-    // Detect N.P. — check total or scratch columns
     const totalRaw = getVal(cols.total);
     const scratchRaw = getVal(cols.scratch);
     const isNP = totalRaw === 'N.P' || totalRaw === 'NP' || scratchRaw === 'N.P' || scratchRaw === 'NP';
@@ -195,6 +217,9 @@ export function parseExcelResults(buffer: ArrayBuffer): ExcelParseOutput {
         stableford_points: null,
         scratch_score: null,
         scores: [],
+        hole_stableford: [],
+        excel_total_stableford: null,
+        computed_total_stableford: null,
         is_np: true,
         is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
       });
@@ -204,19 +229,64 @@ export function parseExcelResults(buffer: ArrayBuffer): ExcelParseOutput {
     const posRaw = getNum(cols.pos);
     const position = posRaw ? Math.floor(posRaw) : posCounter;
 
-    // Parse hole scores
-    const scores: (number | null)[] = [];
+    // Parse hole values (could be strokes OR stableford points depending on mode)
+    const holeValues: (number | null)[] = [];
     for (const hc of cols.holeColumns) {
-      scores.push(getNum(hc));
+      holeValues.push(getNum(hc));
+    }
+    for (const v of holeValues) {
+      if (v == null) continue;
+      totalHoleValues++;
+      if (v === 1) onesCount++;
+      if (mode === 'stableford_points' && v > 5) highStbCount++;
     }
 
-    const hasLiftedBall = scores.length > 0 && scores.some(s => s === null);
+    const excelStableford = getNum(cols.total);
+    const excelTotalStableford =
+      excelStableford != null ? Math.floor(excelStableford) : null;
 
-    // Determine stableford points: prefer 'total'/'net' column
-    const stablefordRaw = getNum(cols.total);
-    // Determine scratch: prefer 'scratch'/'brt' column, fallback to sum of holes
-    let scratchScore = getNum(cols.scratch);
-    if (scratchScore != null) scratchScore = Math.floor(scratchScore);
+    let scores: (number | null)[] = [];
+    let holeStableford: (number | null)[] = [];
+    let stablefordPoints: number | null = null;
+    let scratchScore: number | null = null;
+    let computedTotalStableford: number | null = null;
+
+    if (mode === 'stableford_points') {
+      // Holes ARE stableford points. Do not infer strokes.
+      holeStableford = holeValues;
+      const validHoles = holeValues.filter((v) => v != null) as number[];
+      if (validHoles.length > 0) {
+        computedTotalStableford = validHoles.reduce((s, n) => s + n, 0);
+      }
+      if (excelTotalStableford != null) {
+        stablefordPoints = excelTotalStableford;
+        if (
+          computedTotalStableford != null &&
+          computedTotalStableford !== excelTotalStableford
+        ) {
+          discrepancies.push({
+            name,
+            excel: excelTotalStableford,
+            computed: computedTotalStableford,
+          });
+        }
+      } else if (computedTotalStableford != null) {
+        stablefordPoints = computedTotalStableford;
+      }
+      // Scratch / strokes cannot be derived from stableford points alone.
+      scratchScore = null;
+    } else {
+      // Default: holes are strokes (existing behaviour)
+      scores = holeValues;
+      const hasLiftedBall = scores.length > 0 && scores.some((s) => s === null);
+      stablefordPoints = excelTotalStableford;
+      const rawScratch = getNum(cols.scratch);
+      scratchScore = hasLiftedBall
+        ? null
+        : rawScratch != null
+        ? Math.floor(rawScratch)
+        : null;
+    }
 
     results.push({
       position,
@@ -227,14 +297,46 @@ export function parseExcelResults(buffer: ArrayBuffer): ExcelParseOutput {
       handicap_exact: getNum(cols.hex),
       handicap_play: getNum(cols.hpu),
       category: getNum(cols.category) != null ? Math.floor(getNum(cols.category)!) : null,
-      stableford_points: stablefordRaw != null ? Math.floor(stablefordRaw) : null,
-      scratch_score: hasLiftedBall ? null : (scratchScore ?? null),
+      stableford_points: stablefordPoints,
+      scratch_score: scratchScore,
       scores,
+      hole_stableford: holeStableford,
+      excel_total_stableford: excelTotalStableford,
+      computed_total_stableford: computedTotalStableford,
       is_np: false,
       is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
     });
   }
 
+  // Format-detection warnings
+  if (mode === 'stableford_points') {
+    if (highStbCount > 0) {
+      warnings.push(
+        `Hi ha ${highStbCount} valors per forat superiors a 5. Revisa si el format seleccionat és correcte (punts Stableford normalment són 0-5).`,
+      );
+    }
+    if (discrepancies.length > 0) {
+      const preview = discrepancies
+        .slice(0, 5)
+        .map((d) => `${d.name}: Excel ${d.excel} vs suma ${d.computed}`)
+        .join(' · ');
+      warnings.push(
+        `${discrepancies.length} jugadors amb total Stableford diferent al sumatori dels forats. ${preview}`,
+      );
+    }
+    warnings.push(
+      'Mode Stableford per forat: no es calcularan birdies, eagles ni scratch oficial (no hi ha cops reals).',
+    );
+  } else {
+    // strokes mode: if many holes are "1", likely the file is actually stableford
+    if (totalHoleValues >= 18 && onesCount / totalHoleValues >= 0.2) {
+      warnings.push(
+        `Aquest Excel conté molts valors 1 per forat (${onesCount}/${totalHoleValues}). És possible que les columnes siguin punts Stableford i no cops. Canvia el format si cal.`,
+      );
+    }
+  }
+
   const hasSeniorInfo = cols.age !== null || cols.niv !== null;
-  return { results, hasSeniorInfo };
+  return { results, hasSeniorInfo, mode, warnings };
 }
+
