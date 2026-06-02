@@ -310,6 +310,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     setWarnings([]);
     setResults([]);
     setNeedsSeniorFile(false);
+    setExcelDiagnostics(null);
 
     try {
       const buffer = await file.arrayBuffer();
@@ -318,7 +319,14 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         hasSeniorInfo,
         warnings: parserWarnings,
         mode: parsedMode,
+        diagnostics,
       } = parseExcelResults(buffer, { holeMode: excelHoleMode });
+
+      setExcelDiagnostics(diagnostics);
+      // Default: if a total column exists, prefer it; otherwise fall back to sum
+      const defaultSource: 'excel' | 'sum' = diagnostics.totalColumn ? 'excel' : 'sum';
+      setStablefordTotalSource(defaultSource);
+
 
       const playDate = excelPlayDate || null;
 
