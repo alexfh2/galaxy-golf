@@ -143,6 +143,19 @@ function computeCircuito(
       0,
     );
 
+    const history: HistoryItem[] = [...list]
+      .sort((a, b) => (a.rounds?.round_number ?? 0) - (b.rounds?.round_number ?? 0))
+      .map((r) => {
+        const lbl = roundLabel(r);
+        return {
+          round_id: r.round_id,
+          round_number: lbl.n,
+          label: lbl.short,
+          fullLabel: lbl.full,
+          stableford: Number(r.stableford_points ?? 0),
+        };
+      });
+
     rows.push({
       player_id: pid,
       name: player.name,
@@ -152,6 +165,7 @@ function computeCircuito(
       best7,
       bonus,
       total: best7 + bonus,
+      history,
     });
   }
 
