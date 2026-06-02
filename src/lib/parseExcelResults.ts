@@ -198,7 +198,8 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
   let totalHoleValues = 0;
   let onesCount = 0;
   let highStbCount = 0; // values > 5 in stableford mode
-  const discrepancies: { name: string; excel: number; computed: number }[] = [];
+  const discrepancies: ExcelDiagnosticDiscrepancy[] = [];
+  let withTotalCount = 0;
 
   for (let r = headerRow + 1; r <= range.e.r; r++) {
     const getVal = (c: number | null) => {
