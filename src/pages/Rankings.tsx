@@ -361,6 +361,7 @@ function computeGalaxyCup(
       name: player.name,
       category: playerCategory.get(pid)!,
       firstHcp: playerFirstHcp.get(pid) ?? 999,
+      lastHcp: computeLastHcp(byPlayerAll.get(pid) ?? []),
       rounds_played: awards.length,
       majors_played: majorsByPlayer.get(pid) ?? 0,
       points,
