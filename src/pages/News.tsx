@@ -96,14 +96,34 @@ const News = () => {
 
   return (
     <div className="animate-fade-in">
-      <section className="container pt-6 pb-4">
-        <div className="flex items-center gap-3 mb-1">
-          <Newspaper className="h-5 w-5 text-accent/70" strokeWidth={1.5} />
-          <h1 className="font-display text-2xl font-semibold text-foreground">{t('news.title')}</h1>
+      <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroNews.url})` }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, hsl(var(--gg-bg-light)) 0%, hsl(var(--gg-bg-light) / 0.92) 35%, hsl(var(--gg-bg-light) / 0.55) 60%, hsl(var(--gg-bg-light) / 0.15) 100%)',
+          }}
+        />
+        <div className="container relative mx-auto px-4 py-12 md:py-16">
+          <p className="mb-5 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
+            TEMPORADA 2026
+          </p>
+          <h1
+            className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))]"
+            style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
+          >
+            {t('news.title')}
+          </h1>
+          <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light">
+            Crónicas, resultados destacados y momentos clave del circuito.
+          </p>
         </div>
-        <p className="text-[11px] font-body text-muted-foreground tracking-wide mb-6">
-          {t('common.season')} 2026
-        </p>
       </section>
 
       <section className="container pb-14">
