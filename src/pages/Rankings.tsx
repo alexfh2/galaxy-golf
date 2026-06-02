@@ -585,20 +585,20 @@ function DashboardCard({
     accent === 'copper'
       ? 'text-[hsl(var(--gg-copper))]'
       : accent === 'green'
-      ? 'text-[hsl(var(--gg-ivory))]'
+      ? 'text-[hsl(var(--gg-green))]'
       : accent === 'muted'
-      ? 'text-[hsl(var(--gg-ivory))]/85'
-      : 'text-[hsl(var(--gg-gold))]';
+      ? 'text-[hsl(var(--gg-navy-deep))]'
+      : 'text-[hsl(var(--gg-navy-deep))]';
   return (
-    <div className="border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/55 p-6 transition-colors hover:border-[hsl(var(--gg-gold))]/40">
-      <div className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+    <div className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] p-6 shadow-[0_6px_24px_-16px_rgba(11,19,36,0.25)] transition-colors hover:border-[hsl(var(--gg-green))]/45">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--gg-green))]">
         {label}
       </div>
       <div className={`mt-3 font-display text-3xl md:text-[34px] leading-none ${valueColor}`}>
         {value}
       </div>
       {hint && (
-        <div className="mt-3 text-[11px] tracking-wide text-[hsl(var(--gg-ivory))]/55">
+        <div className="mt-3 text-[11px] tracking-wide text-[hsl(var(--gg-navy-deep))]/65">
           {hint}
         </div>
       )}
