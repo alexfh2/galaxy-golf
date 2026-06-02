@@ -24,6 +24,8 @@ import {
   getGalaxyGolfCategoryByHandicap,
   getGalaxyGolfCategoryLabel,
 } from '@/lib/playerCategoryHandicap';
+import heroCircuito from '@/assets/hero-circuito.jpg';
+import heroGalaxyCup from '@/assets/hero-galaxycup.jpg';
 
 /* ============================================================
  * Rankings GalaxyGolf 2026
