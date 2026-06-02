@@ -60,13 +60,13 @@ const Navbar = () => {
           : 'bg-[hsl(var(--gg-navbar-navy))] border-b border-[hsl(var(--gg-gold))]/15'
       }`}
     >
-      <div className="container flex h-20 items-center justify-between py-4">
+      <div className="container flex h-20 items-center py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
           <LogoGoldNavy className="h-[60px] sm:h-[76px] max-h-[76px]" />
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1 ml-6">
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.path;
             return (
@@ -88,7 +88,7 @@ const Navbar = () => {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <LanguageSwitcher />
           {/* ThemeToggle hidden: app locked to dark mode */}
           <Link
