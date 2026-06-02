@@ -503,11 +503,11 @@ export default function Rankings() {
                         <TableRow>
                           <TableHead className="w-16">Pos.</TableHead>
                           <TableHead>Jugador</TableHead>
-                          <TableHead>Categoría</TableHead>
                           <TableHead className="text-center">Pruebas</TableHead>
                           <TableHead className="text-center">Majors</TableHead>
                           <TableHead className="text-center font-semibold">Puntos</TableHead>
                           <TableHead className="text-center">Mejor resultado</TableHead>
+                          <TableHead>Historial</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -524,9 +524,6 @@ export default function Rankings() {
                               >
                                 {r.name}
                               </button>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {getGalaxyGolfCategoryLabel(r.category)}
                             </TableCell>
                             <TableCell className="text-center">{r.rounds_played}</TableCell>
                             <TableCell className="text-center">{r.majors_played}</TableCell>
@@ -550,6 +547,9 @@ export default function Rankings() {
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              <HistoryChips items={r.history} unit="p" />
                             </TableCell>
                           </TableRow>
                         ))}
