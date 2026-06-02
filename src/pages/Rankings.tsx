@@ -678,7 +678,8 @@ export function CircuitoRankingPage() {
     return ids.size;
   }, [rows]);
   const categoryLabel = getGalaxyGolfCategoryLabel(category);
-  const leader = filtered[0] ?? null;
+  const leaderLow = rows.find((r) => r.category === 'hcp_low') ?? null;
+  const leaderHigh = rows.find((r) => r.category === 'hcp_high') ?? null;
 
   return (
     <>
@@ -693,11 +694,22 @@ export function CircuitoRankingPage() {
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
         bgImage={heroCircuito}
         leaderCard={
-          <LeaderCard
-            name={leader?.name ?? null}
-            points={leader?.total ?? null}
-            categoryLabel={categoryLabel}
+          <LeadersCard
             accent="green"
+            leaders={[
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_low'),
+                name: leaderLow?.name ?? null,
+                points: leaderLow?.total ?? null,
+                highlight: category === 'hcp_low',
+              },
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_high'),
+                name: leaderHigh?.name ?? null,
+                points: leaderHigh?.total ?? null,
+                highlight: category === 'hcp_high',
+              },
+            ]}
           />
         }
       />
