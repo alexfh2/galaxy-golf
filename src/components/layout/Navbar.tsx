@@ -34,10 +34,10 @@ const Navbar = () => {
       } top-0 left-0 right-0 z-50 transition-colors duration-300 ${
         isHome
           ? 'bg-transparent'
-          : 'bg-background/95 backdrop-blur border-b border-border/40'
+          : 'bg-[hsl(var(--gg-navy))]/95 backdrop-blur-md border-b border-[hsl(var(--gg-gold))]/15'
       }`}
     >
-      <div className="container flex h-18 items-center justify-between py-4">
+      <div className="container flex h-20 items-center justify-between py-4">
         <Link to="/" className="flex items-center">
           <Wordmark className="text-xl sm:text-2xl" />
         </Link>
