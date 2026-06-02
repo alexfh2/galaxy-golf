@@ -49,6 +49,15 @@ const sortKey = (r: PublicResult) => {
   return `${d}|${n}|${c}`;
 };
 
+interface HistoryItem {
+  round_id: string;
+  round_number: number | null;
+  label: string;
+  fullLabel: string;
+  stableford: number;
+  isMajor?: boolean;
+}
+
 interface CircuitoRow {
   player_id: string;
   name: string;
@@ -58,6 +67,7 @@ interface CircuitoRow {
   best7: number;
   bonus: number;
   total: number;
+  history: HistoryItem[];
 }
 
 interface GalaxyCupRow {
@@ -70,6 +80,17 @@ interface GalaxyCupRow {
   points: number;
   best_position: number | null;
   best_was_major: boolean;
+  history: HistoryItem[];
+}
+
+function roundLabel(r: PublicResult): { short: string; full: string; n: number | null } {
+  const club = r.rounds?.club?.trim();
+  const course = r.rounds?.course?.trim();
+  const name = r.rounds?.name?.trim();
+  const n = r.rounds?.round_number ?? null;
+  const short = club || course || name || (n ? `J${n}` : '—');
+  const full = [n ? `J${n}` : null, club || course, name].filter(Boolean).join(' · ') || short;
+  return { short, full, n };
 }
 
 function computeCircuito(
@@ -122,6 +143,19 @@ function computeCircuito(
       0,
     );
 
+    const history: HistoryItem[] = [...list]
+      .sort((a, b) => (a.rounds?.round_number ?? 0) - (b.rounds?.round_number ?? 0))
+      .map((r) => {
+        const lbl = roundLabel(r);
+        return {
+          round_id: r.round_id,
+          round_number: lbl.n,
+          label: lbl.short,
+          fullLabel: lbl.full,
+          stableford: Number(r.stableford_points ?? 0),
+        };
+      });
+
     rows.push({
       player_id: pid,
       name: player.name,
@@ -131,6 +165,7 @@ function computeCircuito(
       best7,
       bonus,
       total: best7 + bonus,
+      history,
     });
   }
 
@@ -186,7 +221,7 @@ function computeGalaxyCup(
   }
 
   // Asignar puntos por jornada + categoría
-  type Award = { points: number; position: number; isMajor: boolean };
+  type Award = { points: number; position: number; isMajor: boolean; result: PublicResult };
   const awardsByPlayer = new Map<string, Award[]>();
   const majorsByPlayer = new Map<string, number>();
 
@@ -212,11 +247,6 @@ function computeGalaxyCup(
     }
 
     for (const cat of ['hcp_low', 'hcp_high'] as Category[]) {
-      // Primary sort: Stableford desc within the GalaxyGolf category.
-      // Tiebreak (prudent): only use official_position from the source if ALL tied players
-      // share the same official_category — otherwise GD/Excel positions came from a different
-      // category split and are not comparable. official_* fields are audit data, never used
-      // as a direct ranking source.
       const sorted = byCat[cat].sort((a, b) => {
         const sa = Number(a.stableford_points ?? 0);
         const sb = Number(b.stableford_points ?? 0);
@@ -239,7 +269,7 @@ function computeGalaxyCup(
         const position = idx + 1;
         const points = position <= 20 ? table[position - 1] : 0;
         const arr = awardsByPlayer.get(r.player_id) ?? [];
-        arr.push({ points, position, isMajor });
+        arr.push({ points, position, isMajor, result: r });
         awardsByPlayer.set(r.player_id, arr);
         if (isMajor) {
           majorsByPlayer.set(r.player_id, (majorsByPlayer.get(r.player_id) ?? 0) + 1);
@@ -257,16 +287,31 @@ function computeGalaxyCup(
     for (const a of awards) {
       if (!best || a.position < best.position) best = a;
     }
+    const history: HistoryItem[] = [...awards]
+      .sort((a, b) => (a.result.rounds?.round_number ?? 0) - (b.result.rounds?.round_number ?? 0))
+      .map((a) => {
+        const lbl = roundLabel(a.result);
+        return {
+          round_id: a.result.round_id,
+          round_number: lbl.n,
+          label: lbl.short,
+          fullLabel: `${lbl.full} · ${a.position}º · ${a.points} pts`,
+          stableford: a.points,
+          isMajor: a.isMajor,
+        };
+      });
     rows.push({
       player_id: pid,
       name: player.name,
       category: playerCategory.get(pid)!,
       firstHcp: playerFirstHcp.get(pid) ?? 999,
       rounds_played: awards.length,
+
       majors_played: majorsByPlayer.get(pid) ?? 0,
       points,
       best_position: best?.position ?? null,
       best_was_major: best?.isMajor ?? false,
+      history,
     });
   }
 
@@ -286,6 +331,32 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-2xl rounded-lg border border-[hsl(var(--gg-gold))]/30 bg-[hsl(var(--gg-ivory))]/5 px-6 py-10 text-center text-sm text-muted-foreground">
       {children}
+    </div>
+  );
+}
+
+function HistoryChips({ items, unit }: { items: HistoryItem[]; unit: string }) {
+  if (!items.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1.5 max-w-[28rem]">
+      {items.map((it) => (
+        <span
+          key={it.round_id}
+          title={it.fullLabel}
+          className="inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] leading-none"
+        >
+          <span className="max-w-[8rem] truncate text-muted-foreground">
+            {it.label.length > 14 && it.round_number ? `J${it.round_number}` : it.label}
+          </span>
+          <span className="font-semibold text-[hsl(var(--gg-green))]">
+            {it.stableford}
+            {unit}
+          </span>
+          {it.isMajor && (
+            <span className="text-[9px] uppercase tracking-wide text-[hsl(var(--gg-copper))]">M</span>
+          )}
+        </span>
+      ))}
     </div>
   );
 }
@@ -396,11 +467,11 @@ export default function Rankings() {
                         <TableRow>
                           <TableHead className="w-16">Pos.</TableHead>
                           <TableHead>Jugador</TableHead>
-                          <TableHead>Categoría</TableHead>
                           <TableHead className="text-center">Pruebas</TableHead>
                           <TableHead className="text-center">Mejores 7</TableHead>
                           <TableHead className="text-center">Bonus</TableHead>
                           <TableHead className="text-center font-semibold">Total</TableHead>
+                          <TableHead>Historial</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -418,14 +489,14 @@ export default function Rankings() {
                                 {r.name}
                               </button>
                             </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {getGalaxyGolfCategoryLabel(r.category)}
-                            </TableCell>
                             <TableCell className="text-center">{r.rounds_played}</TableCell>
                             <TableCell className="text-center">{r.best7}</TableCell>
                             <TableCell className="text-center">+{r.bonus}</TableCell>
                             <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
                               {r.total}
+                            </TableCell>
+                            <TableCell>
+                              <HistoryChips items={r.history} unit="" />
                             </TableCell>
                           </TableRow>
                         ))}
@@ -458,11 +529,11 @@ export default function Rankings() {
                         <TableRow>
                           <TableHead className="w-16">Pos.</TableHead>
                           <TableHead>Jugador</TableHead>
-                          <TableHead>Categoría</TableHead>
                           <TableHead className="text-center">Pruebas</TableHead>
                           <TableHead className="text-center">Majors</TableHead>
                           <TableHead className="text-center font-semibold">Puntos</TableHead>
                           <TableHead className="text-center">Mejor resultado</TableHead>
+                          <TableHead>Historial</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -479,9 +550,6 @@ export default function Rankings() {
                               >
                                 {r.name}
                               </button>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {getGalaxyGolfCategoryLabel(r.category)}
                             </TableCell>
                             <TableCell className="text-center">{r.rounds_played}</TableCell>
                             <TableCell className="text-center">{r.majors_played}</TableCell>
@@ -505,6 +573,9 @@ export default function Rankings() {
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              <HistoryChips items={r.history} unit="p" />
                             </TableCell>
                           </TableRow>
                         ))}
