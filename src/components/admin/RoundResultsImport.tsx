@@ -1117,7 +1117,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                 hasUnresolvedConflicts
                   ? 'Resol els conflictes de duplicats primer'
                   : excelDiagnostics?.massDiscrepancy && stablefordTotalSource === 'sum'
-                  ? 'Hi ha massa discrepàncies. Canvia a "Usar total Stableford de l\\'Excel" o revisa el mapeig.'
+                  ? `Hi ha massa discrepàncies. Canvia a "Usar total Stableford de l'Excel" o revisa el mapeig.`
                   : ''
               }
             >
