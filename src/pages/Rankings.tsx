@@ -335,29 +335,25 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
   );
 }
 
-function HistoryChips({ items, unit }: { items: HistoryItem[]; unit: string }) {
-  if (!items.length) return <span className="text-muted-foreground">—</span>;
-  return (
-    <div className="flex flex-wrap gap-1.5 max-w-[28rem]">
-      {items.map((it) => (
-        <span
-          key={it.round_id}
-          title={it.fullLabel}
-          className="inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] leading-none"
-        >
-          <span className="max-w-[8rem] truncate text-muted-foreground">
-            {it.label.length > 14 && it.round_number ? `J${it.round_number}` : it.label}
-          </span>
-          <span className="font-semibold text-[hsl(var(--gg-green))]">
-            {it.stableford}
-            {unit}
-          </span>
-          {it.isMajor && (
-            <span className="text-[9px] uppercase tracking-wide text-[hsl(var(--gg-copper))]">M</span>
-          )}
-        </span>
-      ))}
-    </div>
+type RoundCol = { round_id: string; round_number: number | null; label: string; full: string; isMajor?: boolean };
+
+function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
+  const map = new Map<string, RoundCol>();
+  for (const r of rows) {
+    for (const h of r.history) {
+      if (!map.has(h.round_id)) {
+        map.set(h.round_id, {
+          round_id: h.round_id,
+          round_number: h.round_number,
+          label: h.label,
+          full: h.fullLabel,
+          isMajor: h.isMajor,
+        });
+      }
+    }
+  }
+  return [...map.values()].sort(
+    (a, b) => (a.round_number ?? 9999) - (b.round_number ?? 9999),
   );
 }
 
@@ -400,7 +396,11 @@ export default function Rankings() {
   const circuitoFiltered = circuitoRows.filter((r) => r.category === circuitoCat);
   const galaxyCupFiltered = galaxyCupRows.filter((r) => r.category === galaxyCupCat);
 
+  const circuitoRoundCols = useMemo(() => collectRounds(circuitoFiltered), [circuitoFiltered]);
+  const galaxyCupRoundCols = useMemo(() => collectRounds(galaxyCupFiltered), [galaxyCupFiltered]);
+
   const hasAnyResults = (data?.results.length ?? 0) > 0;
+
 
   return (
     <>
@@ -461,45 +461,61 @@ export default function Rankings() {
                     No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(circuitoCat)} todavía.
                   </EmptyMessage>
                 ) : (
-                  <div className="rounded-lg border border-border bg-card">
+                  <div className="rounded-lg border border-border bg-card overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-16">Pos.</TableHead>
-                          <TableHead>Jugador</TableHead>
+                          <TableHead className="min-w-[180px]">Jugador</TableHead>
+                          {circuitoRoundCols.map((c) => (
+                            <TableHead
+                              key={c.round_id}
+                              title={c.full}
+                              className="text-center whitespace-nowrap px-2"
+                            >
+                              {c.round_number ? `J${c.round_number}` : c.label}
+                            </TableHead>
+                          ))}
                           <TableHead className="text-center">Pruebas</TableHead>
                           <TableHead className="text-center">Mejores 7</TableHead>
                           <TableHead className="text-center">Bonus</TableHead>
                           <TableHead className="text-center font-semibold">Total</TableHead>
-                          <TableHead>Historial</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {circuitoFiltered.map((r, i) => (
-                          <TableRow key={r.player_id} className="group">
-                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
-                              {i + 1}
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
-                              >
-                                {r.name}
-                              </button>
-                            </TableCell>
-                            <TableCell className="text-center">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center">{r.best7}</TableCell>
-                            <TableCell className="text-center">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
-                              {r.total}
-                            </TableCell>
-                            <TableCell>
-                              <HistoryChips items={r.history} unit="" />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {circuitoFiltered.map((r, i) => {
+                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                          return (
+                            <TableRow key={r.player_id} className="group">
+                              <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                                {i + 1}
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPlayerId(r.player_id)}
+                                  className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                                >
+                                  {r.name}
+                                </button>
+                              </TableCell>
+                              {circuitoRoundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <TableCell key={c.round_id} className="text-center px-2 text-sm">
+                                    {v != null ? v : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell className="text-center">{r.rounds_played}</TableCell>
+                              <TableCell className="text-center">{r.best7}</TableCell>
+                              <TableCell className="text-center">+{r.bonus}</TableCell>
+                              <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
+                                {r.total}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -523,62 +539,81 @@ export default function Rankings() {
                     No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(galaxyCupCat)} todavía.
                   </EmptyMessage>
                 ) : (
-                  <div className="rounded-lg border border-border bg-card">
+                  <div className="rounded-lg border border-border bg-card overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-16">Pos.</TableHead>
-                          <TableHead>Jugador</TableHead>
+                          <TableHead className="min-w-[180px]">Jugador</TableHead>
+                          {galaxyCupRoundCols.map((c) => (
+                            <TableHead
+                              key={c.round_id}
+                              title={c.full}
+                              className="text-center whitespace-nowrap px-2"
+                            >
+                              {c.round_number ? `J${c.round_number}` : c.label}
+                              {c.isMajor && (
+                                <span className="ml-1 text-[9px] uppercase text-[hsl(var(--gg-copper))]">M</span>
+                              )}
+                            </TableHead>
+                          ))}
                           <TableHead className="text-center">Pruebas</TableHead>
                           <TableHead className="text-center">Majors</TableHead>
                           <TableHead className="text-center font-semibold">Puntos</TableHead>
                           <TableHead className="text-center">Mejor resultado</TableHead>
-                          <TableHead>Historial</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {galaxyCupFiltered.map((r, i) => (
-                          <TableRow key={r.player_id} className="group">
-                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
-                              {i + 1}
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
-                              >
-                                {r.name}
-                              </button>
-                            </TableCell>
-                            <TableCell className="text-center">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center">{r.majors_played}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-copper))]">
-                              {r.points}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {r.best_position ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-gold))]" />
-                                  {r.best_position}º
-                                  {r.best_was_major && (
-                                    <Badge
-                                      variant="outline"
-                                      className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0"
-                                    >
-                                      Major
-                                    </Badge>
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <HistoryChips items={r.history} unit="p" />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {galaxyCupFiltered.map((r, i) => {
+                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                          return (
+                            <TableRow key={r.player_id} className="group">
+                              <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                                {i + 1}
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPlayerId(r.player_id)}
+                                  className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                                >
+                                  {r.name}
+                                </button>
+                              </TableCell>
+                              {galaxyCupRoundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <TableCell key={c.round_id} className="text-center px-2 text-sm">
+                                    {v != null && v > 0 ? v : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell className="text-center">{r.rounds_played}</TableCell>
+                              <TableCell className="text-center">{r.majors_played}</TableCell>
+                              <TableCell className="text-center font-semibold text-[hsl(var(--gg-copper))]">
+                                {r.points}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {r.best_position ? (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-gold))]" />
+                                    {r.best_position}º
+                                    {r.best_was_major && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0"
+                                      >
+                                        Major
+                                      </Badge>
+                                    )}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
