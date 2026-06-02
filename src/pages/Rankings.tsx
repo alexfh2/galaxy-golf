@@ -393,22 +393,28 @@ function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
 function CategoryTabs({
   category,
   onChange,
+  accent = 'green',
 }: {
   category: Category;
   onChange: (c: Category) => void;
+  accent?: 'green' | 'copper';
 }) {
+  const activeBg =
+    accent === 'copper'
+      ? 'data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-navy))]'
+      : 'data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))]';
   return (
     <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-8">
       <TabsList className="bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 p-1 h-auto rounded-sm">
         <TabsTrigger
           value="hcp_low"
-          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
         >
           Hándicap Inferior
         </TabsTrigger>
         <TabsTrigger
           value="hcp_high"
-          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
         >
           Hándicap Superior
         </TabsTrigger>
