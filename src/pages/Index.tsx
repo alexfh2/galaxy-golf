@@ -1,6 +1,6 @@
 import heroBg from '@/assets/hero-landscape.png';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Trophy, CalendarDays } from 'lucide-react';
+import { ArrowRight, Trophy } from 'lucide-react';
 
 const Index = () => {
   const scrollToCompeticiones = () => {
