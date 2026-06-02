@@ -24,16 +24,16 @@ const Index = () => {
           <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
             Temporada 2026
           </p>
-          <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-5 text-[hsl(var(--gg-ivory))]">
+          <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-5 text-[hsl(var(--gg-navy-deep))]">
             La temporada<br />está en juego
           </h1>
-          <p className="text-base lg:text-lg text-[hsl(var(--gg-ivory))]/75 leading-relaxed mb-8 max-w-xl">
+          <p className="text-base lg:text-lg text-[hsl(var(--gg-text-muted))] leading-relaxed mb-8 max-w-xl">
             Sigue los torneos, el calendario y las clasificaciones del Circuito GALAXY GOLF y la GalaxyCup 2026.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               to="/jornades"
-              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-green))]/90 transition-colors"
+              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-surface-light))] text-[11px] font-semibold uppercase tracking-[0.22em] shadow-[0_8px_24px_-12px_rgba(11,19,36,0.4)] hover:bg-[hsl(var(--gg-green))]/85 transition-colors"
             >
               Ver calendario
               <ArrowRight className="h-4 w-4" />
@@ -41,7 +41,7 @@ const Index = () => {
             <button
               type="button"
               onClick={scrollToCompeticiones}
-              className="inline-flex items-center justify-center gap-3 px-7 py-4 border border-[hsl(var(--gg-gold))]/50 text-[hsl(var(--gg-gold))] text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
+              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-surface-light))]/70 backdrop-blur-[2px] border border-[hsl(var(--gg-navy-deep))]/30 text-[hsl(var(--gg-navy-deep))] text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-surface-light))] hover:border-[hsl(var(--gg-gold))] transition-colors"
             >
               Ver competiciones
               <ArrowRight className="h-4 w-4" />
