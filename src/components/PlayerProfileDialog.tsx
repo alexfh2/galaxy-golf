@@ -75,63 +75,96 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
 
   const bestN = (season?.rules_config as any)?.best_n_scores || 8;
 
-  // Compute player category positions
+  // GalaxyCup point tables (mirror Rankings page)
+  const GALAXYCUP_REGULAR_POINTS = [500,300,190,135,110,100,90,85,80,75,70,65,60,57,56,55,54,53,52,51];
+  const GALAXYCUP_MAJOR_POINTS = [750,450,285,200,165,150,135,125,120,115,110,105,100,90,85,80,75,70,65,60];
+
+  // Compute Circuito and GalaxyCup positions within the player's HCP category
   const positions = useMemo(() => {
-    if (!allResults?.length || !playerId) return null;
+    if (!allResults?.length || !playerId || !roundComps) return null;
 
     const categoryHcpMap = buildPlayerCategoryHandicapMap(allResults as any);
+    const playerHcp = categoryHcpMap.get(playerId) ?? null;
+    const playerCat: 'hcp_low' | 'hcp_high' | null =
+      playerHcp == null ? null : playerHcp <= 15.4 ? 'hcp_low' : 'hcp_high';
 
-    const byPlayer = new Map<string, {
-      gender: string | null;
-      is_senior: boolean;
-      handicap: number | null;
-      scores: { points: number; weighted: number }[];
-    }>();
-
-    for (const r of allResults as any[]) {
-      if (!r.players_public || r.stableford_points == null) continue;
-      const pid = r.player_id;
-      if (!byPlayer.has(pid)) {
-        byPlayer.set(pid, {
-          gender: r.players_public.gender,
-          is_senior: r.players_public.is_senior,
-          handicap: categoryHcpMap.get(pid) ?? r.handicap_at_round ?? r.players_public.current_handicap,
-          scores: [],
-        });
-      }
-      // GalaxyGolf 2026: sin multiplicador Master.
-      const weighted = r.stableford_points;
-      byPlayer.get(pid)!.scores.push({ points: r.stableford_points, weighted });
+    if (!playerCat) {
+      return { categoryHcp: playerHcp, categoryLabel: null, circuito: null, galaxyCup: null };
     }
 
-    const computeTotal = (scores: { weighted: number }[]) =>
-      [...scores].sort((a, b) => b.weighted - a.weighted).slice(0, bestN).reduce((s, x) => s + x.weighted, 0);
+    const playerCategoryMap = new Map<string, 'hcp_low' | 'hcp_high'>();
+    for (const [pid, h] of categoryHcpMap.entries()) {
+      if (h == null) continue;
+      playerCategoryMap.set(pid, h <= 15.4 ? 'hcp_low' : 'hcp_high');
+    }
 
-    const buildRanking = (filterFn: (p: { gender: string | null; is_senior: boolean; handicap: number | null }) => boolean) => {
-      return Array.from(byPlayer.entries())
-        .filter(([, p]) => filterFn(p))
-        .map(([id, p]) => ({ id, total: computeTotal(p.scores) }))
-        .sort((a, b) => b.total - a.total);
+    // Circuito GalaxyGolf
+    const circuitoRoundIds = new Set(
+      (roundComps || [])
+        .filter((rc: any) => rc.competition?.slug === 'circuito-galaxygolf' && rc.stage === 'regular' && rc.counts_for_ranking)
+        .map((rc: any) => rc.round_id),
+    );
+    const cByPlayer = new Map<string, { stbs: number[]; bonus: number }>();
+    for (const r of allResults as any[]) {
+      if (!circuitoRoundIds.has(r.round_id)) continue;
+      if (r.stableford_points == null) continue;
+      if (playerCategoryMap.get(r.player_id) !== playerCat) continue;
+      const e = cByPlayer.get(r.player_id) ?? { stbs: [], bonus: 0 };
+      e.stbs.push(Number(r.stableford_points));
+      e.bonus += 1 + Number(r.extra_play_count ?? 0);
+      cByPlayer.set(r.player_id, e);
+    }
+    const circuitoRanking = Array.from(cByPlayer.entries())
+      .map(([id, e]) => {
+        const best7 = [...e.stbs].sort((a, b) => b - a).slice(0, 7).reduce((s, n) => s + n, 0);
+        return { id, total: best7 + e.bonus };
+      })
+      .sort((a, b) => b.total - a.total);
+
+    // GalaxyCup
+    const cupStage = new Map<string, 'regular' | 'major'>();
+    for (const rc of (roundComps || []) as any[]) {
+      if (rc.competition?.slug === 'galaxycup' && rc.counts_for_ranking && (rc.stage === 'regular' || rc.stage === 'major')) {
+        cupStage.set(rc.round_id, rc.stage);
+      }
+    }
+    const cupAwards = new Map<string, number>();
+    const byRound = new Map<string, any[]>();
+    for (const r of allResults as any[]) {
+      if (!cupStage.has(r.round_id)) continue;
+      if (r.stableford_points == null) continue;
+      if (!playerCategoryMap.has(r.player_id)) continue;
+      const arr = byRound.get(r.round_id) ?? [];
+      arr.push(r);
+      byRound.set(r.round_id, arr);
+    }
+    for (const [rid, list] of byRound.entries()) {
+      const stage = cupStage.get(rid)!;
+      const table = stage === 'major' ? GALAXYCUP_MAJOR_POINTS : GALAXYCUP_REGULAR_POINTS;
+      const inCat = list.filter((r) => playerCategoryMap.get(r.player_id) === playerCat);
+      inCat.sort((a, b) => Number(b.stableford_points ?? 0) - Number(a.stableford_points ?? 0));
+      inCat.forEach((r, i) => {
+        const pts = i < 20 ? table[i] : 0;
+        cupAwards.set(r.player_id, (cupAwards.get(r.player_id) ?? 0) + pts);
+      });
+    }
+    const cupRanking = Array.from(cupAwards.entries())
+      .map(([id, total]) => ({ id, total }))
+      .sort((a, b) => b.total - a.total);
+
+    const findPos = (rk: { id: string; total: number }[]) => {
+      const idx = rk.findIndex((r) => r.id === playerId);
+      return idx === -1 ? null : { pos: idx + 1, total: rk[idx].total, of: rk.length };
     };
-
-    const findPos = (ranking: { id: string; total: number }[]) => {
-      const idx = ranking.findIndex((r) => r.id === playerId);
-      return idx === -1 ? null : { pos: idx + 1, total: ranking[idx].total, of: ranking.length };
-    };
-
-    const hcpLow = buildRanking((p) => p.handicap != null && p.handicap <= 15.4);
-    const hcpHigh = buildRanking((p) => p.handicap != null && p.handicap >= 15.5);
-    const female = buildRanking((p) => p.gender === 'F');
-    const senior = buildRanking((p) => p.is_senior);
 
     return {
-      hcpLow: findPos(hcpLow),
-      hcpHigh: findPos(hcpHigh),
-      female: findPos(female),
-      senior: findPos(senior),
-      categoryHcp: categoryHcpMap.get(playerId) ?? null,
+      categoryHcp: playerHcp,
+      categoryLabel: playerCat === 'hcp_low' ? 'Hándicap Inferior (≤15,4)' : 'Hándicap Superior (≥15,5)',
+      circuito: findPos(circuitoRanking),
+      galaxyCup: findPos(cupRanking),
     };
-  }, [allResults, playerId, bestN]);
+  }, [allResults, playerId, roundComps]);
+
 
   const roundCompMap = useMemo(() => {
     const map = new Map<string, { name: string; competition_type: string }[]>();
