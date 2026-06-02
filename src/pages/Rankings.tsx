@@ -649,7 +649,7 @@ export function CircuitoRankingPage() {
         <DashboardCard
           label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas del Circuito publicadas"
+          hint="Jornadas con resultados publicadas"
         />
         <DashboardCard
           label="Jugadores en ranking"
@@ -659,13 +659,13 @@ export function CircuitoRankingPage() {
         <DashboardCard
           label="Sistema de puntuación"
           value="Mejores 7"
-          hint="Se suman los 7 mejores resultados"
+          hint="Suma de los 7 mejores resultados"
           accent="muted"
         />
         <DashboardCard
           label="Gran Final"
           value="Pendiente"
-          hint="Por confirmar en fase posterior"
+          hint="Por confirmar"
           accent="muted"
         />
       </DashboardStrip>
