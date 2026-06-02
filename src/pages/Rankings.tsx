@@ -461,45 +461,61 @@ export default function Rankings() {
                     No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(circuitoCat)} todavía.
                   </EmptyMessage>
                 ) : (
-                  <div className="rounded-lg border border-border bg-card">
+                  <div className="rounded-lg border border-border bg-card overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-16">Pos.</TableHead>
-                          <TableHead>Jugador</TableHead>
+                          <TableHead className="min-w-[180px]">Jugador</TableHead>
+                          {circuitoRoundCols.map((c) => (
+                            <TableHead
+                              key={c.round_id}
+                              title={c.full}
+                              className="text-center whitespace-nowrap px-2"
+                            >
+                              {c.round_number ? `J${c.round_number}` : c.label}
+                            </TableHead>
+                          ))}
                           <TableHead className="text-center">Pruebas</TableHead>
                           <TableHead className="text-center">Mejores 7</TableHead>
                           <TableHead className="text-center">Bonus</TableHead>
                           <TableHead className="text-center font-semibold">Total</TableHead>
-                          <TableHead>Historial</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {circuitoFiltered.map((r, i) => (
-                          <TableRow key={r.player_id} className="group">
-                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
-                              {i + 1}
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
-                              >
-                                {r.name}
-                              </button>
-                            </TableCell>
-                            <TableCell className="text-center">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center">{r.best7}</TableCell>
-                            <TableCell className="text-center">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
-                              {r.total}
-                            </TableCell>
-                            <TableCell>
-                              <HistoryChips items={r.history} unit="" />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {circuitoFiltered.map((r, i) => {
+                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                          return (
+                            <TableRow key={r.player_id} className="group">
+                              <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                                {i + 1}
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPlayerId(r.player_id)}
+                                  className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                                >
+                                  {r.name}
+                                </button>
+                              </TableCell>
+                              {circuitoRoundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <TableCell key={c.round_id} className="text-center px-2 text-sm">
+                                    {v != null ? v : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell className="text-center">{r.rounds_played}</TableCell>
+                              <TableCell className="text-center">{r.best7}</TableCell>
+                              <TableCell className="text-center">+{r.bonus}</TableCell>
+                              <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
+                                {r.total}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
