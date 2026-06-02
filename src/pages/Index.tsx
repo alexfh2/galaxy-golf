@@ -117,16 +117,16 @@ const Index = () => {
           </article>
 
           {/* GalaxyCup */}
-          <article className="relative overflow-hidden border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))] p-10 flex flex-col group hover:border-[hsl(var(--gg-gold))]/50 transition-colors">
-            <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-copper))]/60 to-transparent" />
+          <article className="relative overflow-hidden border border-[hsl(var(--gg-copper))]/25 bg-[hsl(var(--gg-surface-light))] p-10 flex flex-col group hover:border-[hsl(var(--gg-copper))]/55 transition-colors shadow-[0_2px_24px_-12px_rgba(11,19,36,0.18)]">
+            <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-copper))]/70 to-transparent" />
             <div className="flex items-center gap-4 mb-6">
               <Trophy className="h-10 w-10 text-[hsl(var(--gg-copper))]" strokeWidth={1.2} />
               <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))]">
                 Race to the Playoffs
               </p>
             </div>
-            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-ivory))]">GalaxyCup</h3>
-            <p className="text-[hsl(var(--gg-ivory))]/70 leading-relaxed mb-6">
+            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-navy-deep))]">GalaxyCup</h3>
+            <p className="text-[hsl(var(--gg-navy-deep))]/80 leading-relaxed mb-6">
               Competición por puntos con Majors y Playoffs.
             </p>
             <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))]">
@@ -135,13 +135,13 @@ const Index = () => {
             <div className="mt-auto flex items-center gap-6">
               <Link
                 to="/galaxycup"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver ranking <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 to="/jornades"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/60 hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver calendario
               </Link>
