@@ -363,6 +363,30 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
   }
 
   const hasSeniorInfo = cols.age !== null || cols.niv !== null;
-  return { results, hasSeniorInfo, mode, warnings };
+
+  const headerName = (c: number | null): string => {
+    if (c == null) return '';
+    const cell = ws[XLSX.utils.encode_cell({ r: headerRow, c })];
+    return cell?.v != null ? String(cell.v).trim() : '';
+  };
+
+  const playerCount = results.filter((r) => !r.is_np).length;
+  const discrepancyRatio =
+    withTotalCount > 0 ? discrepancies.length / withTotalCount : 0;
+
+  const diagnostics: ExcelDiagnostics = {
+    holeColumns: cols.holeColumns.map((c) => ({ index: c, name: headerName(c) })),
+    totalColumn: cols.total != null ? { index: cols.total, name: headerName(cols.total) } : null,
+    scratchColumn: cols.scratch != null ? { index: cols.scratch, name: headerName(cols.scratch) } : null,
+    nameColumn: cols.name != null ? { index: cols.name, name: headerName(cols.name) } : null,
+    playerCount,
+    withTotalCount,
+    discrepancyCount: discrepancies.length,
+    discrepancyRatio,
+    massDiscrepancy: discrepancyRatio > 0.1,
+    discrepancies,
+  };
+
+  return { results, hasSeniorInfo, mode, warnings, diagnostics };
 }
 
