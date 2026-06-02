@@ -144,11 +144,33 @@ function findHeaderRow(ws: XLSX.WorkSheet, range: XLSX.Range): number {
   return 0; // default to first row
 }
 
+export interface ExcelDiagnosticDiscrepancy {
+  name: string;
+  holes: (number | null)[];
+  computed: number;
+  excel: number;
+  diff: number;
+}
+
+export interface ExcelDiagnostics {
+  holeColumns: { index: number; name: string }[];
+  totalColumn: { index: number; name: string } | null;
+  scratchColumn: { index: number; name: string } | null;
+  nameColumn: { index: number; name: string } | null;
+  playerCount: number;
+  withTotalCount: number;
+  discrepancyCount: number;
+  discrepancyRatio: number;
+  massDiscrepancy: boolean;
+  discrepancies: ExcelDiagnosticDiscrepancy[];
+}
+
 export interface ExcelParseOutput {
   results: ExcelParsedResult[];
-  hasSeniorInfo: boolean; // true if age or niv columns were detected
+  hasSeniorInfo: boolean;
   mode: HoleMode;
   warnings: string[];
+  diagnostics: ExcelDiagnostics;
 }
 
 export interface ExcelParseOptions {
