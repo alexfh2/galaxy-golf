@@ -719,6 +719,24 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
               Columnes: Pos, Licencia, Nombre, Hex, NVH, Niv, Edad, Sex, Cat, Hpu, Total, H1-H18, Totalx.
               N.P exclosos. Sènior = edat ≥ 65 o Niv = S.
             </p>
+
+            <div className="space-y-1.5 rounded-md border border-border/60 bg-muted/30 p-3">
+              <Label className="text-xs font-semibold">Format de columnes per forat</Label>
+              <Select value={excelHoleMode} onValueChange={(v) => setExcelHoleMode(v as HoleMode)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="strokes">Cops per forat (per defecte)</SelectItem>
+                  <SelectItem value="stableford_points">Punts Stableford per forat</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Selecciona "Punts Stableford per forat" si l'Excel ja conté els punts obtinguts en cada forat,
+                no els cops realitzats. En aquest mode no es calculen birdies, eagles ni scratch oficial.
+              </p>
+            </div>
+
             <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
               <div className="space-y-1">
                 <Label htmlFor="excel-date" className="text-xs">Data de joc d'aquest fitxer</Label>
