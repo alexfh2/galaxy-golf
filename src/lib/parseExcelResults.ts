@@ -1,5 +1,7 @@
 import * as XLSX from 'xlsx';
 
+export type HoleMode = 'strokes' | 'stableford_points';
+
 export interface ExcelParsedResult {
   position: number;
   name: string;
@@ -11,10 +13,18 @@ export interface ExcelParsedResult {
   category: number | null;
   stableford_points: number | null;
   scratch_score: number | null;
+  /** Strokes per hole. Empty when mode === 'stableford_points'. */
   scores: (number | null)[];
+  /** Stableford points per hole. Empty when mode === 'strokes'. */
+  hole_stableford: (number | null)[];
+  /** Stableford total as found in the Excel "Total/Stb" column (audit). */
+  excel_total_stableford: number | null;
+  /** Sum of hole_stableford when mode === 'stableford_points'. */
+  computed_total_stableford: number | null;
   is_np: boolean;
   is_senior: boolean;
 }
+
 
 // Normalize header text for matching
 function norm(s: string): string {
