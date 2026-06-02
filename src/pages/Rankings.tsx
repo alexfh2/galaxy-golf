@@ -49,6 +49,15 @@ const sortKey = (r: PublicResult) => {
   return `${d}|${n}|${c}`;
 };
 
+interface HistoryItem {
+  round_id: string;
+  round_number: number | null;
+  label: string;
+  fullLabel: string;
+  stableford: number;
+  isMajor?: boolean;
+}
+
 interface CircuitoRow {
   player_id: string;
   name: string;
@@ -58,6 +67,7 @@ interface CircuitoRow {
   best7: number;
   bonus: number;
   total: number;
+  history: HistoryItem[];
 }
 
 interface GalaxyCupRow {
@@ -70,6 +80,17 @@ interface GalaxyCupRow {
   points: number;
   best_position: number | null;
   best_was_major: boolean;
+  history: HistoryItem[];
+}
+
+function roundLabel(r: PublicResult): { short: string; full: string; n: number | null } {
+  const club = r.rounds?.club?.trim();
+  const course = r.rounds?.course?.trim();
+  const name = r.rounds?.name?.trim();
+  const n = r.rounds?.round_number ?? null;
+  const short = club || course || name || (n ? `J${n}` : '—');
+  const full = [n ? `J${n}` : null, club || course, name].filter(Boolean).join(' · ') || short;
+  return { short, full, n };
 }
 
 function computeCircuito(
