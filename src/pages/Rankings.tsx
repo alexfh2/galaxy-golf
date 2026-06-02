@@ -311,6 +311,7 @@ function computeGalaxyCup(
       points,
       best_position: best?.position ?? null,
       best_was_major: best?.isMajor ?? false,
+      history,
     });
   }
 
