@@ -439,36 +439,42 @@ function LeaderCard({
   const accentColor = accent === 'green' ? 'hsl(var(--gg-green))' : 'hsl(var(--gg-copper))';
   return (
     <div
-      className="relative w-full max-w-sm border border-[hsl(var(--gg-gold))]/25 bg-[hsl(var(--gg-navy))]/70 backdrop-blur-sm p-7 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
+      className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))]/95 backdrop-blur-md p-7 shadow-[0_24px_60px_-24px_rgba(11,19,36,0.35)]"
       style={{ borderTop: `2px solid ${accentColor}` }}
     >
       <div className="flex items-center justify-between mb-5">
-        <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+        <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/55">
           Líder actual
         </span>
-        <span className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] border border-[hsl(var(--gg-gold))]/40 px-2 py-[2px]">
+        <span
+          className="text-[10px] uppercase tracking-[0.22em] px-2 py-[2px] border"
+          style={{ color: accentColor, borderColor: accentColor + '55' }}
+        >
           #1
         </span>
       </div>
       {name ? (
         <>
-          <div className="font-display text-2xl md:text-[26px] leading-tight text-[hsl(var(--gg-ivory))]">
+          <div className="font-display text-2xl md:text-[26px] leading-tight text-[hsl(var(--gg-navy-deep))]">
             {name}
           </div>
-          <div className="mt-5 flex items-end justify-between border-t border-[hsl(var(--gg-gold))]/15 pt-4">
+          <div className="mt-5 flex items-end justify-between border-t border-[hsl(var(--gg-navy-deep))]/10 pt-4">
             <div>
-              <div className="text-[9px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/45">
+              <div className="text-[9px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/50">
                 Categoría
               </div>
-              <div className="mt-1 text-[12px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/85">
+              <div className="mt-1 text-[12px] uppercase tracking-[0.18em] text-[hsl(var(--gg-navy-deep))]/85">
                 {categoryLabel}
               </div>
             </div>
             <div className="text-right">
-              <div className="font-display text-3xl text-[hsl(var(--gg-gold))] leading-none">
+              <div
+                className="font-display text-3xl leading-none"
+                style={{ color: accentColor }}
+              >
                 {points}
               </div>
-              <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+              <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/55">
                 pts
               </div>
             </div>
@@ -476,8 +482,8 @@ function LeaderCard({
         </>
       ) : (
         <div className="py-4">
-          <div className="font-display text-xl text-[hsl(var(--gg-ivory))]/75">Ranking pendiente</div>
-          <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/45">
+          <div className="font-display text-xl text-[hsl(var(--gg-navy-deep))]/70">Ranking pendiente</div>
+          <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/50">
             Sin resultados en {categoryLabel}
           </div>
         </div>
