@@ -235,7 +235,7 @@ export function computeCircuito(
   return rows;
 }
 
-function computeGalaxyCup(
+export function computeGalaxyCup(
   results: PublicResult[],
   roundComps: PublicRoundCompetition[],
 ): GalaxyCupRow[] {
