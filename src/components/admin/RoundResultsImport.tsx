@@ -13,7 +13,7 @@ import { Check, X, AlertTriangle, Search, Plus, Trash2, Upload, FileSpreadsheet 
 import { DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { parseExcelResults, type HoleMode } from '@/lib/parseExcelResults';
+import { parseExcelResults, type HoleMode, type ExcelDiagnostics } from '@/lib/parseExcelResults';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
