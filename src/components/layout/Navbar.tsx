@@ -26,10 +26,10 @@ const Wordmark = ({ className = '' }: { className?: string }) => (
   </span>
 );
 
-// Logo monocromo dorado sobre navy — encaja con --gg-navbar-navy
+// Logo monocromo dorado sobre navy v2 — fondo #041633, encaja con --gg-navbar-navy
 const LogoGoldNavy = ({ className = '' }: { className?: string }) => (
   <img
-    src={logoGoldNavy.url}
+    src={logoGoldNavyV2.url}
     alt="GalaxyGolf"
     className={`object-contain w-auto select-none ${className}`}
     draggable={false}
