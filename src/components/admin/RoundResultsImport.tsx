@@ -593,33 +593,45 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         r => deleteExisting || !r._matched_player_id || !existingPlayerIds.has(r._matched_player_id)
       );
 
-      const payloads = toInsert.map(r => ({
-        round_id: round.id,
-        player_id: r._matched_player_id!,
-        stableford_points: r.stableford_points,
-        scratch_score: r.scratch_score,
-        handicap_at_round: r.handicap,
-        source_url: r.source_url,
-        play_date: r.play_date,
-        extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
-        import_source: importSource || null,
-        // Audit-only: official position and category as reported by the source (GolfDirecto/Excel).
-        // Never used as a primary ranking source — GalaxyGolf categories are computed independently.
-        official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
-        official_category: r.source_category ?? null,
-        scorecard: r._hole_mode === 'stableford_points'
-          ? (r._hole_stableford && r._hole_stableford.length > 0
-              ? {
-                  mode: 'stableford_points',
-                  hole_points: r._hole_stableford,
-                  handicap_play: r.handicap_play,
-                  note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
-                }
-              : null)
-          : (r.scores.length > 0
-              ? { scores: r.scores, handicap_play: r.handicap_play }
-              : null),
-      }));
+      const payloads = toInsert.map(r => {
+        // Override stableford_points with computed sum when admin chose that source.
+        let stb = r.stableford_points;
+        if (
+          r._hole_mode === 'stableford_points' &&
+          stablefordTotalSource === 'sum' &&
+          r._hole_stableford && r._hole_stableford.length > 0
+        ) {
+          const valid = r._hole_stableford.filter((v): v is number => v != null);
+          stb = valid.length > 0 ? valid.reduce((s, n) => s + n, 0) : null;
+        }
+        return {
+          round_id: round.id,
+          player_id: r._matched_player_id!,
+          stableford_points: stb,
+          scratch_score: r.scratch_score,
+          handicap_at_round: r.handicap,
+          source_url: r.source_url,
+          play_date: r.play_date,
+          extra_play_count: droppedByKey.get(dupKey(r)) ?? 0,
+          import_source: importSource || null,
+          official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
+          official_category: r.source_category ?? null,
+          scorecard: r._hole_mode === 'stableford_points'
+            ? (r._hole_stableford && r._hole_stableford.length > 0
+                ? {
+                    mode: 'stableford_points',
+                    hole_points: r._hole_stableford,
+                    handicap_play: r.handicap_play,
+                    total_source: stablefordTotalSource,
+                    note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
+                  }
+                : null)
+            : (r.scores.length > 0
+                ? { scores: r.scores, handicap_play: r.handicap_play }
+                : null),
+        };
+      });
+
 
       if (payloads.length === 0 && duplicatedExisting.length > 0) {
         throw new Error(
