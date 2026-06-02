@@ -393,22 +393,28 @@ function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
 function CategoryTabs({
   category,
   onChange,
+  accent = 'green',
 }: {
   category: Category;
   onChange: (c: Category) => void;
+  accent?: 'green' | 'copper';
 }) {
+  const activeBg =
+    accent === 'copper'
+      ? 'data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-navy))]'
+      : 'data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))]';
   return (
     <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-8">
       <TabsList className="bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 p-1 h-auto rounded-sm">
         <TabsTrigger
           value="hcp_low"
-          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
         >
           Hándicap Inferior
         </TabsTrigger>
         <TabsTrigger
           value="hcp_high"
-          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
         >
           Hándicap Superior
         </TabsTrigger>
@@ -488,7 +494,7 @@ function PageHeader({
   leaderCard,
 }: {
   eyebrow: string;
-  title: string;
+  title: React.ReactNode;
   text: string;
   bgImage?: string;
   leaderCard?: React.ReactNode;
@@ -501,15 +507,15 @@ function PageHeader({
             src={bgImage}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-cover opacity-35"
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/85 to-[hsl(var(--gg-navy))]/55"
+            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))]/95 via-[hsl(var(--gg-navy))]/65 to-[hsl(var(--gg-navy))]/30"
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/20 to-transparent"
           />
         </>
       )}
@@ -525,13 +531,13 @@ function PageHeader({
         aria-hidden
         className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/30"
       />
-      <div className="container relative mx-auto px-4 py-14 md:py-20">
+      <div className="container relative mx-auto px-4 py-10 md:py-14">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
             <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
               {eyebrow}
             </p>
-            <h1 className="font-display text-5xl md:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
               {title}
             </h1>
             <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75 font-light">
@@ -619,7 +625,12 @@ export function CircuitoRankingPage() {
     <>
       <PageHeader
         eyebrow="TEMPORADA 2026"
-        title="Circuito GalaxyGolf 2026"
+        title={
+          <>
+            Circuito GalaxyGolf
+            <span className="block text-[hsl(var(--gg-gold))]/90">2026</span>
+          </>
+        }
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
         bgImage={heroCircuito}
         leaderCard={
@@ -633,15 +644,9 @@ export function CircuitoRankingPage() {
       />
       <DashboardStrip>
         <DashboardCard
-          label="Líder actual"
-          value={leader ? leader.name.split(' ')[0] : '—'}
-          hint={leader ? `${leader.total} pts · ${categoryLabel}` : 'Ranking pendiente'}
-          accent="gold"
-        />
-        <DashboardCard
-          label="Pruebas publicadas"
+          label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas del Circuito"
+          hint="Jornadas del Circuito publicadas"
         />
         <DashboardCard
           label="Jugadores en ranking"
@@ -649,9 +654,15 @@ export function CircuitoRankingPage() {
           hint={categoryLabel}
         />
         <DashboardCard
-          label="Mejores 7"
-          value="Best 7"
-          hint="Computan los 7 mejores resultados"
+          label="Sistema de puntuación"
+          value="Mejores 7"
+          hint="Se suman los 7 mejores resultados"
+          accent="muted"
+        />
+        <DashboardCard
+          label="Gran Final"
+          value="Pendiente"
+          hint="Por confirmar en fase posterior"
           accent="muted"
         />
       </DashboardStrip>
@@ -788,7 +799,12 @@ export function GalaxyCupRankingPage() {
     <>
       <PageHeader
         eyebrow="RACE TO THE PLAYOFFS"
-        title="GalaxyCup 2026"
+        title={
+          <>
+            GalaxyCup
+            <span className="block text-[hsl(var(--gg-copper))]/95">2026</span>
+          </>
+        }
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
         bgImage={heroGalaxyCup}
         leaderCard={
@@ -802,26 +818,25 @@ export function GalaxyCupRankingPage() {
       />
       <DashboardStrip>
         <DashboardCard
-          label="Líder actual"
-          value={leader ? leader.name.split(' ')[0] : '—'}
-          hint={leader ? `${leader.points} pts · ${categoryLabel}` : 'Ranking pendiente'}
-          accent="gold"
+          label="Jugadores en ranking"
+          value={filtered.length || '—'}
+          hint={categoryLabel}
         />
         <DashboardCard
-          label="Pruebas publicadas"
+          label="Pruebas puntuables"
           value={totalPruebas || '—'}
-          hint="Jornadas GalaxyCup"
+          hint="Jornadas GalaxyCup publicadas"
         />
         <DashboardCard
-          label="Majors jugados"
+          label="Majors puntuables"
           value={totalMajors || '—'}
-          hint="Bonus de puntos"
+          hint="Puntuación incrementada"
           accent="copper"
         />
         <DashboardCard
-          label="Playoffs"
-          value="—"
-          hint="Pendientes de implementación"
+          label="Ruta a Playoffs"
+          value="Fase regular"
+          hint="Playoffs por confirmar"
           accent="muted"
         />
       </DashboardStrip>
@@ -833,7 +848,7 @@ export function GalaxyCupRankingPage() {
             <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
           ) : (
             <>
-              <CategoryTabs category={category} onChange={setCategory} />
+              <CategoryTabs category={category} onChange={setCategory} accent="copper" />
               {rows.length === 0 ? (
                 <EmptyMessage>
                   Todavía no hay resultados publicados de la GalaxyCup.
