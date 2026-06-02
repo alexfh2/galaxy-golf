@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import LanguageSwitcher from './LanguageSwitcher';
 import logoGoldNavyV2 from '@/assets/galaxygolf-logo-gold-navy-v2.png.asset.json';
-import logoGoldNavy from '@/assets/galaxygolf-logo-gold-navy.png.asset.json';
 import logoOficial from '@/assets/galaxygolf-logo-oficial.png.asset.json';
 // ThemeToggle removed — app locked to dark mode
 
