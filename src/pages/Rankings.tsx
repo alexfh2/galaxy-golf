@@ -594,7 +594,7 @@ function DashboardCard({
 
 function DashboardStrip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="container mx-auto px-4 -mt-10 md:-mt-14 relative z-10 mb-12">
+    <div className="container mx-auto px-4 -mt-10 md:-mt-14 relative z-10 mb-16">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">{children}</div>
     </div>
   );
