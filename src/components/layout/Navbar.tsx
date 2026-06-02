@@ -62,7 +62,7 @@ const Navbar = () => {
     >
       <div className="container flex h-20 items-center justify-between py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
-          <LogoGoldNavy className="h-7 sm:h-9 max-h-9" />
+          <LogoGoldNavy className="h-11 sm:h-14 max-h-14" />
         </Link>
 
         {/* Desktop Nav */}
