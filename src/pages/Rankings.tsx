@@ -396,12 +396,35 @@ function CategoryTabs({
   onChange: (c: Category) => void;
 }) {
   return (
-    <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-6">
-      <TabsList className="bg-[hsl(var(--gg-navy))]/10">
-        <TabsTrigger value="hcp_low">Hándicap Inferior</TabsTrigger>
-        <TabsTrigger value="hcp_high">Hándicap Superior</TabsTrigger>
+    <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-8">
+      <TabsList className="bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 p-1 h-auto rounded-sm">
+        <TabsTrigger
+          value="hcp_low"
+          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+        >
+          Hándicap Inferior
+        </TabsTrigger>
+        <TabsTrigger
+          value="hcp_high"
+          className="text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))] data-[state=active]:shadow-none"
+        >
+          Hándicap Superior
+        </TabsTrigger>
       </TabsList>
     </Tabs>
+  );
+}
+
+function HeroStat({ value, label }: { value: React.ReactNode; label: string }) {
+  return (
+    <div className="border-l border-[hsl(var(--gg-gold))]/25 pl-5">
+      <div className="font-display text-3xl md:text-4xl text-[hsl(var(--gg-gold))] leading-none">
+        {value}
+      </div>
+      <div className="mt-2 text-[10px] uppercase tracking-[0.25em] text-[hsl(var(--gg-ivory))]/55">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -409,27 +432,48 @@ function PageHeader({
   eyebrow,
   title,
   text,
+  stats,
 }: {
   eyebrow: string;
   title: string;
   text: string;
+  stats?: { value: React.ReactNode; label: string }[];
 }) {
   return (
-    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
+    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full border border-[hsl(var(--gg-gold))]/20"
+        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-40 -left-20 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-green))]/40"
+        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/10"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/40"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--gg-green)/0.25),transparent_60%)]"
       />
       <div className="container relative mx-auto px-4 py-16 md:py-24">
-        <p className="mb-4 text-xs font-medium tracking-[0.3em] text-[hsl(var(--gg-gold))]">
+        <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
           {eyebrow}
         </p>
-        <h1 className="font-display text-4xl md:text-6xl font-light leading-tight">{title}</h1>
-        <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">{text}</p>
+        <h1 className="font-display text-5xl md:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
+          {title}
+        </h1>
+        <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/70 font-light">
+          {text}
+        </p>
+        {stats && stats.length > 0 && (
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 max-w-3xl">
+            {stats.map((s, i) => (
+              <HeroStat key={i} value={s.value} label={s.label} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -451,14 +495,31 @@ export function CircuitoRankingPage() {
   const filtered = rows.filter((r) => r.category === category);
   const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
 
+  const totalPruebas = useMemo(() => {
+    const ids = new Set<string>();
+    for (const r of rows) for (const h of r.history) ids.add(h.round_id);
+    return ids.size;
+  }, [rows]);
+  const leader = rows[0];
+
+  const heroStats = rows.length
+    ? [
+        { value: leader ? leader.name.split(' ')[0] : '—', label: 'Líder actual' },
+        { value: leader ? leader.total : '—', label: 'Puntos líder' },
+        { value: totalPruebas, label: 'Pruebas disputadas' },
+        { value: rows.length, label: 'Jugadores' },
+      ]
+    : undefined;
+
   return (
     <>
       <PageHeader
         eyebrow="TEMPORADA 2026"
-        title="Circuito GalaxyGolf"
-        text="Ranking anual del Circuito GalaxyGolf con las pruebas regulares y la clasificación acumulada."
+        title="Circuito GalaxyGolf 2026"
+        text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
+        stats={heroStats}
       />
-      <section className="bg-background py-12">
+      <section className="bg-background py-14">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <EmptyMessage>Cargando ranking...</EmptyMessage>
@@ -476,40 +537,46 @@ export function CircuitoRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-lg border border-border bg-card overflow-x-auto">
+                <div className="rounded-sm border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 overflow-x-auto shadow-[0_8px_40px_-20px_hsl(var(--gg-navy))]">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Pos.</TableHead>
-                        <TableHead className="min-w-[180px]">Jugador</TableHead>
+                      <TableRow className="border-b border-[hsl(var(--gg-gold))]/20 hover:bg-transparent">
+                        <TableHead className="w-14 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pos.</TableHead>
+                        <TableHead className="min-w-[180px] text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Jugador</TableHead>
                         {roundCols.map((c) => (
                           <TableHead
                             key={c.round_id}
                             title={c.full}
-                            className="text-center whitespace-nowrap px-2"
+                            className="text-center whitespace-nowrap px-2 text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--gg-ivory))]/55"
                           >
                             {c.label}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center">Pruebas</TableHead>
-                        <TableHead className="text-center">Mejores 7</TableHead>
-                        <TableHead className="text-center">Bonus</TableHead>
-                        <TableHead className="text-center font-semibold">Total</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pruebas</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Mejores 7</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Bonus</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-gold))]">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filtered.map((r, i) => {
                         const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                        const isLeader = i === 0;
                         return (
-                          <TableRow key={r.player_id} className="group">
-                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                          <TableRow
+                            key={r.player_id}
+                            className={`group border-b border-[hsl(var(--gg-gold))]/10 ${
+                              isLeader ? 'bg-[hsl(var(--gg-green))]/20 hover:bg-[hsl(var(--gg-green))]/25' : 'hover:bg-[hsl(var(--gg-navy))]/60'
+                            }`}
+                          >
+                            <TableCell className="font-display text-lg text-[hsl(var(--gg-gold))]">
                               {i + 1}
                             </TableCell>
                             <TableCell>
                               <button
                                 type="button"
                                 onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                                className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
                               >
                                 {r.name}
                               </button>
@@ -517,15 +584,15 @@ export function CircuitoRankingPage() {
                             {roundCols.map((c) => {
                               const v = byRid.get(c.round_id);
                               return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm">
-                                  {v != null ? v : <span className="text-muted-foreground">—</span>}
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-ivory))]/85">
+                                  {v != null ? v : <span className="text-[hsl(var(--gg-ivory))]/25">—</span>}
                                 </TableCell>
                               );
                             })}
-                            <TableCell className="text-center">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center">{r.best7}</TableCell>
-                            <TableCell className="text-center">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
+                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/85">{r.best7}</TableCell>
+                            <TableCell className="text-center text-[hsl(var(--gg-copper))]">+{r.bonus}</TableCell>
+                            <TableCell className="text-center font-display text-lg text-[hsl(var(--gg-gold))]">
                               {r.total}
                             </TableCell>
                           </TableRow>
@@ -535,8 +602,8 @@ export function CircuitoRankingPage() {
                   </Table>
                 </div>
               )}
-              <p className="mt-6 text-xs text-muted-foreground italic">
-                Ranking regular provisional. La Gran Final se implementará en una fase posterior.
+              <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
+                Ranking regular provisional · La Gran Final se implementará en una fase posterior.
               </p>
             </>
           )}
@@ -567,14 +634,37 @@ export function GalaxyCupRankingPage() {
   const filtered = rows.filter((r) => r.category === category);
   const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
 
+  const { totalPruebas, totalMajors } = useMemo(() => {
+    const ids = new Set<string>();
+    const majors = new Set<string>();
+    for (const r of rows) {
+      for (const h of r.history) {
+        ids.add(h.round_id);
+        if (h.isMajor) majors.add(h.round_id);
+      }
+    }
+    return { totalPruebas: ids.size, totalMajors: majors.size };
+  }, [rows]);
+  const leader = rows[0];
+
+  const heroStats = rows.length
+    ? [
+        { value: leader ? leader.name.split(' ')[0] : '—', label: 'Líder actual' },
+        { value: leader ? leader.points : '—', label: 'Puntos líder' },
+        { value: totalPruebas, label: 'Pruebas disputadas' },
+        { value: totalMajors, label: 'Majors jugados' },
+      ]
+    : undefined;
+
   return (
     <>
       <PageHeader
         eyebrow="RACE TO THE PLAYOFFS"
-        title="GalaxyCup"
-        text="Clasificación por puntos con pruebas regulares, Majors y camino hacia los Playoffs."
+        title="GalaxyCup 2026"
+        text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
+        stats={heroStats}
       />
-      <section className="bg-background py-12">
+      <section className="bg-background py-14">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <EmptyMessage>Cargando ranking...</EmptyMessage>
@@ -592,43 +682,51 @@ export function GalaxyCupRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-lg border border-border bg-card overflow-x-auto">
+                <div className="rounded-sm border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 overflow-x-auto shadow-[0_8px_40px_-20px_hsl(var(--gg-navy))]">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Pos.</TableHead>
-                        <TableHead className="min-w-[180px]">Jugador</TableHead>
+                      <TableRow className="border-b border-[hsl(var(--gg-gold))]/20 hover:bg-transparent">
+                        <TableHead className="w-14 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pos.</TableHead>
+                        <TableHead className="min-w-[180px] text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Jugador</TableHead>
                         {roundCols.map((c) => (
                           <TableHead
                             key={c.round_id}
                             title={c.full}
-                            className="text-center whitespace-nowrap px-2"
+                            className="text-center whitespace-nowrap px-2 text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--gg-ivory))]/55"
                           >
                             {c.label}
                             {c.isMajor && (
-                              <span className="ml-1 text-[9px] uppercase text-[hsl(var(--gg-copper))]">M</span>
+                              <span className="ml-1 inline-block text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-copper))] border border-[hsl(var(--gg-copper))]/50 px-1 leading-none py-[2px]">
+                                M
+                              </span>
                             )}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center">Pruebas</TableHead>
-                        <TableHead className="text-center">Majors</TableHead>
-                        <TableHead className="text-center font-semibold">Puntos</TableHead>
-                        <TableHead className="text-center">Mejor resultado</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pruebas</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Majors</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-gold))]">Puntos</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Mejor resultado</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filtered.map((r, i) => {
                         const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                        const isLeader = i === 0;
                         return (
-                          <TableRow key={r.player_id} className="group">
-                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                          <TableRow
+                            key={r.player_id}
+                            className={`group border-b border-[hsl(var(--gg-gold))]/10 ${
+                              isLeader ? 'bg-[hsl(var(--gg-green))]/20 hover:bg-[hsl(var(--gg-green))]/25' : 'hover:bg-[hsl(var(--gg-navy))]/60'
+                            }`}
+                          >
+                            <TableCell className="font-display text-lg text-[hsl(var(--gg-gold))]">
                               {i + 1}
                             </TableCell>
                             <TableCell>
                               <button
                                 type="button"
                                 onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                                className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
                               >
                                 {r.name}
                               </button>
@@ -636,32 +734,32 @@ export function GalaxyCupRankingPage() {
                             {roundCols.map((c) => {
                               const v = byRid.get(c.round_id);
                               return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm">
-                                  {v != null && v > 0 ? v : <span className="text-muted-foreground">—</span>}
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-ivory))]/85">
+                                  {v != null && v > 0 ? v : <span className="text-[hsl(var(--gg-ivory))]/25">—</span>}
                                 </TableCell>
                               );
                             })}
-                            <TableCell className="text-center">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center">{r.majors_played}</TableCell>
-                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-copper))]">
+                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.majors_played}</TableCell>
+                            <TableCell className="text-center font-display text-lg text-[hsl(var(--gg-gold))]">
                               {r.points}
                             </TableCell>
                             <TableCell className="text-center">
                               {r.best_position ? (
-                                <span className="inline-flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1.5 text-[hsl(var(--gg-ivory))]/85">
                                   <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-gold))]" />
                                   {r.best_position}º
                                   {r.best_was_major && (
                                     <Badge
                                       variant="outline"
-                                      className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0"
+                                      className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0 rounded-none"
                                     >
                                       Major
                                     </Badge>
                                   )}
                                 </span>
                               ) : (
-                                <span className="text-muted-foreground">—</span>
+                                <span className="text-[hsl(var(--gg-ivory))]/25">—</span>
                               )}
                             </TableCell>
                           </TableRow>
@@ -671,8 +769,8 @@ export function GalaxyCupRankingPage() {
                   </Table>
                 </div>
               )}
-              <p className="mt-6 text-xs text-muted-foreground italic">
-                Ranking de fase regular y Majors. Los Playoffs se implementarán en una fase posterior.
+              <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
+                Ranking de fase regular y Majors · Los Playoffs se implementarán en una fase posterior.
               </p>
             </>
           )}
