@@ -521,6 +521,8 @@ function PageHeader({
   bgImage,
   leaderCard,
   overlayStrength = 'soft',
+  eyebrowAccent = 'green',
+  eyebrowSize = 'sm',
 }: {
   eyebrow: string;
   title: React.ReactNode;
@@ -528,8 +530,12 @@ function PageHeader({
   bgImage?: string;
   leaderCard?: React.ReactNode;
   overlayStrength?: 'soft' | 'strong';
+  eyebrowAccent?: 'green' | 'copper';
+  eyebrowSize?: 'sm' | 'lg';
 }) {
   const isStrong = overlayStrength === 'strong';
+  const eyebrowColor =
+    eyebrowAccent === 'copper' ? 'hsl(var(--gg-copper))' : 'hsl(var(--gg-green))';
   return (
     <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
       {bgImage && (
@@ -545,32 +551,33 @@ function PageHeader({
             aria-hidden
             className={`absolute inset-0 bg-gradient-to-r ${
               isStrong
-                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/82 via-45% to-[hsl(var(--gg-bg-light))]/28 to-100%'
+                ? 'from-[hsl(var(--gg-bg-light))] from-0% via-[hsl(var(--gg-bg-light))]/92 via-40% to-[hsl(var(--gg-bg-light))]/15 to-100%'
                 : 'from-[hsl(var(--gg-bg-light))]/95 from-0% via-[hsl(var(--gg-bg-light))]/72 via-45% to-[hsl(var(--gg-bg-light))]/18 to-100%'
             }`}
           />
-          {/* Velo superior suave */}
           <div
             aria-hidden
             className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[hsl(var(--gg-bg-light))]/55 to-transparent"
           />
-          {/* Fundido inferior */}
           <div
             aria-hidden
             className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
           />
-          {/* Refuerzo localizado bajo el bloque titular */}
           <div
             aria-hidden
-            className={`absolute inset-y-0 left-0 ${isStrong ? 'w-[60%]' : 'w-[52%]'} bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent`}
+            className={`absolute inset-y-0 left-0 ${isStrong ? 'w-[68%]' : 'w-[52%]'} bg-gradient-to-r ${isStrong ? 'from-[hsl(var(--gg-bg-light))]/75' : 'from-[hsl(var(--gg-bg-light))]/55'} to-transparent`}
           />
         </>
       )}
-      {/* grafismos circulares eliminados — pedido cliente: hero más limpio */}
       <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
-            <p className="mb-5 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
+            <p
+              className={`mb-5 font-semibold tracking-[0.32em] ${
+                eyebrowSize === 'lg' ? 'text-xs md:text-sm' : 'text-[10px]'
+              }`}
+              style={{ color: eyebrowColor }}
+            >
               {eyebrow}
             </p>
             <h1
