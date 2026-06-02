@@ -494,7 +494,7 @@ function PageHeader({
   leaderCard,
 }: {
   eyebrow: string;
-  title: string;
+  title: React.ReactNode;
   text: string;
   bgImage?: string;
   leaderCard?: React.ReactNode;
@@ -507,15 +507,15 @@ function PageHeader({
             src={bgImage}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-cover opacity-35"
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/85 to-[hsl(var(--gg-navy))]/55"
+            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))]/95 via-[hsl(var(--gg-navy))]/65 to-[hsl(var(--gg-navy))]/30"
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/20 to-transparent"
           />
         </>
       )}
@@ -531,13 +531,13 @@ function PageHeader({
         aria-hidden
         className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/30"
       />
-      <div className="container relative mx-auto px-4 py-14 md:py-20">
+      <div className="container relative mx-auto px-4 py-10 md:py-14">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
             <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
               {eyebrow}
             </p>
-            <h1 className="font-display text-5xl md:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-light leading-[1.05] text-[hsl(var(--gg-ivory))]">
               {title}
             </h1>
             <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75 font-light">
