@@ -11,21 +11,21 @@ const Index = () => {
   return (
     <div className="animate-fade-in bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
       {/* ——— HERO ——— */}
-      <section className="relative min-h-[78vh] overflow-hidden flex items-center">
+      <section className="relative min-h-[68vh] overflow-hidden flex items-center">
         <div className="absolute inset-0">
           <img src={heroBg} alt="" className="w-full h-full object-cover object-center" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))] via-[hsl(var(--gg-navy))]/85 to-[hsl(var(--gg-navy))]/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-[hsl(var(--gg-navy))]/40" />
 
-        <div className="relative z-10 container py-24 max-w-3xl">
-          <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-5">
+        <div className="relative z-10 container py-16 max-w-3xl">
+          <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
             Temporada 2026
           </p>
-          <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-6 text-[hsl(var(--gg-ivory))]">
+          <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-5 text-[hsl(var(--gg-ivory))]">
             La temporada<br />está en juego
           </h1>
-          <p className="text-base lg:text-lg text-[hsl(var(--gg-ivory))]/75 leading-relaxed mb-10 max-w-xl">
+          <p className="text-base lg:text-lg text-[hsl(var(--gg-ivory))]/75 leading-relaxed mb-8 max-w-xl">
             Sigue los torneos, el calendario y las clasificaciones del Circuito GALAXY GOLF y la GalaxyCup 2026.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -48,9 +48,30 @@ const Index = () => {
         </div>
       </section>
 
+      {/* ——— SPONSORS STRIP (institucional, discreto) ——— */}
+      <section className="border-y border-[hsl(var(--gg-gold))]/15 bg-[hsl(var(--gg-navy))]">
+        <div className="container py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]/70 shrink-0">
+              Patrocinadores oficiales
+            </p>
+            <div className="flex-1 grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-3 items-center">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-7 flex items-center justify-center text-[10px] font-semibold tracking-[0.22em] uppercase text-[hsl(var(--gg-ivory))]/30"
+                >
+                  Sponsor
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ——— COMPETICIONES ——— */}
-      <section id="competiciones" className="container py-20">
-        <div className="flex items-center gap-4 mb-12">
+      <section id="competiciones" className="container py-14">
+        <div className="flex items-center gap-4 mb-8">
           <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/20" />
           <h2 className="text-[11px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]">
             Competiciones 2026
@@ -77,12 +98,20 @@ const Index = () => {
             <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-gold))]/40 text-[hsl(var(--gg-gold))]">
               12 pruebas + Gran Final
             </span>
-            <Link
-              to="/jornades"
-              className="mt-auto inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
-            >
-              Ver calendario <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="mt-auto flex items-center gap-6">
+              <Link
+                to="/circuito-galaxygolf"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
+              >
+                Ver ranking <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                to="/jornades"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-ivory))] transition-colors"
+              >
+                Ver calendario
+              </Link>
+            </div>
           </article>
 
           {/* GalaxyCup */}
@@ -101,43 +130,30 @@ const Index = () => {
             <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))]">
               Fase regular + Playoffs
             </span>
-            <Link
-              to="/jornades"
-              className="mt-auto inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
-            >
-              Ver calendario <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="mt-auto flex items-center gap-6">
+              <Link
+                to="/galaxycup"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
+              >
+                Ver ranking <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                to="/jornades"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-ivory))] transition-colors"
+              >
+                Ver calendario
+              </Link>
+            </div>
           </article>
         </div>
       </section>
 
-      {/* ——— SEASON STATS (estáticos) ——— */}
-      <section className="border-y border-[hsl(var(--gg-gold))]/15 bg-[hsl(var(--gg-navy))]">
-        <div className="container py-14 grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">
+      {/* ——— SEASON STATS ——— */}
+      <section className="border-t border-[hsl(var(--gg-gold))]/15 bg-[hsl(var(--gg-navy))]">
+        <div className="container py-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
           <StaticStat value="2" label="Competiciones" />
           <StaticStat value="29" label="Jornadas" />
           <StaticStat value="2026" label="Temporada" icon={<CalendarDays className="h-5 w-5 text-[hsl(var(--gg-gold))]/70" />} />
-        </div>
-      </section>
-
-      {/* ——— PATROCINADORES ——— */}
-      <section className="container py-20">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/15" />
-          <h2 className="text-[11px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]/80">
-            Patrocinadores oficiales
-          </h2>
-          <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/15" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 max-w-4xl mx-auto">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-16 border border-[hsl(var(--gg-gold))]/15 flex items-center justify-center text-[10px] font-semibold tracking-[0.22em] uppercase text-[hsl(var(--gg-ivory))]/30"
-            >
-              Sponsor
-            </div>
-          ))}
         </div>
       </section>
     </div>
