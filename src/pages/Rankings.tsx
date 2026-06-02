@@ -401,20 +401,21 @@ function CategoryTabs({
 }) {
   const activeBg =
     accent === 'copper'
-      ? 'data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-navy))]'
-      : 'data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-ivory))]';
+      ? 'data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]'
+      : 'data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]';
+  const inactive = 'text-[hsl(var(--gg-navy-deep))]/65 hover:text-[hsl(var(--gg-navy-deep))]';
   return (
     <Tabs value={category} onValueChange={(v) => onChange(v as Category)} className="mb-8">
-      <TabsList className="bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 p-1 h-auto rounded-sm">
+      <TabsList className="bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm shadow-[0_2px_10px_-6px_rgba(11,19,36,0.18)]">
         <TabsTrigger
           value="hcp_low"
-          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
+          className={`text-[11px] font-semibold uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${inactive} ${activeBg}`}
         >
           Hándicap Inferior
         </TabsTrigger>
         <TabsTrigger
           value="hcp_high"
-          className={`text-[11px] uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${activeBg}`}
+          className={`text-[11px] font-semibold uppercase tracking-[0.18em] px-5 py-2 rounded-none data-[state=active]:shadow-none ${inactive} ${activeBg}`}
         >
           Hándicap Superior
         </TabsTrigger>
@@ -523,9 +524,14 @@ function PageHeader({
             aria-hidden
             className={`absolute inset-0 bg-gradient-to-r ${
               isStrong
-                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/80 via-45% to-[hsl(var(--gg-bg-light))]/25 to-100%'
-                : 'from-[hsl(var(--gg-bg-light))]/92 from-0% via-[hsl(var(--gg-bg-light))]/65 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%'
+                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/82 via-45% to-[hsl(var(--gg-bg-light))]/28 to-100%'
+                : 'from-[hsl(var(--gg-bg-light))]/95 from-0% via-[hsl(var(--gg-bg-light))]/72 via-45% to-[hsl(var(--gg-bg-light))]/18 to-100%'
             }`}
+          />
+          {/* Velo superior suave */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[hsl(var(--gg-bg-light))]/55 to-transparent"
           />
           {/* Fundido inferior */}
           <div
@@ -533,30 +539,17 @@ function PageHeader({
             className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
           />
           {/* Refuerzo localizado bajo el bloque titular */}
-          {isStrong && (
-            <div
-              aria-hidden
-              className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent"
-            />
-          )}
+          <div
+            aria-hidden
+            className={`absolute inset-y-0 left-0 ${isStrong ? 'w-[60%]' : 'w-[52%]'} bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent`}
+          />
         </>
       )}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/20"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/15"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/25"
-      />
+      {/* grafismos circulares eliminados — pedido cliente: hero más limpio */}
       <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
-            <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
+            <p className="mb-5 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
               {eyebrow}
             </p>
             <h1
@@ -593,20 +586,20 @@ function DashboardCard({
     accent === 'copper'
       ? 'text-[hsl(var(--gg-copper))]'
       : accent === 'green'
-      ? 'text-[hsl(var(--gg-ivory))]'
+      ? 'text-[hsl(var(--gg-green))]'
       : accent === 'muted'
-      ? 'text-[hsl(var(--gg-ivory))]/85'
-      : 'text-[hsl(var(--gg-gold))]';
+      ? 'text-[hsl(var(--gg-navy-deep))]'
+      : 'text-[hsl(var(--gg-navy-deep))]';
   return (
-    <div className="border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/55 p-6 transition-colors hover:border-[hsl(var(--gg-gold))]/40">
-      <div className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/55">
+    <div className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] p-6 shadow-[0_6px_24px_-16px_rgba(11,19,36,0.25)] transition-colors hover:border-[hsl(var(--gg-green))]/45">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--gg-green))]">
         {label}
       </div>
       <div className={`mt-3 font-display text-3xl md:text-[34px] leading-none ${valueColor}`}>
         {value}
       </div>
       {hint && (
-        <div className="mt-3 text-[11px] tracking-wide text-[hsl(var(--gg-ivory))]/55">
+        <div className="mt-3 text-[11px] tracking-wide text-[hsl(var(--gg-navy-deep))]/65">
           {hint}
         </div>
       )}
@@ -709,25 +702,25 @@ export function CircuitoRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-sm border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 overflow-x-auto shadow-[0_8px_40px_-20px_hsl(var(--gg-navy))]">
+                <div className="rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-[hsl(var(--gg-gold))]/20 hover:bg-transparent">
-                        <TableHead className="w-14 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pos.</TableHead>
-                        <TableHead className="min-w-[180px] text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Jugador</TableHead>
+                      <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                        <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pos.</TableHead>
+                        <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Jugador</TableHead>
                         {roundCols.map((c) => (
                           <TableHead
                             key={c.round_id}
                             title={c.full}
-                            className="text-center whitespace-nowrap px-2 text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--gg-ivory))]/55"
+                            className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-green))]/85"
                           >
                             {c.label}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pruebas</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Mejores 7</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Bonus</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-gold))]">Total</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pruebas</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Mejores 7</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Bonus</TableHead>
+                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -737,18 +730,20 @@ export function CircuitoRankingPage() {
                         return (
                           <TableRow
                             key={r.player_id}
-                            className={`group border-b border-[hsl(var(--gg-gold))]/10 ${
-                              isLeader ? 'bg-[hsl(var(--gg-green))]/20 hover:bg-[hsl(var(--gg-green))]/25' : 'hover:bg-[hsl(var(--gg-navy))]/60'
+                            className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
+                              isLeader
+                                ? 'bg-[hsl(var(--gg-green))]/10 hover:bg-[hsl(var(--gg-green))]/14'
+                                : 'hover:bg-[hsl(var(--gg-bg-light))]'
                             }`}
                           >
-                            <TableCell className="font-display text-lg text-[hsl(var(--gg-gold))]">
+                            <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
                               {i + 1}
                             </TableCell>
                             <TableCell>
                               <button
                                 type="button"
                                 onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
+                                className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
                               >
                                 {r.name}
                               </button>
@@ -756,15 +751,15 @@ export function CircuitoRankingPage() {
                             {roundCols.map((c) => {
                               const v = byRid.get(c.round_id);
                               return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-ivory))]/85">
-                                  {v != null ? v : <span className="text-[hsl(var(--gg-ivory))]/25">—</span>}
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                                  {v != null ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
                                 </TableCell>
                               );
                             })}
-                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/85">{r.best7}</TableCell>
-                            <TableCell className="text-center text-[hsl(var(--gg-copper))]">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-display text-lg text-[hsl(var(--gg-gold))]">
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.best7}</TableCell>
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">+{r.bonus}</TableCell>
+                            <TableCell className="text-center font-sans font-bold text-xl text-[hsl(var(--gg-copper))] tabular-nums">
                               {r.total}
                             </TableCell>
                           </TableRow>
