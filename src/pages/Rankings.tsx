@@ -523,9 +523,14 @@ function PageHeader({
             aria-hidden
             className={`absolute inset-0 bg-gradient-to-r ${
               isStrong
-                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/80 via-45% to-[hsl(var(--gg-bg-light))]/25 to-100%'
-                : 'from-[hsl(var(--gg-bg-light))]/92 from-0% via-[hsl(var(--gg-bg-light))]/65 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%'
+                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/82 via-45% to-[hsl(var(--gg-bg-light))]/28 to-100%'
+                : 'from-[hsl(var(--gg-bg-light))]/95 from-0% via-[hsl(var(--gg-bg-light))]/72 via-45% to-[hsl(var(--gg-bg-light))]/18 to-100%'
             }`}
+          />
+          {/* Velo superior suave */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[hsl(var(--gg-bg-light))]/55 to-transparent"
           />
           {/* Fundido inferior */}
           <div
@@ -533,19 +538,17 @@ function PageHeader({
             className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
           />
           {/* Refuerzo localizado bajo el bloque titular */}
-          {isStrong && (
-            <div
-              aria-hidden
-              className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent"
-            />
-          )}
+          <div
+            aria-hidden
+            className={`absolute inset-y-0 left-0 ${isStrong ? 'w-[60%]' : 'w-[52%]'} bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent`}
+          />
         </>
       )}
       {/* grafismos circulares eliminados — pedido cliente: hero más limpio */}
       <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
           <div>
-            <p className="mb-5 text-[10px] font-medium tracking-[0.32em] text-[hsl(var(--gg-gold))]">
+            <p className="mb-5 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
               {eyebrow}
             </p>
             <h1
