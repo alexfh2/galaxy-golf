@@ -99,7 +99,7 @@ const News = () => {
       <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
         <div
           aria-hidden
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-bottom"
           style={{ backgroundImage: `url(${heroNews.url})` }}
         />
         <div
