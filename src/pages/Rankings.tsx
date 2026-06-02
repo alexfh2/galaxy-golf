@@ -914,17 +914,17 @@ export function GalaxyCupRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-sm border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 overflow-x-auto shadow-[0_8px_40px_-20px_hsl(var(--gg-navy))]">
+                <div className="rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-[hsl(var(--gg-gold))]/20 hover:bg-transparent">
-                        <TableHead className="w-14 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pos.</TableHead>
-                        <TableHead className="min-w-[180px] text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Jugador</TableHead>
+                      <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                        <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
+                        <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
                         {roundCols.map((c) => (
                           <TableHead
                             key={c.round_id}
                             title={c.full}
-                            className="text-center whitespace-nowrap px-2 text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--gg-ivory))]/55"
+                            className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-copper))]/85"
                           >
                             {c.label}
                             {c.isMajor && (
@@ -934,10 +934,10 @@ export function GalaxyCupRankingPage() {
                             )}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Pruebas</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Majors</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-gold))]">Puntos</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/60">Mejor resultado</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Pruebas</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Majors</TableHead>
+                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Puntos</TableHead>
+                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Mejor resultado</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -947,22 +947,24 @@ export function GalaxyCupRankingPage() {
                         return (
                           <TableRow
                             key={r.player_id}
-                            className={`group border-b border-[hsl(var(--gg-gold))]/10 ${
-                              isLeader ? 'bg-[hsl(var(--gg-green))]/20 hover:bg-[hsl(var(--gg-green))]/25' : 'hover:bg-[hsl(var(--gg-navy))]/60'
+                            className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
+                              isLeader
+                                ? 'bg-[hsl(var(--gg-copper))]/10 hover:bg-[hsl(var(--gg-copper))]/14'
+                                : 'hover:bg-[hsl(var(--gg-bg-light))]'
                             }`}
                           >
-                            <TableCell className="font-display text-lg text-[hsl(var(--gg-gold))]">
+                            <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
                               {i + 1}
                             </TableCell>
                             <TableCell>
                               <button
                                 type="button"
                                 onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
+                                className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-copper))]"
                               >
                                 <span>{r.name}</span>
                                 {fmtHcp(r.lastHcp) && (
-                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-ivory))]/55">
+                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
                                     ({fmtHcp(r.lastHcp)})
                                   </span>
                                 )}
@@ -971,20 +973,19 @@ export function GalaxyCupRankingPage() {
                             {roundCols.map((c) => {
                               const v = byRid.get(c.round_id);
                               return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-ivory))]/85">
-                                  {v != null && v > 0 ? v : <span className="text-[hsl(var(--gg-ivory))]/25">—</span>}
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                                  {v != null && v > 0 ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
                                 </TableCell>
                               );
                             })}
-                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center text-[hsl(var(--gg-ivory))]/75">{r.majors_played}</TableCell>
-                            <TableCell className="text-center font-display text-lg text-[hsl(var(--gg-gold))]">
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.majors_played}</TableCell>
+                            <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
                               {r.points}
                             </TableCell>
                             <TableCell className="text-center">
                               {r.best_position ? (
-                                <span className="inline-flex items-center gap-1.5 text-[hsl(var(--gg-ivory))]/85">
-                                  <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-gold))]" />
+                                <span className="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--gg-navy-deep))]/85 tabular-nums">
                                   {r.best_position}º
                                   {r.best_was_major && (
                                     <Badge
@@ -996,7 +997,7 @@ export function GalaxyCupRankingPage() {
                                   )}
                                 </span>
                               ) : (
-                                <span className="text-[hsl(var(--gg-ivory))]/25">—</span>
+                                <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>
                               )}
                             </TableCell>
                           </TableRow>
