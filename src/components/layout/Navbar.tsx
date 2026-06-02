@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import LanguageSwitcher from './LanguageSwitcher';
+import logoGoldNavy from '@/assets/galaxygolf-logo-gold-navy.png.asset.json';
 import logoOficial from '@/assets/galaxygolf-logo-oficial.png.asset.json';
 // ThemeToggle removed — app locked to dark mode
 
@@ -24,6 +25,17 @@ const Wordmark = ({ className = '' }: { className?: string }) => (
   </span>
 );
 
+// Logo monocromo dorado sobre navy — encaja con --gg-navbar-navy
+const LogoGoldNavy = ({ className = '' }: { className?: string }) => (
+  <img
+    src={logoGoldNavy.url}
+    alt="GalaxyGolf"
+    className={`object-contain w-auto select-none ${className}`}
+    draggable={false}
+  />
+);
+
+// Logo oficial azul/verde — conservado como referencia / fallback opcional
 const LogoOficial = ({ className = '' }: { className?: string }) => (
   <img
     src={logoOficial.url}
@@ -45,12 +57,12 @@ const Navbar = () => {
       } top-0 left-0 right-0 z-50 transition-colors duration-300 ${
         isHome
           ? 'bg-transparent'
-          : 'bg-[hsl(var(--gg-navy))]/95 backdrop-blur-md border-b border-[hsl(var(--gg-gold))]/15'
+          : 'bg-[hsl(var(--gg-navbar-navy))] border-b border-[hsl(var(--gg-gold))]/15'
       }`}
     >
       <div className="container flex h-20 items-center justify-between py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
-          <LogoOficial className="h-7 sm:h-9 max-h-9" />
+          <LogoGoldNavy className="h-8 sm:h-10 max-h-10" />
         </Link>
 
         {/* Desktop Nav */}
