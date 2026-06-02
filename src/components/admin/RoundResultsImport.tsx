@@ -40,6 +40,10 @@ interface ParsedResult {
   _url_index?: number;
   _is_np?: boolean;
   _is_senior?: boolean;
+  /** Excel-only: tells the save mutation how to serialise the scorecard. */
+  _hole_mode?: HoleMode;
+  /** Excel-only: stableford points per hole when _hole_mode === 'stableford_points'. */
+  _hole_stableford?: (number | null)[];
 }
 
 interface Props {
