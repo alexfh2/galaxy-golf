@@ -4,8 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import LanguageSwitcher from './LanguageSwitcher';
-import logoGoldNavyV2 from '@/assets/galaxygolf-logo-gold-navy-v2.png.asset.json';
-import logoOficial from '@/assets/galaxygolf-logo-oficial.png.asset.json';
+import logoGalaxyGolf from '@/assets/galaxygolf-logo.png.asset.json';
 // ThemeToggle removed — app locked to dark mode
 
 const navItems = [
@@ -16,31 +15,11 @@ const navItems = [
   { label: 'Jugadores', path: '/jugadors' },
 ] as const;
 
-// Fallback tipográfico (se conserva por si el logo oficial no encaja en algún contexto)
-const Wordmark = ({ className = '' }: { className?: string }) => (
-  <span
-    className={`font-display tracking-[0.22em] uppercase font-medium text-[hsl(var(--gg-gold))] ${className}`}
-  >
-    GALAXY GOLF
-  </span>
-);
-
-// Logo monocromo dorado sobre navy v2 — fondo #041633, encaja con --gg-navbar-navy
-const LogoGoldNavy = ({ className = '' }: { className?: string }) => (
+const Logo = ({ className = '' }: { className?: string }) => (
   <img
-    src={logoGoldNavyV2.url}
+    src={logoGalaxyGolf.url}
     alt="GalaxyGolf"
     className={`object-contain w-auto select-none ${className}`}
-    draggable={false}
-  />
-);
-
-// Logo oficial azul/verde — conservado como referencia / fallback opcional
-const LogoOficial = ({ className = '' }: { className?: string }) => (
-  <img
-    src={logoOficial.url}
-    alt="GalaxyGolf"
-    className={`object-contain w-auto ${className}`}
     draggable={false}
   />
 );
@@ -62,7 +41,7 @@ const Navbar = () => {
     >
       <div className="container flex h-20 items-center py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
-          <Wordmark className="text-xl sm:text-2xl" />
+          <Logo className="h-12 sm:h-14" />
         </Link>
 
         {/* Desktop Nav */}
@@ -106,7 +85,7 @@ const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-72 bg-background border-border">
               <SheetTitle>
-                <Wordmark className="text-lg" />
+                <Logo className="h-10" />
               </SheetTitle>
               <nav className="mt-8 flex flex-col gap-0.5">
                 {navItems.map((item, idx) => (
