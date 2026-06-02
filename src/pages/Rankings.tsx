@@ -148,7 +148,7 @@ function galaxyCupFullLabel(r: PublicResult, stage: string, n: number | null): s
   return parts.filter(Boolean).join(' · ');
 }
 
-function computeCircuito(
+export function computeCircuito(
   results: PublicResult[],
   roundComps: PublicRoundCompetition[],
 ): CircuitoRow[] {
