@@ -597,7 +597,18 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         // Never used as a primary ranking source — GalaxyGolf categories are computed independently.
         official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
         official_category: r.source_category ?? null,
-        scorecard: r.scores.length > 0 ? { scores: r.scores, handicap_play: r.handicap_play } : null,
+        scorecard: r._hole_mode === 'stableford_points'
+          ? (r._hole_stableford && r._hole_stableford.length > 0
+              ? {
+                  mode: 'stableford_points',
+                  hole_points: r._hole_stableford,
+                  handicap_play: r.handicap_play,
+                  note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
+                }
+              : null)
+          : (r.scores.length > 0
+              ? { scores: r.scores, handicap_play: r.handicap_play }
+              : null),
       }));
 
       if (payloads.length === 0 && duplicatedExisting.length > 0) {
