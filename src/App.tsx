@@ -11,6 +11,8 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import Index from "./pages/Index";
 import Rankings from "./pages/Rankings";
+import CircuitoRanking from "./pages/CircuitoRanking";
+import GalaxyCupRanking from "./pages/GalaxyCupRanking";
 import Rounds from "./pages/Rounds";
 import Players from "./pages/Players";
 import PlayerDetail from "./pages/PlayerDetail";
@@ -40,7 +42,10 @@ const App = () => (
             {/* Public routes */}
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
+              <Route path="/circuito-galaxygolf" element={<CircuitoRanking />} />
+              <Route path="/galaxycup" element={<GalaxyCupRanking />} />
               <Route path="/ranquings" element={<Rankings />} />
+              <Route path="/rankings" element={<Rankings />} />
               <Route path="/jornades" element={<Rounds />} />
               <Route path="/jugadors" element={<Players />} />
               <Route path="/jugadors/:id" element={<PlayerDetail />} />

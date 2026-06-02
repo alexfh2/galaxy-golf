@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import { useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -25,12 +26,10 @@ import {
 } from '@/lib/playerCategoryHandicap';
 
 /* ============================================================
- * Rankings GalaxyGolf 2026 — MVP
- * Circuito GalaxyGolf (Stableford best 7 + bonus participación)
- * GalaxyCup (tabla por posición Regular/Major)
- * Categorías: Hándicap Inferior ≤15,4 — Hándicap Superior ≥15,5
- * No usa is_master / master_coefficient.
- * Gran Final, Playoffs y Challenge GLX → pendientes de fase futura.
+ * Rankings GalaxyGolf 2026
+ * Lógica compartida + dos vistas independientes:
+ *   - CircuitoRankingPage  (Stableford best 7 + bonus participación)
+ *   - GalaxyCupRankingPage (puntos por posición Regular/Major)
  * ============================================================ */
 
 type Category = 'hcp_low' | 'hcp_high';
@@ -100,7 +99,6 @@ function venueName(r: PublicResult): string {
 }
 
 const CIRCUITO_STAGE_ORDER: Record<string, number> = { regular: 0, final: 1 };
-const GALAXYCUP_STAGE_ORDER: Record<string, number> = { regular: 0, major: 1, playoff: 2 };
 
 function circuitoColumn(stage: string, n: number | null): { label: string; sort: number } {
   if (stage === 'final') return { label: 'Final', sort: 10_000 + (n ?? 0) };
@@ -111,13 +109,11 @@ function galaxyCupColumn(stage: string, n: number | null): { label: string; sort
   if (stage === 'playoff') {
     return { label: n ? `PO${n}` : 'PO?', sort: 100_000 + (n ?? 999) };
   }
-  // regular y major se ordenan en una única secuencia por competition_round_number
   return { label: n ? `P${n}` : 'P?', sort: n ?? 9999 };
 }
 
 function circuitoFullLabel(r: PublicResult, stage: string, n: number | null): string {
-  const stageLabel =
-    stage === 'final' ? 'Circuito Final' : `Circuito P${n ?? '?'}`;
+  const stageLabel = stage === 'final' ? 'Circuito Final' : `Circuito P${n ?? '?'}`;
   return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
     .filter(Boolean)
     .join(' · ');
@@ -131,13 +127,10 @@ function galaxyCupFullLabel(r: PublicResult, stage: string, n: number | null): s
   return parts.filter(Boolean).join(' · ');
 }
 
-
 function computeCircuito(
   results: PublicResult[],
   roundComps: PublicRoundCompetition[],
 ): CircuitoRow[] {
-  // Asociaciones del Circuito (regular cuenta para ranking; mapa de etiquetas
-  // incluye también 'final' por si en el futuro se muestra como columna).
   const circuitoAssoc = roundComps.filter(
     (rc) => rc.competition?.slug === 'circuito-galaxygolf',
   );
@@ -158,7 +151,6 @@ function computeCircuito(
     (r) => validRoundIds.has(r.round_id) && r.stableford_points != null,
   );
 
-  // Agrupar por jugador
   const byPlayer = new Map<string, PublicResult[]>();
   for (const r of filtered) {
     const arr = byPlayer.get(r.player_id) ?? [];
@@ -171,7 +163,6 @@ function computeCircuito(
     const player = list[0]?.players_public;
     if (!player) continue;
 
-    // Primera prueba con HCP no nulo
     const sorted = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     const firstWithHcp = sorted.find((r) => r.handicap_at_round != null);
     const firstHcp = Number(firstWithHcp?.handicap_at_round ?? NaN);
@@ -200,7 +191,6 @@ function computeCircuito(
       };
     });
 
-
     rows.push({
       player_id: pid,
       name: player.name,
@@ -227,7 +217,6 @@ function computeGalaxyCup(
   results: PublicResult[],
   roundComps: PublicRoundCompetition[],
 ): GalaxyCupRow[] {
-  // round → stage (regular|major) para GalaxyCup
   const roundStage = new Map<string, 'regular' | 'major'>();
   const galaxyCupMeta = new Map<string, { stage: string; n: number | null }>();
   for (const rc of roundComps) {
@@ -248,7 +237,6 @@ function computeGalaxyCup(
     (r) => roundStage.has(r.round_id) && r.stableford_points != null,
   );
 
-  // Categoría fija por jugador
   const playerCategory = new Map<string, Category>();
   const playerFirstHcp = new Map<string, number>();
 
@@ -270,12 +258,10 @@ function computeGalaxyCup(
     }
   }
 
-  // Asignar puntos por jornada + categoría
   type Award = { points: number; position: number; isMajor: boolean; result: PublicResult };
   const awardsByPlayer = new Map<string, Award[]>();
   const majorsByPlayer = new Map<string, number>();
 
-  // Agrupar por round
   const byRound = new Map<string, PublicResult[]>();
   for (const r of filtered) {
     if (!playerCategory.has(r.player_id)) continue;
@@ -289,7 +275,6 @@ function computeGalaxyCup(
     const table = stage === 'major' ? GALAXYCUP_MAJOR_POINTS : GALAXYCUP_REGULAR_POINTS;
     const isMajor = stage === 'major';
 
-    // Separar por categoría fija
     const byCat: Record<Category, PublicResult[]> = { hcp_low: [], hcp_high: [] };
     for (const r of list) {
       const cat = playerCategory.get(r.player_id)!;
@@ -355,7 +340,6 @@ function computeGalaxyCup(
       category: playerCategory.get(pid)!,
       firstHcp: playerFirstHcp.get(pid) ?? 999,
       rounds_played: awards.length,
-
       majors_played: majorsByPlayer.get(pid) ?? 0,
       points,
       best_position: best?.position ?? null,
@@ -421,256 +405,140 @@ function CategoryTabs({
   );
 }
 
-export default function Rankings() {
+function PageHeader({
+  eyebrow,
+  title,
+  text,
+}: {
+  eyebrow: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full border border-[hsl(var(--gg-gold))]/20"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-40 -left-20 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-green))]/40"
+      />
+      <div className="container relative mx-auto px-4 py-16 md:py-24">
+        <p className="mb-4 text-xs font-medium tracking-[0.3em] text-[hsl(var(--gg-gold))]">
+          {eyebrow}
+        </p>
+        <h1 className="font-display text-4xl md:text-6xl font-light leading-tight">{title}</h1>
+        <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">{text}</p>
+      </div>
+    </section>
+  );
+}
+
+/* ============ Página: Circuito GalaxyGolf ============ */
+export function CircuitoRankingPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
   });
-
-  const [circuitoCat, setCircuitoCat] = useState<Category>('hcp_low');
-  const [galaxyCupCat, setGalaxyCupCat] = useState<Category>('hcp_low');
+  const [category, setCategory] = useState<Category>('hcp_low');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
-  const circuitoRows = useMemo(
+  const rows = useMemo(
     () => (data ? computeCircuito(data.results, data.round_competitions) : []),
     [data],
   );
-  const galaxyCupRows = useMemo(
-    () => (data ? computeGalaxyCup(data.results, data.round_competitions) : []),
-    [data],
-  );
-
-  const circuitoFiltered = circuitoRows.filter((r) => r.category === circuitoCat);
-  const galaxyCupFiltered = galaxyCupRows.filter((r) => r.category === galaxyCupCat);
-
-  const circuitoRoundCols = useMemo(() => collectRounds(circuitoFiltered), [circuitoFiltered]);
-  const galaxyCupRoundCols = useMemo(() => collectRounds(galaxyCupFiltered), [galaxyCupFiltered]);
-
-  const hasAnyResults = (data?.results.length ?? 0) > 0;
-
+  const filtered = rows.filter((r) => r.category === category);
+  const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
 
   return (
     <>
-      {/* Cabecera editorial */}
-      <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full border border-[hsl(var(--gg-gold))]/20"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 -left-20 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-green))]/40"
-        />
-        <div className="container relative mx-auto px-4 py-16 md:py-24">
-          <p className="mb-4 text-xs font-medium tracking-[0.3em] text-[hsl(var(--gg-gold))]">
-            TEMPORADA 2026
-          </p>
-          <h1 className="font-display text-4xl md:text-6xl font-light leading-tight">
-            Rankings GalaxyGolf
-          </h1>
-          <p className="mt-6 max-w-2xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75">
-            Consulta la clasificación actualizada del Circuito GalaxyGolf y la GalaxyCup.
-          </p>
-        </div>
-      </section>
-
+      <PageHeader
+        eyebrow="TEMPORADA 2026"
+        title="Circuito GalaxyGolf"
+        text="Ranking anual del Circuito GalaxyGolf con las pruebas regulares y la clasificación acumulada."
+      />
       <section className="bg-background py-12">
         <div className="container mx-auto px-4">
           {isLoading ? (
-            <EmptyMessage>Cargando rankings...</EmptyMessage>
+            <EmptyMessage>Cargando ranking...</EmptyMessage>
           ) : error ? (
-            <EmptyMessage>No se han podido cargar los rankings.</EmptyMessage>
-          ) : !hasAnyResults ? (
-            <EmptyMessage>
-              Los rankings se actualizarán cuando se publiquen los primeros resultados oficiales.
-            </EmptyMessage>
+            <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
           ) : (
-            <Tabs defaultValue="circuito" className="w-full">
-              <TabsList className="mb-8 bg-[hsl(var(--gg-navy))]/10">
-                <TabsTrigger value="circuito" className="px-6">
-                  Circuito GalaxyGolf
-                </TabsTrigger>
-                <TabsTrigger value="galaxycup" className="px-6">
-                  GalaxyCup
-                </TabsTrigger>
-              </TabsList>
-
-              {/* ============ Circuito GalaxyGolf ============ */}
-              <TabsContent value="circuito">
-                <CategoryTabs category={circuitoCat} onChange={setCircuitoCat} />
-
-                {circuitoRows.length === 0 ? (
-                  <EmptyMessage>
-                    Todavía no hay resultados publicados del Circuito GalaxyGolf.
-                  </EmptyMessage>
-                ) : circuitoFiltered.length === 0 ? (
-                  <EmptyMessage>
-                    No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(circuitoCat)} todavía.
-                  </EmptyMessage>
-                ) : (
-                  <div className="rounded-lg border border-border bg-card overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-16">Pos.</TableHead>
-                          <TableHead className="min-w-[180px]">Jugador</TableHead>
-                          {circuitoRoundCols.map((c) => (
-                            <TableHead
-                              key={c.round_id}
-                              title={c.full}
-                              className="text-center whitespace-nowrap px-2"
-                            >
-                              {c.label}
-                            </TableHead>
-                          ))}
-                          <TableHead className="text-center">Pruebas</TableHead>
-                          <TableHead className="text-center">Mejores 7</TableHead>
-                          <TableHead className="text-center">Bonus</TableHead>
-                          <TableHead className="text-center font-semibold">Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {circuitoFiltered.map((r, i) => {
-                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
-                          return (
-                            <TableRow key={r.player_id} className="group">
-                              <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
-                                {i + 1}
-                              </TableCell>
-                              <TableCell>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPlayerId(r.player_id)}
-                                  className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
-                                >
-                                  {r.name}
-                                </button>
-                              </TableCell>
-                              {circuitoRoundCols.map((c) => {
-                                const v = byRid.get(c.round_id);
-                                return (
-                                  <TableCell key={c.round_id} className="text-center px-2 text-sm">
-                                    {v != null ? v : <span className="text-muted-foreground">—</span>}
-                                  </TableCell>
-                                );
-                              })}
-                              <TableCell className="text-center">{r.rounds_played}</TableCell>
-                              <TableCell className="text-center">{r.best7}</TableCell>
-                              <TableCell className="text-center">+{r.bonus}</TableCell>
-                              <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
-                                {r.total}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-
-                <p className="mt-6 text-xs text-muted-foreground italic">
-                  Ranking regular provisional. La Gran Final se implementará en una fase posterior.
-                </p>
-              </TabsContent>
-
-              {/* ============ GalaxyCup ============ */}
-              <TabsContent value="galaxycup">
-                <CategoryTabs category={galaxyCupCat} onChange={setGalaxyCupCat} />
-
-                {galaxyCupRows.length === 0 ? (
-                  <EmptyMessage>
-                    Todavía no hay resultados publicados de la GalaxyCup.
-                  </EmptyMessage>
-                ) : galaxyCupFiltered.length === 0 ? (
-                  <EmptyMessage>
-                    No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(galaxyCupCat)} todavía.
-                  </EmptyMessage>
-                ) : (
-                  <div className="rounded-lg border border-border bg-card overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-16">Pos.</TableHead>
-                          <TableHead className="min-w-[180px]">Jugador</TableHead>
-                          {galaxyCupRoundCols.map((c) => (
-                            <TableHead
-                              key={c.round_id}
-                              title={c.full}
-                              className="text-center whitespace-nowrap px-2"
-                            >
-                              {c.label}
-                              {c.isMajor && (
-                                <span className="ml-1 text-[9px] uppercase text-[hsl(var(--gg-copper))]">M</span>
-                              )}
-                            </TableHead>
-                          ))}
-                          <TableHead className="text-center">Pruebas</TableHead>
-                          <TableHead className="text-center">Majors</TableHead>
-                          <TableHead className="text-center font-semibold">Puntos</TableHead>
-                          <TableHead className="text-center">Mejor resultado</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {galaxyCupFiltered.map((r, i) => {
-                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
-                          return (
-                            <TableRow key={r.player_id} className="group">
-                              <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
-                                {i + 1}
-                              </TableCell>
-                              <TableCell>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPlayerId(r.player_id)}
-                                  className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
-                                >
-                                  {r.name}
-                                </button>
-                              </TableCell>
-                              {galaxyCupRoundCols.map((c) => {
-                                const v = byRid.get(c.round_id);
-                                return (
-                                  <TableCell key={c.round_id} className="text-center px-2 text-sm">
-                                    {v != null && v > 0 ? v : <span className="text-muted-foreground">—</span>}
-                                  </TableCell>
-                                );
-                              })}
-                              <TableCell className="text-center">{r.rounds_played}</TableCell>
-                              <TableCell className="text-center">{r.majors_played}</TableCell>
-                              <TableCell className="text-center font-semibold text-[hsl(var(--gg-copper))]">
-                                {r.points}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {r.best_position ? (
-                                  <span className="inline-flex items-center gap-1.5">
-                                    <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-gold))]" />
-                                    {r.best_position}º
-                                    {r.best_was_major && (
-                                      <Badge
-                                        variant="outline"
-                                        className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0"
-                                      >
-                                        Major
-                                      </Badge>
-                                    )}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground">—</span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-
-                <p className="mt-6 text-xs text-muted-foreground italic">
-                  Ranking de fase regular y Majors. Los Playoffs se implementarán en una fase posterior.
-                </p>
-              </TabsContent>
-            </Tabs>
+            <>
+              <CategoryTabs category={category} onChange={setCategory} />
+              {rows.length === 0 ? (
+                <EmptyMessage>
+                  Todavía no hay resultados publicados del Circuito GalaxyGolf.
+                </EmptyMessage>
+              ) : filtered.length === 0 ? (
+                <EmptyMessage>
+                  No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
+                </EmptyMessage>
+              ) : (
+                <div className="rounded-lg border border-border bg-card overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">Pos.</TableHead>
+                        <TableHead className="min-w-[180px]">Jugador</TableHead>
+                        {roundCols.map((c) => (
+                          <TableHead
+                            key={c.round_id}
+                            title={c.full}
+                            className="text-center whitespace-nowrap px-2"
+                          >
+                            {c.label}
+                          </TableHead>
+                        ))}
+                        <TableHead className="text-center">Pruebas</TableHead>
+                        <TableHead className="text-center">Mejores 7</TableHead>
+                        <TableHead className="text-center">Bonus</TableHead>
+                        <TableHead className="text-center font-semibold">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((r, i) => {
+                        const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                        return (
+                          <TableRow key={r.player_id} className="group">
+                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                              {i + 1}
+                            </TableCell>
+                            <TableCell>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPlayerId(r.player_id)}
+                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              >
+                                {r.name}
+                              </button>
+                            </TableCell>
+                            {roundCols.map((c) => {
+                              const v = byRid.get(c.round_id);
+                              return (
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm">
+                                  {v != null ? v : <span className="text-muted-foreground">—</span>}
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="text-center">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center">{r.best7}</TableCell>
+                            <TableCell className="text-center">+{r.bonus}</TableCell>
+                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-green))] text-orange-300">
+                              {r.total}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+              <p className="mt-6 text-xs text-muted-foreground italic">
+                Ranking regular provisional. La Gran Final se implementará en una fase posterior.
+              </p>
+            </>
           )}
         </div>
       </section>
@@ -681,4 +549,145 @@ export default function Rankings() {
       />
     </>
   );
+}
+
+/* ============ Página: GalaxyCup ============ */
+export function GalaxyCupRankingPage() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: publicCircuitDataQueryKey,
+    queryFn: fetchPublicCircuitData,
+  });
+  const [category, setCategory] = useState<Category>('hcp_low');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+
+  const rows = useMemo(
+    () => (data ? computeGalaxyCup(data.results, data.round_competitions) : []),
+    [data],
+  );
+  const filtered = rows.filter((r) => r.category === category);
+  const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="RACE TO THE PLAYOFFS"
+        title="GalaxyCup"
+        text="Clasificación por puntos con pruebas regulares, Majors y camino hacia los Playoffs."
+      />
+      <section className="bg-background py-12">
+        <div className="container mx-auto px-4">
+          {isLoading ? (
+            <EmptyMessage>Cargando ranking...</EmptyMessage>
+          ) : error ? (
+            <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
+          ) : (
+            <>
+              <CategoryTabs category={category} onChange={setCategory} />
+              {rows.length === 0 ? (
+                <EmptyMessage>
+                  Todavía no hay resultados publicados de la GalaxyCup.
+                </EmptyMessage>
+              ) : filtered.length === 0 ? (
+                <EmptyMessage>
+                  No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
+                </EmptyMessage>
+              ) : (
+                <div className="rounded-lg border border-border bg-card overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">Pos.</TableHead>
+                        <TableHead className="min-w-[180px]">Jugador</TableHead>
+                        {roundCols.map((c) => (
+                          <TableHead
+                            key={c.round_id}
+                            title={c.full}
+                            className="text-center whitespace-nowrap px-2"
+                          >
+                            {c.label}
+                            {c.isMajor && (
+                              <span className="ml-1 text-[9px] uppercase text-[hsl(var(--gg-copper))]">M</span>
+                            )}
+                          </TableHead>
+                        ))}
+                        <TableHead className="text-center">Pruebas</TableHead>
+                        <TableHead className="text-center">Majors</TableHead>
+                        <TableHead className="text-center font-semibold">Puntos</TableHead>
+                        <TableHead className="text-center">Mejor resultado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((r, i) => {
+                        const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                        return (
+                          <TableRow key={r.player_id} className="group">
+                            <TableCell className="font-medium text-[hsl(var(--gg-gold))]">
+                              {i + 1}
+                            </TableCell>
+                            <TableCell>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPlayerId(r.player_id)}
+                                className="font-medium text-left transition-colors group-hover:text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-green))]"
+                              >
+                                {r.name}
+                              </button>
+                            </TableCell>
+                            {roundCols.map((c) => {
+                              const v = byRid.get(c.round_id);
+                              return (
+                                <TableCell key={c.round_id} className="text-center px-2 text-sm">
+                                  {v != null && v > 0 ? v : <span className="text-muted-foreground">—</span>}
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="text-center">{r.rounds_played}</TableCell>
+                            <TableCell className="text-center">{r.majors_played}</TableCell>
+                            <TableCell className="text-center font-semibold text-[hsl(var(--gg-copper))]">
+                              {r.points}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {r.best_position ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-gold))]" />
+                                  {r.best_position}º
+                                  {r.best_was_major && (
+                                    <Badge
+                                      variant="outline"
+                                      className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0"
+                                    >
+                                      Major
+                                    </Badge>
+                                  )}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+              <p className="mt-6 text-xs text-muted-foreground italic">
+                Ranking de fase regular y Majors. Los Playoffs se implementarán en una fase posterior.
+              </p>
+            </>
+          )}
+        </div>
+      </section>
+      <PlayerProfileDialog
+        playerId={selectedPlayerId}
+        open={!!selectedPlayerId}
+        onOpenChange={(o) => !o && setSelectedPlayerId(null)}
+      />
+    </>
+  );
+}
+
+/* Default export: alias antiguo /rankings → redirige a Circuito. */
+export default function Rankings() {
+  return <Navigate to="/circuito-galaxygolf" replace />;
 }

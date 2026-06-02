@@ -7,12 +7,11 @@ import LanguageSwitcher from './LanguageSwitcher';
 // ThemeToggle removed — app locked to dark mode
 
 const navItems = [
-  { label: 'Rankings', path: '/ranquings' },
-  { label: 'Torneos', path: '/jornades' },
+  { label: 'Circuito GalaxyGolf', path: '/circuito-galaxygolf' },
+  { label: 'GalaxyCup', path: '/galaxycup' },
   { label: 'Calendario', path: '/jornades' },
   { label: 'Noticias', path: '/noticies' },
   { label: 'Jugadores', path: '/jugadors' },
-  { label: 'GalaxyCup', path: '/jornades' },
 ] as const;
 
 const Wordmark = ({ className = '' }: { className?: string }) => (
