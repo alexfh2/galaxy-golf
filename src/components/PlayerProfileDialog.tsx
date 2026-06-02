@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { User, TrendingUp, Trophy, Bird, Target, Square, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ca, es } from 'date-fns/locale';
 import ScorecardVisual from '@/components/ScorecardVisual';
@@ -49,20 +48,10 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     enabled: !!playerId && open,
   });
 
-  // Load all season data to compute category rankings
   const { data: allResults } = useQuery({
     queryKey: [...publicCircuitDataQueryKey, 'dialog-results'],
     queryFn: fetchPublicCircuitData,
     select: (data) => data.results.filter((result) => result.stableford_points != null),
-    enabled: open,
-  });
-
-  const { data: season } = useQuery({
-    queryKey: ['player-profile-dialog-season'],
-    queryFn: async () => {
-      const { data } = await supabase.from('seasons').select('rules_config').eq('active', true).single();
-      return data;
-    },
     enabled: open,
   });
 
@@ -73,13 +62,10 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     enabled: open,
   });
 
-  const bestN = (season?.rules_config as any)?.best_n_scores || 8;
-
   // GalaxyCup point tables (mirror Rankings page)
   const GALAXYCUP_REGULAR_POINTS = [500,300,190,135,110,100,90,85,80,75,70,65,60,57,56,55,54,53,52,51];
   const GALAXYCUP_MAJOR_POINTS = [750,450,285,200,165,150,135,125,120,115,110,105,100,90,85,80,75,70,65,60];
 
-  // Compute Circuito and GalaxyCup positions within the player's HCP category
   const positions = useMemo(() => {
     if (!allResults?.length || !playerId || !roundComps) return null;
 
@@ -98,7 +84,6 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
       playerCategoryMap.set(pid, h <= 15.4 ? 'hcp_low' : 'hcp_high');
     }
 
-    // Circuito GalaxyGolf
     const circuitoRoundIds = new Set(
       (roundComps || [])
         .filter((rc: any) => rc.competition?.slug === 'circuito-galaxygolf' && rc.stage === 'regular' && rc.counts_for_ranking)
@@ -121,7 +106,6 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
       })
       .sort((a, b) => b.total - a.total);
 
-    // GalaxyCup
     const cupStage = new Map<string, 'regular' | 'major'>();
     for (const rc of (roundComps || []) as any[]) {
       if (rc.competition?.slug === 'galaxycup' && rc.counts_for_ranking && (rc.stage === 'regular' || rc.stage === 'major')) {
@@ -159,7 +143,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
 
     return {
       categoryHcp: playerHcp,
-      categoryLabel: playerCat === 'hcp_low' ? 'Hándicap Inferior (≤15,4)' : 'Hándicap Superior (≥15,5)',
+      categoryLabel: playerCat === 'hcp_low' ? 'Hándicap Inferior' : 'Hándicap Superior',
       circuito: findPos(circuitoRanking),
       galaxyCup: findPos(cupRanking),
     };
@@ -188,75 +172,37 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
   if (!player) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl">
-          <p className="text-sm text-muted-foreground py-8 text-center">{t('common.loading')}</p>
+        <DialogContent className="max-w-3xl bg-[hsl(var(--gg-bg-light))] border border-[hsl(var(--gg-navy-deep))]/14 text-[hsl(var(--gg-navy-deep))]">
+          <p className="text-sm text-[hsl(var(--gg-navy-deep))]/60 py-8 text-center">{t('common.loading')}</p>
         </DialogContent>
       </Dialog>
     );
   }
 
-  // Stats
+  // Resumen básico (no derivado de scorecards hoyo-a-hoyo)
   const stbScores = (results || []).filter((r) => r.stableford_points != null).map((r) => r.stableford_points!);
+  const roundsPlayed = (results || []).length;
   const avgStb = stbScores.length ? (stbScores.reduce((a, b) => a + b, 0) / stbScores.length).toFixed(1) : '—';
   const bestStb = stbScores.length ? Math.max(...stbScores) : '—';
 
-  const roundsWithScorecard = (results || []).filter((r) => {
-    const raw = r.scorecard as any;
-    const scores: number[] | null = Array.isArray(raw) ? raw : raw?.scores ?? null;
-    const round = r.rounds as any;
-    const par: number[] | undefined = Array.isArray(round?.course_par) ? round.course_par : undefined;
-    return scores && par && scores.length === par.length;
-  });
+  const lastHcp = (() => {
+    const ordered = [...(results || [])]
+      .filter((r) => r.handicap_at_round != null)
+      .sort((a, b) => {
+        const ra = (a.rounds as any)?.round_number ?? 0;
+        const rb = (b.rounds as any)?.round_number ?? 0;
+        return rb - ra;
+      });
+    return ordered[0]?.handicap_at_round ?? player.current_handicap ?? null;
+  })();
 
-  let birdies = 0, pars = 0, bogeys = 0, doublePlus = 0;
-  const parGroupStats: Record<3 | 4 | 5, { strokes: number; count: number }> = {
-    3: { strokes: 0, count: 0 },
-    4: { strokes: 0, count: 0 },
-    5: { strokes: 0, count: 0 },
-  };
-  const n = roundsWithScorecard.length;
-  for (const r of roundsWithScorecard) {
-    const raw = r.scorecard as any;
-    const scores: number[] = Array.isArray(raw) ? raw : raw?.scores;
-    const round = r.rounds as any;
-    const par: number[] = round.course_par;
-    for (let i = 0; i < scores.length; i++) {
-      if (scores[i] === 0 || scores[i] == null) continue;
-      const diff = scores[i] - par[i];
-      if (diff <= -1) birdies++;
-      else if (diff === 0) pars++;
-      else if (diff === 1) bogeys++;
-      else doublePlus++;
-
-      const p = par[i];
-      if (p === 3 || p === 4 || p === 5) {
-        parGroupStats[p as 3 | 4 | 5].strokes += scores[i];
-        parGroupStats[p as 3 | 4 | 5].count += 1;
-      }
-    }
-  }
-
-  const formatParAvg = (par: 3 | 4 | 5) => {
-    const g = parGroupStats[par];
-    return g.count > 0 ? (g.strokes / g.count).toFixed(2) : '—';
-  };
-
-  const stats = [
-    { label: 'Mitjana Stb.', value: avgStb, icon: TrendingUp },
-    { label: 'Millor Stb.', value: bestStb, icon: Trophy },
-    { label: 'Birdies/r.', value: n ? (birdies / n).toFixed(1) : '—', icon: Bird },
-    { label: 'Pars/r.', value: n ? (pars / n).toFixed(1) : '—', icon: Target },
-    { label: 'Bogeys/r.', value: n ? (bogeys / n).toFixed(1) : '—', icon: Square },
-    { label: 'Doble+/r.', value: n ? (doublePlus / n).toFixed(1) : '—', icon: AlertTriangle },
+  const summary = [
+    { label: 'Rondas jugadas', value: roundsPlayed },
+    { label: 'Mejor Stableford', value: bestStb },
+    { label: 'Media Stableford', value: avgStb },
+    { label: 'Hándicap actual', value: lastHcp ?? '—' },
   ];
 
-  const parAverages = [
-    { label: 'Mitjana Pars 3', value: formatParAvg(3), count: parGroupStats[3].count, par: 3 },
-    { label: 'Mitjana Pars 4', value: formatParAvg(4), count: parGroupStats[4].count, par: 4 },
-    { label: 'Mitjana Pars 5', value: formatParAvg(5), count: parGroupStats[5].count, par: 5 },
-  ];
-
-  // Posiciones por competición (Circuito y GalaxyCup) dentro de la categoría del jugador
   const categoryLabel = positions?.categoryLabel ?? null;
   const rankingCells: { label: string; pos: { pos: number; total: number; of: number } | null }[] = [
     { label: 'Circuito GalaxyGolf', pos: positions?.circuito ?? null },
@@ -267,77 +213,106 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0 bg-card border-border">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/50">
-          <DialogTitle className="flex items-center gap-2 font-display text-foreground">
-            <User className="h-5 w-5 text-accent" />
-            {t('players.profile')}
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0 bg-[hsl(var(--gg-bg-light))] border border-[hsl(var(--gg-navy-deep))]/14 text-[hsl(var(--gg-navy-deep))]">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-[hsl(var(--gg-navy-deep))]/10">
+          <DialogTitle className="font-display font-light text-2xl leading-tight text-[hsl(var(--gg-navy-deep))]">
+            Perfil del jugador
           </DialogTitle>
+          {categoryLabel && (
+            <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-green))] font-semibold">
+              {categoryLabel}
+            </p>
+          )}
         </DialogHeader>
 
-        {/* Header con gradiente sutil */}
-        <div className="from-primary to-primary/80 px-6 py-5 mx-6 rounded-lg flex items-center gap-4 border border-accent/20 bg-[sidebar-accent-foreground] bg-border">
-          <Avatar className="h-14 w-14 border-2 border-accent/30">
+        {/* Cabecera jugador */}
+        <div className="px-6 pt-5 pb-4 flex items-center gap-4 border-b border-[hsl(var(--gg-navy-deep))]/8 bg-[hsl(var(--gg-surface-light))]">
+          <Avatar className="h-16 w-16 border border-[hsl(var(--gg-gold))]/40">
             {player.photo_url && <AvatarImage src={player.photo_url} alt={player.name} />}
-            <AvatarFallback className="bg-accent/20 text-accent font-semibold">
+            <AvatarFallback className="bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] font-semibold">
               {initials(player.name)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-display font-bold text-lg leading-tight text-cream truncate">
+            <h3 className="font-display font-light text-2xl leading-tight text-[hsl(var(--gg-navy-deep))] truncate">
               {player.name}
             </h3>
-            <p className="text-xs text-cream-dark mt-1">
-              {results?.length || 0} {(results?.length || 0) === 1 ? t('players.singleRound') : t('players.multipleRounds')}
-              {player.current_handicap != null && <> · Hcp {player.current_handicap}</>}
+            <p className="text-xs text-[hsl(var(--gg-navy-deep))]/65 mt-1">
+              {roundsPlayed} {roundsPlayed === 1 ? 'ronda' : 'rondas'}
+              {lastHcp != null && <> · Hcp {lastHcp}</>}
               {player.club && <> · {player.club}</>}
             </p>
           </div>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-6 py-5 space-y-6">
+          {/* Resumen básico */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {summary.map((s) => (
+              <div
+                key={s.label}
+                className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] px-4 py-3 rounded-sm"
+              >
+                <div className="text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-green))] font-semibold">
+                  {s.label}
+                </div>
+                <div className="mt-1.5 font-display text-2xl text-[hsl(var(--gg-navy-deep))] tabular-nums">
+                  {s.value}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Posiciones por competición */}
           {hasAnyRanking && (
             <div>
-              <div className="flex items-baseline justify-between mb-3">
-                <h4 className="font-display font-semibold text-sm text-foreground">{t('rankings.position')}</h4>
-                {categoryLabel && (
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    {categoryLabel}
-                  </span>
-                )}
-              </div>
+              <h4 className="font-display text-lg text-[hsl(var(--gg-navy-deep))] mb-3">
+                Posición en clasificaciones
+              </h4>
               <div className="grid grid-cols-2 gap-3">
-                {rankingCells.map((cell) => (
-                  <div key={cell.label} className="border border-border/50 rounded-lg p-4 bg-secondary/30">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                      {cell.label}
-                    </div>
-                    {cell.pos ? (
-                      <div className="flex items-end justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Trophy className="h-5 w-5 text-accent" strokeWidth={1.5} />
-                          <span className="font-display font-extrabold text-2xl text-foreground tabular-nums">
-                            {cell.pos.pos}
-                          </span>
-                          <span className="text-xs text-muted-foreground mb-0.5">/ {cell.pos.of}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-mono font-bold text-base text-foreground">{cell.pos.total}</div>
-                          <div className="text-[10px] text-muted-foreground leading-none">{t('common.points')}</div>
-                        </div>
+                {rankingCells.map((cell, i) => {
+                  const accent = i === 0 ? 'hsl(var(--gg-green))' : 'hsl(var(--gg-copper))';
+                  return (
+                    <div
+                      key={cell.label}
+                      className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] p-4 rounded-sm"
+                    >
+                      <div
+                        className="text-[10px] uppercase tracking-[0.2em] font-semibold mb-2"
+                        style={{ color: accent }}
+                      >
+                        {cell.label}
                       </div>
-                    ) : (
-                      <div className="text-xs text-muted-foreground italic h-[44px] flex items-center">—</div>
-                    )}
-                  </div>
-                ))}
+                      {cell.pos ? (
+                        <div className="flex items-end justify-between gap-2">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-display text-3xl text-[hsl(var(--gg-navy-deep))] tabular-nums leading-none">
+                              {cell.pos.pos}
+                            </span>
+                            <span className="text-xs text-[hsl(var(--gg-navy-deep))]/55">/ {cell.pos.of}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-mono font-bold text-base tabular-nums" style={{ color: accent }}>
+                              {cell.pos.total}
+                            </div>
+                            <div className="text-[10px] text-[hsl(var(--gg-navy-deep))]/55 leading-none uppercase tracking-wider">
+                              puntos
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-[hsl(var(--gg-navy-deep))]/45 italic h-[44px] flex items-center">
+                          Sin clasificación
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-
-          {/* HCP Evolution */}
+          {/* Evolución hándicap */}
           {(() => {
             const hcpData = (results || [])
               .filter(r => r.handicap_at_round != null)
@@ -369,23 +344,25 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
 
             return (
               <div>
-                <h4 className="font-display font-semibold text-sm mb-3 text-foreground">{t('players.hcpEvolution')}</h4>
-                <div className="bg-secondary/20 rounded-lg p-3 border border-border/40 overflow-x-auto">
-                  <svg width={chartW} height={chartH + 20} className="text-accent">
+                <h4 className="font-display text-lg text-[hsl(var(--gg-navy-deep))] mb-3">
+                  Evolución de hándicap
+                </h4>
+                <div className="bg-[hsl(var(--gg-surface-light))] rounded-sm p-3 border border-[hsl(var(--gg-navy-deep))]/12 overflow-x-auto">
+                  <svg width={chartW} height={chartH + 20}>
                     <polyline
                       points={polyline}
                       fill="none"
-                      stroke="hsl(var(--accent))"
+                      stroke="hsl(var(--gg-green))"
                       strokeWidth="2"
                       strokeLinejoin="round"
                     />
                     {points.map((p, i) => (
                       <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="4" fill="hsl(var(--accent))" />
-                        <text x={p.x} y={p.y - 8} textAnchor="middle" className="fill-foreground text-[10px] font-mono font-semibold">
+                        <circle cx={p.x} cy={p.y} r="4" fill="hsl(var(--gg-copper))" />
+                        <text x={p.x} y={p.y - 8} textAnchor="middle" className="fill-[hsl(var(--gg-navy-deep))] text-[10px] font-mono font-semibold">
                           {p.hcp}
                         </text>
-                        <text x={p.x} y={chartH + 14} textAnchor="middle" className="fill-muted-foreground text-[9px]">
+                        <text x={p.x} y={chartH + 14} textAnchor="middle" className="fill-[hsl(var(--gg-navy-deep))]/55 text-[9px]">
                           {p.label}
                         </text>
                       </g>
@@ -396,45 +373,11 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
             );
           })()}
 
-          {/* Statistics */}
-          {n > 0 && (
-            <div>
-              <h4 className="font-display font-semibold text-sm mb-3 text-foreground">{t('stats.title')}</h4>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 bg-secondary/20 rounded-lg p-3 border border-border/40">
-                {stats.map((s) => (
-                  <div key={s.label} className="text-center">
-                    <s.icon className="h-4 w-4 mx-auto text-accent/70 mb-1" strokeWidth={1.5} />
-                    <div className="font-display font-extrabold text-base text-foreground tabular-nums">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground leading-tight font-bold">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-3 mt-3">
-                {parAverages.map((p) => {
-                  const numericVal = p.count > 0 ? Number(p.value) : null;
-                  const overPar = numericVal != null ? numericVal - p.par : null;
-                  return (
-                    <div key={p.label} className="border border-border/50 rounded-lg p-3 bg-secondary/30 text-center">
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">{p.label}</div>
-                      <div className="font-display font-extrabold text-xl text-foreground tabular-nums leading-tight">
-                        {p.count > 0 ? `${p.value}` : '—'}
-                        {p.count > 0 && <span className="text-[10px] text-muted-foreground font-body font-normal ml-1">cops</span>}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground/70 mt-0.5">
-                        {p.count > 0 ? (
-                          <>{p.count} forats · {overPar! >= 0 ? '+' : ''}{overPar!.toFixed(2)} sobre par</>
-                        ) : 'Sense dades'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Rounds list */}
+          {/* Historial de rondas */}
           <div>
-            <h4 className="font-display font-semibold text-sm mb-3 text-foreground">{t('players.roundsPlayed')}</h4>
+            <h4 className="font-display text-lg text-[hsl(var(--gg-navy-deep))] mb-3">
+              Historial de rondas
+            </h4>
             {results && results.length > 0 ? (
               <Accordion type="multiple" value={openCards} onValueChange={setOpenCards} className="space-y-2">
                 {results.map((r) => {
@@ -443,7 +386,6 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                   const scorecard: number[] | null = Array.isArray(raw) ? raw : raw?.scores ?? null;
                   const handicapPlay: number | null = raw?.handicap_play ?? null;
                   const coursePar: number[] | undefined = Array.isArray(round?.course_par) ? round.course_par : undefined;
-                  // Scratch Stableford = puntos sin hándicap. Bolas levantadas (s===0) = Par+4 → 0 puntos.
                   const scratchStableford = scorecard && coursePar && scorecard.length === coursePar.length
                     ? scorecard.reduce((total, s, i) => {
                         if (s == null || s === 0) return total;
@@ -458,11 +400,20 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                     : null;
 
                   return (
-                    <AccordionItem key={r.id} value={r.id} className="border border-border/50 rounded-md overflow-hidden bg-card">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline hover:bg-secondary/50 text-foreground">
+                    <AccordionItem
+                      key={r.id}
+                      value={r.id}
+                      className="border border-[hsl(var(--gg-navy-deep))]/12 rounded-sm overflow-hidden bg-[hsl(var(--gg-surface-light))]"
+                    >
+                      <AccordionTrigger className="px-3 py-2.5 hover:no-underline hover:bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))]">
                         <div className="flex items-center gap-2 text-left flex-1 min-w-0">
-                          <Badge variant="outline" className="text-[10px] font-mono shrink-0 px-1.5 py-0 border-accent/30">J{round?.round_number}</Badge>
-                          <span className="font-medium text-sm truncate text-foreground">{round?.name}</span>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-mono shrink-0 px-1.5 py-0 border-[hsl(var(--gg-green))]/40 text-[hsl(var(--gg-green))] bg-transparent"
+                          >
+                            J{round?.round_number}
+                          </Badge>
+                          <span className="font-medium text-sm truncate text-[hsl(var(--gg-navy-deep))]">{round?.name}</span>
                           {(() => {
                             const comps = getRoundCompetitionLabels(round?.id);
                             if (!comps.length) return null;
@@ -470,32 +421,38 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                               <Badge
                                 key={comp.variant}
                                 variant="secondary"
-                                className={`text-[9px] font-bold shrink-0 px-1.5 py-0 ${
+                                className={`text-[9px] font-semibold shrink-0 px-1.5 py-0 border ${
                                   comp.variant === 'cup'
-                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                    ? 'bg-[hsl(var(--gg-copper))]/10 text-[hsl(var(--gg-copper))] border-[hsl(var(--gg-copper))]/30'
+                                    : 'bg-[hsl(var(--gg-green))]/10 text-[hsl(var(--gg-green))] border-[hsl(var(--gg-green))]/30'
                                 }`}
                               >
                                 {comp.label}
                               </Badge>
                             ));
                           })()}
-                          <span className="text-xs text-muted-foreground ml-auto mr-2 shrink-0">
+                          <span className="text-xs text-[hsl(var(--gg-navy-deep))]/55 ml-auto mr-2 shrink-0">
                             {round?.date ? format(new Date(round.date), 'dd MMM', { locale }) : ''}
                           </span>
-                          <span className="font-mono font-bold text-sm text-foreground mr-1 shrink-0">{r.stableford_points ?? '—'}</span>
+                          <span className="font-mono font-bold text-sm text-[hsl(var(--gg-copper))] mr-1 shrink-0 tabular-nums">
+                            {r.stableford_points ?? '—'}
+                          </span>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 bg-secondary/20">
-                        <div className="flex items-center gap-3 mb-3 text-xs flex-wrap">
-                          <div className="inline-flex rounded-md border border-accent/30 overflow-hidden shadow-sm" role="group" aria-label="Modo de puntuación">
+                      <AccordionContent className="px-3 pb-3 bg-[hsl(var(--gg-bg-light))]">
+                        <div className="flex items-center gap-3 mb-3 mt-2 text-xs flex-wrap">
+                          <div
+                            className="inline-flex rounded-sm border border-[hsl(var(--gg-navy-deep))]/15 overflow-hidden"
+                            role="group"
+                            aria-label="Modo de puntuación"
+                          >
                             <button
                               type="button"
                               onClick={() => setScratchMode((m) => ({ ...m, [r.id]: false }))}
                               className={`px-3 py-1.5 text-xs font-medium transition-all ${
                                 !scratchMode[r.id]
-                                  ? 'bg-accent text-accent-foreground shadow-inner'
-                                  : 'bg-card text-muted-foreground hover:bg-accent/10 hover:text-foreground'
+                                  ? 'bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-surface-light))]'
+                                  : 'bg-[hsl(var(--gg-surface-light))] text-[hsl(var(--gg-navy-deep))]/65 hover:text-[hsl(var(--gg-navy-deep))]'
                               }`}
                               aria-pressed={!scratchMode[r.id]}
                             >
@@ -504,19 +461,19 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                             <button
                               type="button"
                               onClick={() => setScratchMode((m) => ({ ...m, [r.id]: true }))}
-                              className={`px-3 py-1.5 text-xs font-medium transition-all border-l border-accent/30 ${
+                              className={`px-3 py-1.5 text-xs font-medium transition-all border-l border-[hsl(var(--gg-navy-deep))]/15 ${
                                 scratchMode[r.id]
-                                  ? 'bg-accent text-accent-foreground shadow-inner'
-                                  : 'bg-card text-muted-foreground hover:bg-accent/10 hover:text-foreground'
+                                  ? 'bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-surface-light))]'
+                                  : 'bg-[hsl(var(--gg-surface-light))] text-[hsl(var(--gg-navy-deep))]/65 hover:text-[hsl(var(--gg-navy-deep))]'
                               }`}
                               aria-pressed={!!scratchMode[r.id]}
                             >
                               Scratch <strong className="ml-1 font-mono">{scratchStableford ?? '—'}</strong>
                             </button>
                           </div>
-                          <span className="text-[10px] text-muted-foreground italic">Clica per alternar</span>
-                          <span className="text-muted-foreground ml-auto">
-                            HCP: <strong className="text-foreground">{r.handicap_at_round ?? '—'}</strong>{handicapPlay != null ? ` (HPU: ${handicapPlay})` : ''}
+                          <span className="text-[hsl(var(--gg-navy-deep))]/65 ml-auto">
+                            HCP: <strong className="text-[hsl(var(--gg-navy-deep))]">{r.handicap_at_round ?? '—'}</strong>
+                            {handicapPlay != null ? ` (HPU: ${handicapPlay})` : ''}
                           </span>
                         </div>
                         {scorecard && scorecard.length > 0 ? (
@@ -531,7 +488,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                             />
                           </div>
                         ) : (
-                          <p className="text-xs text-muted-foreground">{t('players.noScorecard')}</p>
+                          <p className="text-xs text-[hsl(var(--gg-navy-deep))]/55">Sin tarjeta disponible.</p>
                         )}
                       </AccordionContent>
                     </AccordionItem>
@@ -539,7 +496,9 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
                 })}
               </Accordion>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">{t('players.noRounds')}</p>
+              <p className="text-sm text-[hsl(var(--gg-navy-deep))]/55 text-center py-4">
+                Sin rondas registradas.
+              </p>
             )}
           </div>
         </div>
