@@ -396,7 +396,11 @@ export default function Rankings() {
   const circuitoFiltered = circuitoRows.filter((r) => r.category === circuitoCat);
   const galaxyCupFiltered = galaxyCupRows.filter((r) => r.category === galaxyCupCat);
 
+  const circuitoRoundCols = useMemo(() => collectRounds(circuitoFiltered), [circuitoFiltered]);
+  const galaxyCupRoundCols = useMemo(() => collectRounds(galaxyCupFiltered), [galaxyCupFiltered]);
+
   const hasAnyResults = (data?.results.length ?? 0) > 0;
+
 
   return (
     <>
