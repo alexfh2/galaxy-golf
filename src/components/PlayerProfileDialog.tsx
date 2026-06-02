@@ -66,6 +66,13 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     enabled: open,
   });
 
+  const { data: roundComps } = useQuery({
+    queryKey: [...publicCircuitDataQueryKey, 'dialog-round-comps'],
+    queryFn: fetchPublicCircuitData,
+    select: (data) => data.round_competitions,
+    enabled: open,
+  });
+
   const bestN = (season?.rules_config as any)?.best_n_scores || 8;
 
   // Compute player category positions
