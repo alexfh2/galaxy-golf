@@ -139,17 +139,23 @@ function computeCircuito(
   results: PublicResult[],
   roundComps: PublicRoundCompetition[],
 ): CircuitoRow[] {
-  // round_ids válidos: circuito-galaxygolf · regular · counts_for_ranking
+  // Asociaciones del Circuito (regular cuenta para ranking; mapa de etiquetas
+  // incluye también 'final' por si en el futuro se muestra como columna).
+  const circuitoAssoc = roundComps.filter(
+    (rc) => rc.competition?.slug === 'circuito-galaxygolf',
+  );
   const validRoundIds = new Set(
-    roundComps
-      .filter(
-        (rc) =>
-          rc.competition?.slug === 'circuito-galaxygolf' &&
-          rc.stage === 'regular' &&
-          rc.counts_for_ranking,
-      )
+    circuitoAssoc
+      .filter((rc) => rc.stage === 'regular' && rc.counts_for_ranking)
       .map((rc) => rc.round_id),
   );
+  const circuitoMeta = new Map<string, { stage: string; n: number | null }>();
+  for (const rc of circuitoAssoc) {
+    circuitoMeta.set(rc.round_id, {
+      stage: rc.stage,
+      n: rc.competition_round_number ?? null,
+    });
+  }
 
   const filtered = results.filter(
     (r) => validRoundIds.has(r.round_id) && r.stableford_points != null,
@@ -185,18 +191,18 @@ function computeCircuito(
       0,
     );
 
-    const history: HistoryItem[] = [...list]
-      .sort((a, b) => (a.rounds?.round_number ?? 0) - (b.rounds?.round_number ?? 0))
-      .map((r) => {
-        const lbl = roundLabel(r);
-        return {
-          round_id: r.round_id,
-          round_number: lbl.n,
-          label: lbl.short,
-          fullLabel: lbl.full,
-          stableford: Number(r.stableford_points ?? 0),
-        };
-      });
+    const history: HistoryItem[] = list.map((r) => {
+      const meta = circuitoMeta.get(r.round_id) ?? { stage: 'regular', n: null };
+      const col = circuitoColumn(meta.stage, meta.n);
+      return {
+        round_id: r.round_id,
+        colLabel: col.label,
+        colSort: col.sort,
+        fullLabel: circuitoFullLabel(r, meta.stage, meta.n),
+        stableford: Number(r.stableford_points ?? 0),
+      };
+    });
+
 
     rows.push({
       player_id: pid,
