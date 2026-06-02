@@ -147,8 +147,9 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     const names = comps.map(c => c.name);
     if (names.some(n => n.toLowerCase().includes('cup'))) return { label: 'GalaxyCup', variant: 'cup' };
     if (names.some(n => n.toLowerCase().includes('circuito'))) return { label: 'Circuito', variant: 'circuit' };
-    return { label: comps[0]?.name ?? '', variant: 'circuit' };
   };
+
+  if (!player) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
