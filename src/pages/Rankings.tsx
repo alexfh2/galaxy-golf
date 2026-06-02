@@ -492,44 +492,60 @@ function PageHeader({
   text,
   bgImage,
   leaderCard,
+  overlayStrength = 'soft',
 }: {
   eyebrow: string;
   title: React.ReactNode;
   text: string;
   bgImage?: string;
   leaderCard?: React.ReactNode;
+  overlayStrength?: 'soft' | 'strong';
 }) {
+  const isStrong = overlayStrength === 'strong';
   return (
-    <section className="relative overflow-hidden bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))] border-b border-[hsl(var(--gg-gold))]/15">
+    <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
       {bgImage && (
         <>
           <img
             src={bgImage}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-cover opacity-75"
+            className="absolute inset-0 w-full h-full object-cover opacity-90"
           />
+          {/* Capa lateral marfil — apoyo del titular */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-navy))]/92 via-[hsl(var(--gg-navy))]/55 to-[hsl(var(--gg-navy))]/20"
+            className={`absolute inset-0 bg-gradient-to-r ${
+              isStrong
+                ? 'from-[hsl(var(--gg-bg-light))]/97 from-0% via-[hsl(var(--gg-bg-light))]/80 via-45% to-[hsl(var(--gg-bg-light))]/25 to-100%'
+                : 'from-[hsl(var(--gg-bg-light))]/92 from-0% via-[hsl(var(--gg-bg-light))]/65 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%'
+            }`}
           />
+          {/* Fundido inferior */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-navy))] via-transparent to-[hsl(var(--gg-navy))]/10"
+            className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
           />
+          {/* Refuerzo localizado bajo el bloque titular */}
+          {isStrong && (
+            <div
+              aria-hidden
+              className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/55 to-transparent"
+            />
+          )}
         </>
       )}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/15"
+        className="pointer-events-none absolute -top-40 -right-32 h-[28rem] w-[28rem] rounded-full border border-[hsl(var(--gg-gold))]/20"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/10"
+        className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full border border-[hsl(var(--gg-gold))]/15"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/30"
+        className="pointer-events-none absolute -bottom-48 -left-24 h-[32rem] w-[32rem] rounded-full border border-[hsl(var(--gg-green))]/25"
       />
       <div className="container relative mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-end">
@@ -538,12 +554,12 @@ function PageHeader({
               {eyebrow}
             </p>
             <h1
-              className="font-display font-light leading-[1.05] text-[hsl(var(--gg-ivory))]"
+              className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))]"
               style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
             >
               {title}
             </h1>
-            <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-ivory))]/75 font-light">
+            <p className="mt-6 max-w-xl text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light">
               {text}
             </p>
           </div>
