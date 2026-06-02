@@ -83,33 +83,33 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Circuito GalaxyGolf */}
-          <article className="relative overflow-hidden border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-green))]/40 p-10 flex flex-col group hover:border-[hsl(var(--gg-gold))]/50 transition-colors">
+          <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/25 bg-[hsl(var(--gg-green))]/12 p-10 flex flex-col group hover:border-[hsl(var(--gg-green))]/50 transition-colors shadow-[0_2px_24px_-12px_rgba(11,19,36,0.18)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gg-gold))]/60 to-transparent" />
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-12 w-12 rounded-full border border-[hsl(var(--gg-gold))]/50 flex items-center justify-center">
-                <span className="font-display text-xl text-[hsl(var(--gg-gold))]">G</span>
+              <div className="h-12 w-12 rounded-full border border-[hsl(var(--gg-green))]/50 flex items-center justify-center bg-[hsl(var(--gg-surface-light))]/60">
+                <span className="font-display text-xl text-[hsl(var(--gg-green))]">G</span>
               </div>
-              <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-gold))]/80">
+              <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))]">
                 Temporada 2026
               </p>
             </div>
-            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-ivory))]">Circuito GALAXY GOLF</h3>
-            <p className="text-[hsl(var(--gg-ivory))]/70 leading-relaxed mb-6">
+            <h3 className="font-display text-4xl mb-3 text-[hsl(var(--gg-navy-deep))]">Circuito GALAXY GOLF</h3>
+            <p className="text-[hsl(var(--gg-navy-deep))]/80 leading-relaxed mb-6">
               Ranking anual, pruebas regulares y Gran Final.
             </p>
-            <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-gold))]/40 text-[hsl(var(--gg-gold))]">
+            <span className="inline-flex self-start px-3 py-1.5 mb-8 text-[10px] font-semibold tracking-[0.18em] uppercase border border-[hsl(var(--gg-green))]/40 text-[hsl(var(--gg-green))] bg-[hsl(var(--gg-surface-light))]/50">
               12 pruebas + Gran Final
             </span>
             <div className="mt-auto flex items-center gap-6">
               <Link
                 to="/circuito-galaxygolf"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-gold))] hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-green))] hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver ranking <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 to="/jornades"
-                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-ivory))] transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/60 hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
                 Ver calendario
               </Link>
