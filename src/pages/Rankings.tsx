@@ -124,15 +124,11 @@ function circuitoFullLabel(r: PublicResult, stage: string, n: number | null): st
 }
 
 function galaxyCupFullLabel(r: PublicResult, stage: string, n: number | null): string {
-  const stageLabel =
-    stage === 'major'
-      ? `GalaxyCup Major P${n ?? '?'}`
-      : stage === 'playoff'
-        ? `GalaxyCup Playoff P${n ?? '?'}`
-        : `GalaxyCup P${n ?? '?'}`;
-  return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
-    .filter(Boolean)
-    .join(' · ');
+  const parts = [venueName(r), fmtDate(r.rounds?.date || r.play_date)];
+  if (stage === 'playoff') parts.push(`GalaxyCup PO${n ?? '?'}`);
+  else parts.push(`GalaxyCup P${n ?? '?'}`);
+  if (stage === 'major') parts.push('Major');
+  return parts.filter(Boolean).join(' · ');
 }
 
 
