@@ -133,7 +133,22 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     };
   }, [allResults, playerId, bestN]);
 
-  if (!player) {
+  const roundCompMap = useMemo(() => {
+    const map = new Map<string, { name: string; competition_type: string }[]>();
+    for (const rc of (roundComps || [])) {
+      if (!map.has(rc.round_id)) map.set(rc.round_id, []);
+      if (rc.competition) map.get(rc.round_id)!.push(rc.competition);
+    }
+    return map;
+  }, [roundComps]);
+
+  const getRoundCompetitionLabel = (roundId: string): { label: string; variant: 'cup' | 'circuit' | null } => {
+    const comps = roundCompMap.get(roundId) || [];
+    const names = comps.map(c => c.name);
+    if (names.some(n => n.toLowerCase().includes('cup'))) return { label: 'GalaxyCup', variant: 'cup' };
+    if (names.some(n => n.toLowerCase().includes('circuito'))) return { label: 'Circuito', variant: 'circuit' };
+    return { label: comps[0]?.name ?? '', variant: 'circuit' };
+  };
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
