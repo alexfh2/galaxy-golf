@@ -826,6 +826,7 @@ export function GalaxyCupRankingPage() {
         }
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
         bgImage={heroGalaxyCup}
+        overlayStrength="strong"
         leaderCard={
           <LeaderCard
             name={leader?.name ?? null}
