@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import { useQuery } from '@tanstack/react-query';
-import { Trophy } from 'lucide-react';
+
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
