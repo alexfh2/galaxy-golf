@@ -951,7 +951,12 @@ export function GalaxyCupRankingPage() {
                                 onClick={() => setSelectedPlayerId(r.player_id)}
                                 className="font-medium text-left text-[hsl(var(--gg-ivory))] transition-colors hover:text-[hsl(var(--gg-gold))]"
                               >
-                                {r.name}
+                                <span>{r.name}</span>
+                                {fmtHcp(r.lastHcp) && (
+                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-ivory))]/55">
+                                    ({fmtHcp(r.lastHcp)})
+                                  </span>
+                                )}
                               </button>
                             </TableCell>
                             {roundCols.map((c) => {
