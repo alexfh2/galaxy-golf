@@ -62,7 +62,7 @@ const Navbar = () => {
     >
       <div className="container flex h-20 items-center py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
-          <LogoGoldNavy className="h-[60px] sm:h-[76px] max-h-[76px]" />
+          <Wordmark className="text-xl sm:text-2xl" />
         </Link>
 
         {/* Desktop Nav */}
