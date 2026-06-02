@@ -447,26 +447,29 @@ function CategoryTabs({
 
 type Accent = 'green' | 'copper';
 
-function LeaderCard({
-  name,
-  points,
-  categoryLabel,
-  accent,
-}: {
+type LeaderEntry = {
   name: string | null;
   points: number | null;
   categoryLabel: string;
+  highlight?: boolean;
+};
+
+function LeadersCard({
+  leaders,
+  accent,
+}: {
+  leaders: [LeaderEntry, LeaderEntry];
   accent: Accent;
 }) {
   const accentColor = accent === 'green' ? 'hsl(var(--gg-green))' : 'hsl(var(--gg-copper))';
   return (
     <div
-      className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))]/95 backdrop-blur-md p-7 shadow-[0_24px_60px_-24px_rgba(11,19,36,0.35)]"
+      className="relative w-full max-w-md border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))]/95 backdrop-blur-md p-6 md:p-7 shadow-[0_24px_60px_-24px_rgba(11,19,36,0.35)]"
       style={{ borderTop: `2px solid ${accentColor}` }}
     >
       <div className="flex items-center justify-between mb-5">
         <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/55">
-          Líder actual
+          Líderes actuales
         </span>
         <span
           className="text-[10px] uppercase tracking-[0.22em] px-2 py-[2px] border"
@@ -475,44 +478,54 @@ function LeaderCard({
           #1
         </span>
       </div>
-      {name ? (
-        <>
-          <div className="font-display text-2xl md:text-[26px] leading-tight text-[hsl(var(--gg-navy-deep))]">
-            {name}
-          </div>
-          <div className="mt-5 flex items-end justify-between border-t border-[hsl(var(--gg-navy-deep))]/10 pt-4">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/50">
-                Categoría
-              </div>
-              <div className="mt-1 text-[12px] uppercase tracking-[0.18em] text-[hsl(var(--gg-navy-deep))]/85">
-                {categoryLabel}
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
+        {leaders.map((l, idx) => (
+          <div
+            key={idx}
+            className={`${idx === 1 ? 'sm:pl-4 sm:border-l border-t pt-5 sm:pt-0 sm:border-t-0' : ''} border-[hsl(var(--gg-navy-deep))]/10 ${
+              l.highlight ? 'sm:-mx-1 sm:px-1' : ''
+            }`}
+          >
+            <div
+              className="text-[9px] font-semibold uppercase tracking-[0.24em]"
+              style={{ color: accentColor }}
+            >
+              {l.categoryLabel}
             </div>
-            <div className="text-right">
-              <div
-                className="font-display text-3xl leading-none"
-                style={{ color: accentColor }}
-              >
-                {points}
+            {l.name ? (
+              <>
+                <div className="mt-2 font-display text-xl md:text-[22px] leading-tight text-[hsl(var(--gg-navy-deep))]">
+                  {l.name}
+                </div>
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span
+                    className="font-sans font-bold text-2xl leading-none tabular-nums"
+                    style={{ color: accentColor }}
+                  >
+                    {l.points}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.24em] text-[hsl(var(--gg-navy-deep))]/55">
+                    pts
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="mt-2">
+                <div className="font-display text-lg text-[hsl(var(--gg-navy-deep))]/65">
+                  Pendiente
+                </div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/45">
+                  Sin resultados
+                </div>
               </div>
-              <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/55">
-                pts
-              </div>
-            </div>
+            )}
           </div>
-        </>
-      ) : (
-        <div className="py-4">
-          <div className="font-display text-xl text-[hsl(var(--gg-navy-deep))]/70">Ranking pendiente</div>
-          <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/50">
-            Sin resultados en {categoryLabel}
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
+
 
 function PageHeader({
   eyebrow,
@@ -665,7 +678,8 @@ export function CircuitoRankingPage() {
     return ids.size;
   }, [rows]);
   const categoryLabel = getGalaxyGolfCategoryLabel(category);
-  const leader = filtered[0] ?? null;
+  const leaderLow = rows.find((r) => r.category === 'hcp_low') ?? null;
+  const leaderHigh = rows.find((r) => r.category === 'hcp_high') ?? null;
 
   return (
     <>
@@ -680,11 +694,22 @@ export function CircuitoRankingPage() {
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
         bgImage={heroCircuito}
         leaderCard={
-          <LeaderCard
-            name={leader?.name ?? null}
-            points={leader?.total ?? null}
-            categoryLabel={categoryLabel}
+          <LeadersCard
             accent="green"
+            leaders={[
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_low'),
+                name: leaderLow?.name ?? null,
+                points: leaderLow?.total ?? null,
+                highlight: category === 'hcp_low',
+              },
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_high'),
+                name: leaderHigh?.name ?? null,
+                points: leaderHigh?.total ?? null,
+                highlight: category === 'hcp_high',
+              },
+            ]}
           />
         }
       />
@@ -846,7 +871,8 @@ export function GalaxyCupRankingPage() {
     return { totalPruebas: ids.size, totalMajors: majors.size };
   }, [rows]);
   const categoryLabel = getGalaxyGolfCategoryLabel(category);
-  const leader = filtered[0] ?? null;
+  const leaderLow = rows.find((r) => r.category === 'hcp_low') ?? null;
+  const leaderHigh = rows.find((r) => r.category === 'hcp_high') ?? null;
 
   return (
     <>
@@ -864,11 +890,22 @@ export function GalaxyCupRankingPage() {
         eyebrowAccent="copper"
         eyebrowSize="lg"
         leaderCard={
-          <LeaderCard
-            name={leader?.name ?? null}
-            points={leader?.points ?? null}
-            categoryLabel={categoryLabel}
+          <LeadersCard
             accent="copper"
+            leaders={[
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_low'),
+                name: leaderLow?.name ?? null,
+                points: leaderLow?.points ?? null,
+                highlight: category === 'hcp_low',
+              },
+              {
+                categoryLabel: getGalaxyGolfCategoryLabel('hcp_high'),
+                name: leaderHigh?.name ?? null,
+                points: leaderHigh?.points ?? null,
+                highlight: category === 'hcp_high',
+              },
+            ]}
           />
         }
       />
