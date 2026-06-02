@@ -918,6 +918,20 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             <p className="text-sm font-semibold">
               {selectedCount} / {visibleResults.length} resultats seleccionats
               {source && <Badge variant="outline" className="ml-2 text-xs">{source}</Badge>}
+              {importSource === 'excel' && results.some(r => r._hole_mode) && (
+                <Badge
+                  variant="outline"
+                  className={`ml-2 text-xs ${
+                    results[0]?._hole_mode === 'stableford_points'
+                      ? 'border-amber-400/60 text-amber-300'
+                      : 'border-emerald-400/60 text-emerald-300'
+                  }`}
+                >
+                  {results[0]?._hole_mode === 'stableford_points'
+                    ? 'Excel: punts Stableford per forat'
+                    : 'Excel: cops per forat'}
+                </Badge>
+              )}
               {unresolvedConflicts.length > 0 && (
                 <Badge variant="destructive" className="ml-2 text-xs">
                   {unresolvedConflicts.length} conflictes
