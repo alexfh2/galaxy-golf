@@ -335,29 +335,25 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
   );
 }
 
-function HistoryChips({ items, unit }: { items: HistoryItem[]; unit: string }) {
-  if (!items.length) return <span className="text-muted-foreground">—</span>;
-  return (
-    <div className="flex flex-wrap gap-1.5 max-w-[28rem]">
-      {items.map((it) => (
-        <span
-          key={it.round_id}
-          title={it.fullLabel}
-          className="inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] leading-none"
-        >
-          <span className="max-w-[8rem] truncate text-muted-foreground">
-            {it.label.length > 14 && it.round_number ? `J${it.round_number}` : it.label}
-          </span>
-          <span className="font-semibold text-[hsl(var(--gg-green))]">
-            {it.stableford}
-            {unit}
-          </span>
-          {it.isMajor && (
-            <span className="text-[9px] uppercase tracking-wide text-[hsl(var(--gg-copper))]">M</span>
-          )}
-        </span>
-      ))}
-    </div>
+type RoundCol = { round_id: string; round_number: number | null; label: string; full: string; isMajor?: boolean };
+
+function collectRounds(rows: { history: HistoryItem[] }[]): RoundCol[] {
+  const map = new Map<string, RoundCol>();
+  for (const r of rows) {
+    for (const h of r.history) {
+      if (!map.has(h.round_id)) {
+        map.set(h.round_id, {
+          round_id: h.round_id,
+          round_number: h.round_number,
+          label: h.label,
+          full: h.fullLabel,
+          isMajor: h.isMajor,
+        });
+      }
+    }
+  }
+  return [...map.values()].sort(
+    (a, b) => (a.round_number ?? 9999) - (b.round_number ?? 9999),
   );
 }
 
