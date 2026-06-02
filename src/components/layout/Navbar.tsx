@@ -50,13 +50,16 @@ const Navbar = () => {
               <Link
                 key={`${item.label}-${idx}`}
                 to={item.path}
-                className={`px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                className={`relative px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] transition-colors ${
                   isActive
                     ? 'text-[hsl(var(--gg-gold))]'
-                    : 'text-foreground/70 hover:text-[hsl(var(--gg-gold))]'
+                    : 'text-[hsl(var(--gg-ivory))]/70 hover:text-[hsl(var(--gg-gold))]'
                 }`}
               >
                 {item.label}
+                {isActive && (
+                  <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 h-px w-6 bg-[hsl(var(--gg-gold))]" />
+                )}
               </Link>
             );
           })}
@@ -67,7 +70,7 @@ const Navbar = () => {
           {/* ThemeToggle hidden: app locked to dark mode */}
           <Link
             to="/admin"
-            className="hidden sm:inline-flex items-center px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] border border-[hsl(var(--gg-copper))]/60 text-[hsl(var(--gg-copper))] hover:bg-[hsl(var(--gg-copper))]/10 transition-colors"
+            className="hidden sm:inline-flex items-center px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] border border-[hsl(var(--gg-gold))]/60 text-[hsl(var(--gg-gold))] hover:bg-[hsl(var(--gg-gold))]/10 hover:border-[hsl(var(--gg-gold))] transition-colors"
           >
             Iniciar sesión
           </Link>
