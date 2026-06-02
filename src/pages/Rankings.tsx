@@ -108,10 +108,11 @@ function circuitoColumn(stage: string, n: number | null): { label: string; sort:
 }
 
 function galaxyCupColumn(stage: string, n: number | null): { label: string; sort: number } {
-  const sortBase = (GALAXYCUP_STAGE_ORDER[stage] ?? 9) * 1000 + (n ?? 999);
-  if (stage === 'major') return { label: n ? `M${n}` : 'M?', sort: sortBase };
-  if (stage === 'playoff') return { label: n ? `PO${n}` : 'PO?', sort: sortBase };
-  return { label: n ? `P${n}` : 'P?', sort: sortBase };
+  if (stage === 'playoff') {
+    return { label: n ? `PO${n}` : 'PO?', sort: 100_000 + (n ?? 999) };
+  }
+  // regular y major se ordenan en una única secuencia por competition_round_number
+  return { label: n ? `P${n}` : 'P?', sort: n ?? 9999 };
 }
 
 function circuitoFullLabel(r: PublicResult, stage: string, n: number | null): string {
@@ -123,15 +124,11 @@ function circuitoFullLabel(r: PublicResult, stage: string, n: number | null): st
 }
 
 function galaxyCupFullLabel(r: PublicResult, stage: string, n: number | null): string {
-  const stageLabel =
-    stage === 'major'
-      ? `GalaxyCup Major P${n ?? '?'}`
-      : stage === 'playoff'
-        ? `GalaxyCup Playoff P${n ?? '?'}`
-        : `GalaxyCup P${n ?? '?'}`;
-  return [venueName(r), fmtDate(r.rounds?.date || r.play_date), stageLabel]
-    .filter(Boolean)
-    .join(' · ');
+  const parts = [venueName(r), fmtDate(r.rounds?.date || r.play_date)];
+  if (stage === 'playoff') parts.push(`GalaxyCup PO${n ?? '?'}`);
+  else parts.push(`GalaxyCup P${n ?? '?'}`);
+  if (stage === 'major') parts.push('Major');
+  return parts.filter(Boolean).join(' · ');
 }
 
 
