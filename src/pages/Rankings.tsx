@@ -523,7 +523,7 @@ export default function Rankings() {
                               title={c.full}
                               className="text-center whitespace-nowrap px-2"
                             >
-                              {c.round_number ? `J${c.round_number}` : c.label}
+                              {c.label}
                             </TableHead>
                           ))}
                           <TableHead className="text-center">Pruebas</TableHead>
