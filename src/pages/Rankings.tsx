@@ -168,8 +168,12 @@ export function computeCircuito(
     });
   }
 
+  // Circuito: completed counts for points; retired counts only for bonus participación.
   const filtered = results.filter(
-    (r) => validRoundIds.has(r.round_id) && r.stableford_points != null,
+    (r) =>
+      validRoundIds.has(r.round_id) &&
+      (r.result_status ?? 'completed') !== 'no_show' &&
+      (r.result_status ?? 'completed') !== 'disqualified',
   );
 
   const byPlayer = new Map<string, PublicResult[]>();
@@ -190,7 +194,9 @@ export function computeCircuito(
     const category = getGalaxyGolfCategoryByHandicap(firstHcp);
     if (!category) continue;
 
+    // Only completed cards contribute Stableford points; retired = 0.
     const stablefords = list
+      .filter((r) => (r.result_status ?? 'completed') === 'completed')
       .map((r) => Number(r.stableford_points ?? 0))
       .sort((a, b) => b - a);
     const best7 = stablefords.slice(0, 7).reduce((s, n) => s + n, 0);
@@ -255,8 +261,12 @@ export function computeGalaxyCup(
     }
   }
 
+  // GalaxyCup: only completed cards enter the points distribution.
   const filtered = results.filter(
-    (r) => roundStage.has(r.round_id) && r.stableford_points != null,
+    (r) =>
+      roundStage.has(r.round_id) &&
+      r.stableford_points != null &&
+      (r.result_status ?? 'completed') === 'completed',
   );
 
   const playerCategory = new Map<string, Category>();

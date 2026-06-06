@@ -18,6 +18,8 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
 
+type ResultStatus = 'completed' | 'retired' | 'no_show' | 'disqualified';
+
 interface ParsedResult {
   position: number;
   name: string;
@@ -33,11 +35,16 @@ interface ParsedResult {
   play_date: string | null;
   /** Original category label from the source (GolfDirecto category name, Excel "Cat" column, etc.). */
   source_category: string | null;
+  /** Detailed result status. 'completed' for normal cards. */
+  result_status: ResultStatus;
+  /** Partial Stableford reported by the source when the player retired (audit). */
+  raw_stableford_points: number | null;
   _uid: string;
   _selected: boolean;
   _conflict_group?: string; // dup key if this row is part of an unresolved conflict
   _matched_player_id?: string;
   _url_index?: number;
+  /** Legacy flag: true for any non-completed status (kept for backwards compat in this component). */
   _is_np?: boolean;
   _is_senior?: boolean;
   /** Excel-only: tells the save mutation how to serialise the scorecard. */
@@ -45,6 +52,14 @@ interface ParsedResult {
   /** Excel-only: stableford points per hole when _hole_mode === 'stableford_points'. */
   _hole_stableford?: (number | null)[];
 }
+
+const STATUS_BADGE: Record<ResultStatus, { label: string; effect: string; cls: string }> = {
+  completed:     { label: 'Completat',    effect: '',                                       cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  retired:       { label: 'Retirat',      effect: 'Ranking 0 · Bonus participació',        cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+  no_show:       { label: 'No presentat', effect: '0 punts · sense bonus',                 cls: 'bg-muted text-muted-foreground border-border' },
+  disqualified:  { label: 'Desqualificat',effect: '0 punts · sense bonus',                 cls: 'bg-red-50 text-red-700 border-red-200' },
+};
+
 
 interface Props {
   round: Round;
@@ -331,7 +346,10 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const playDate = excelPlayDate || null;
 
       const parsed: ParsedResult[] = excelResults
-        .filter(r => !r.is_np)
+        // Keep retired & disqualified (they affect bonus / are audited).
+        // 'no_show' rows remain skipped — same legacy behaviour, the spec
+        // explicitly says "mantener omitido si ya se omitía".
+        .filter(r => r.result_status !== 'no_show')
         .map(r => ({
           position: r.position,
           name: r.name,
@@ -340,19 +358,27 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           handicap: r.handicap_exact,
           handicap_play: r.handicap_play,
           age: r.age,
-          stableford_points: r.stableford_points,
-          scratch_score: r.scratch_score,
+          // Retired: 0 in ranking, partial card kept in raw_stableford_points.
+          // Disqualified: 0.
+          stableford_points:
+            r.result_status === 'completed' ? r.stableford_points
+            : r.result_status === 'retired' ? 0
+            : 0,
+          scratch_score: r.result_status === 'completed' ? r.scratch_score : null,
           scores: r.scores,
           source_url: `excel:${file.name}`,
           play_date: playDate,
           source_category: r.category != null ? `Cat ${r.category}` : null,
+          result_status: r.result_status,
+          raw_stableford_points: r.result_status === 'retired' ? r.stableford_points : null,
           _uid: uid(),
           _selected: true,
-          _is_np: false,
+          _is_np: r.result_status !== 'completed',
           _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
           _hole_mode: parsedMode,
           _hole_stableford: r.hole_stableford,
         }));
+
 
       setSource(`Excel: ${file.name}`);
       setImportSource('excel');
@@ -414,13 +440,24 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         detectedSource = detectedSource || resp.source;
         // Per-URL play_date precedence: admin-entered date > game_date from API > result.play_date
         const urlDate: string | null = resp.urlPlayDate || resp.game_date || null;
-        for (const r of resp.results as (ParsedResult & { category?: string | null })[]) {
+        for (const r of resp.results as (ParsedResult & { category?: string | null; result_status?: ResultStatus; raw_stableford_points?: number | null })[]) {
+          // Skip no_show entries silently (legacy behaviour for N.P).
+          if (r.result_status === 'no_show') continue;
+          const status: ResultStatus = r.result_status ?? 'completed';
           allParsed.push({
             ...r,
             play_date: urlDate || r.play_date || null,
             source_category: r.source_category ?? r.category ?? null,
             age: null,
             scores: r.scores ?? [],
+            result_status: status,
+            raw_stableford_points: r.raw_stableford_points ?? null,
+            stableford_points:
+              status === 'completed' ? r.stableford_points
+              : status === 'retired' ? 0
+              : 0,
+            scratch_score: status === 'completed' ? r.scratch_score : null,
+            _is_np: status !== 'completed',
             _uid: uid(),
             _selected: true,
             _url_index: resp.urlIdx,
@@ -594,9 +631,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       );
 
       const payloads = toInsert.map(r => {
+        const status: ResultStatus = r.result_status ?? 'completed';
         // Override stableford_points with computed sum when admin chose that source.
         let stb = r.stableford_points;
         if (
+          status === 'completed' &&
           r._hole_mode === 'stableford_points' &&
           stablefordTotalSource === 'sum' &&
           r._hole_stableford && r._hole_stableford.length > 0
@@ -604,6 +643,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           const valid = r._hole_stableford.filter((v): v is number => v != null);
           stb = valid.length > 0 ? valid.reduce((s, n) => s + n, 0) : null;
         }
+        // Force 0 for non-completed (spec: retired → 0 + bonus, DQ → 0).
+        if (status !== 'completed') stb = 0;
         return {
           round_id: round.id,
           player_id: r._matched_player_id!,
@@ -616,19 +657,23 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           import_source: importSource || null,
           official_position: Number.isFinite(r.position) && r.position > 0 ? r.position : null,
           official_category: r.source_category ?? null,
-          scorecard: r._hole_mode === 'stableford_points'
-            ? (r._hole_stableford && r._hole_stableford.length > 0
-                ? {
-                    mode: 'stableford_points',
-                    hole_points: r._hole_stableford,
-                    handicap_play: r.handicap_play,
-                    total_source: stablefordTotalSource,
-                    note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
-                  }
-                : null)
-            : (r.scores.length > 0
-                ? { scores: r.scores, handicap_play: r.handicap_play }
-                : null),
+          result_status: status,
+          raw_stableford_points: r.raw_stableford_points ?? null,
+          scorecard: status !== 'completed'
+            ? null
+            : r._hole_mode === 'stableford_points'
+              ? (r._hole_stableford && r._hole_stableford.length > 0
+                  ? {
+                      mode: 'stableford_points',
+                      hole_points: r._hole_stableford,
+                      handicap_play: r.handicap_play,
+                      total_source: stablefordTotalSource,
+                      note: 'Excel import: hole values were Stableford points, not strokes. No real per-hole scores available.',
+                    }
+                  : null)
+              : (r.scores.length > 0
+                  ? { scores: r.scores, handicap_play: r.handicap_play }
+                  : null),
         };
       });
 
@@ -1195,6 +1240,20 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                         {r.name}
                         {r.gender && <span className="text-muted-foreground ml-1">({r.gender})</span>}
                         {r._is_senior && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Sènior</Badge>}
+                        {(() => {
+                          const st = r.result_status ?? 'completed';
+                          if (st === 'completed') return null;
+                          const meta = STATUS_BADGE[st];
+                          return (
+                            <span className="ml-1 inline-flex items-center gap-1">
+                              <Badge variant="outline" className={`text-[10px] px-1 py-0 ${meta.cls}`}>{meta.label}</Badge>
+                              <span className="text-[10px] text-muted-foreground">{meta.effect}</span>
+                              {r.raw_stableford_points != null && (
+                                <span className="text-[10px] text-muted-foreground">(parcial {r.raw_stableford_points})</span>
+                              )}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="p-2 font-mono text-muted-foreground">{r.license || '—'}</td>
                       <td className="p-2 font-mono text-muted-foreground">{r.play_date || '—'}</td>

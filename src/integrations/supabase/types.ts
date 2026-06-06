@@ -273,6 +273,8 @@ export type Database = {
           official_position: number | null
           play_date: string | null
           player_id: string
+          raw_stableford_points: number | null
+          result_status: string
           round_id: string
           scorecard: Json | null
           scratch_score: number | null
@@ -293,6 +295,8 @@ export type Database = {
           official_position?: number | null
           play_date?: string | null
           player_id: string
+          raw_stableford_points?: number | null
+          result_status?: string
           round_id: string
           scorecard?: Json | null
           scratch_score?: number | null
@@ -313,6 +317,8 @@ export type Database = {
           official_position?: number | null
           play_date?: string | null
           player_id?: string
+          raw_stableford_points?: number | null
+          result_status?: string
           round_id?: string
           scorecard?: Json | null
           scratch_score?: number | null

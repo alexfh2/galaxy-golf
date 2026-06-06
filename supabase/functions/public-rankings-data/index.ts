@@ -18,6 +18,8 @@ type RankingResultRow = {
   scorecard: unknown;
   play_date: string | null;
   source_url: string | null;
+  result_status: string;
+  raw_stableford_points: number | null;
   created_at: string;
   updated_at: string;
   players_public: {
@@ -93,13 +95,15 @@ Deno.serve(async (req) => {
         extra_play_count,
         official_position,
         official_category,
+        result_status,
+        raw_stableford_points,
         created_at,
         updated_at,
         rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
         players!inner(id, name, license, club, gender, is_senior, initial_handicap, current_handicap, photo_url, created_at, updated_at)
       `)
       .eq("rounds.status", "published")
-      .not("stableford_points", "is", null),
+      .in("result_status", ["completed", "retired"]),
       adminClient
         .from("players")
         .select("id, license, name, club, current_handicap, initial_handicap, gender, is_senior, photo_url, created_at, updated_at")
@@ -129,6 +133,8 @@ Deno.serve(async (req) => {
       extra_play_count: row.extra_play_count ?? 0,
       official_position: row.official_position ?? null,
       official_category: row.official_category ?? null,
+      result_status: row.result_status ?? 'completed',
+      raw_stableford_points: row.raw_stableford_points ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
       rounds: row.rounds

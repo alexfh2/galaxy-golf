@@ -6,6 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type ResultStatus = "completed" | "retired" | "no_show" | "disqualified";
+
 interface ParsedResult {
   position: number;
   name: string;
@@ -19,7 +21,34 @@ interface ParsedResult {
   source_url: string;
   play_date?: string | null;
   category?: string | null; // Original source category (GolfDirecto/Teeone), kept verbatim for audit.
+  result_status?: ResultStatus;
+  raw_stableford_points?: number | null;
   _is_senior?: boolean;
+}
+
+const RETIRED_TOKENS = new Set([
+  "retirado","retirada","retirat","ret","dnf","wd",
+  "abandono","abandonado","notermina","noterminanaltarjeta",
+  "noentregatarjeta","noentrega","sintarjeta","nr",
+]);
+const NOSHOW_TOKENS = new Set(["nopresentado","nopresentada","np","dns"]);
+const DQ_TOKENS = new Set(["dq","dsq","descalificado","descalificada","desqualificat"]);
+
+function detectStatus(...values: unknown[]): ResultStatus {
+  for (const v of values) {
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (!s) continue;
+    const n = s.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "");
+    if (!n) continue;
+    if (n === "np" || n === "n.p") return "no_show";
+    if (DQ_TOKENS.has(n)) return "disqualified";
+    if (NOSHOW_TOKENS.has(n)) return "no_show";
+    if (RETIRED_TOKENS.has(n)) return "retired";
+  }
+  return "completed";
 }
 
 serve(async (req) => {
@@ -197,6 +226,13 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     const license = player.license || "";
     const isSenior = seniorLicenses.has(license);
 
+    // Detect status from any string flag GolfDirecto exposes for this entry.
+    const status = detectStatus(
+      dayView.flag, dayView.flags, dayView.status, dayView.code,
+      dayView.result, entry.status, entry.flag,
+    );
+    const rawStb = stablefordPoints;
+
     entryDataList.push({
       playerId: player._id || "",
       result: {
@@ -206,16 +242,19 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
         gender: player.gender === "F" ? "F" : player.gender === "M" ? "M" : "",
         handicap: hcpExact,
         handicap_play: hcpGame != null ? Math.trunc(hcpGame) : null,
-        stableford_points: stablefordPoints,
-        scratch_score: scratchScore,
+        stableford_points: status === "completed" ? stablefordPoints : (status === "retired" ? 0 : null),
+        scratch_score: status === "completed" ? scratchScore : null,
         scores: [],
         source_url: url,
         play_date: gameDate,
         category: selectedCat?.name ?? null,
+        result_status: status,
+        raw_stableford_points: status === "retired" ? rawStb : null,
         _is_senior: isSenior,
       },
     });
   }
+
 
   // Fetch hole-by-hole scorecards in parallel (batches of 10)
   let coursePar: number[] | undefined;

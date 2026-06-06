@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 
 export type HoleMode = 'strokes' | 'stableford_points';
+export type ResultStatus = 'completed' | 'retired' | 'no_show' | 'disqualified';
 
 export interface ExcelParsedResult {
   position: number;
@@ -21,9 +22,50 @@ export interface ExcelParsedResult {
   excel_total_stableford: number | null;
   /** Sum of hole_stableford when mode === 'stableford_points'. */
   computed_total_stableford: number | null;
+  /** True for any non-completed status (no_show / retired / disqualified). Kept for backwards compatibility. */
   is_np: boolean;
+  /** New: detailed status detected from the Excel cells. */
+  result_status: ResultStatus;
+  /** Partial Stableford as reported by the source (kept for audit when retired with partial card). */
+  raw_stableford_points: number | null;
   is_senior: boolean;
 }
+
+const RETIRED_TOKENS = [
+  'retirado', 'retirada', 'retirat', 'ret', 'dnf', 'wd',
+  'abandono', 'abandonado', 'noterminanaltarjeta',
+  'noentregatarjeta', 'noentrega', 'sintarjeta', 'nr',
+  'noterminado', 'notermina',
+];
+const NOSHOW_TOKENS = ['nopresentado', 'np', 'dns', 'nopresentada'];
+const DQ_TOKENS = ['dq', 'dsq', 'descalificado', 'descalificada', 'desqualificat'];
+
+/**
+ * Detect a result status from any cell value. Returns 'completed' when nothing matches.
+ * Handles common notations from federation/club exports.
+ */
+export function detectResultStatus(...values: unknown[]): ResultStatus {
+  for (const v of values) {
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (!s) continue;
+    const n = s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+    if (!n) continue;
+    if (n === 'np' || n === 'n.p') {
+      // Ambiguous: legacy "N.P" = no presentado. Treat as no_show by default.
+      return 'no_show';
+    }
+    if (DQ_TOKENS.includes(n)) return 'disqualified';
+    if (NOSHOW_TOKENS.includes(n)) return 'no_show';
+    if (RETIRED_TOKENS.includes(n)) return 'retired';
+  }
+  return 'completed';
+}
+
 
 
 // Normalize header text for matching
@@ -223,7 +265,9 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
 
     const totalRaw = getVal(cols.total);
     const scratchRaw = getVal(cols.scratch);
-    const isNP = totalRaw === 'N.P' || totalRaw === 'NP' || scratchRaw === 'N.P' || scratchRaw === 'NP';
+    // Detect detailed status from total/scratch/position cells.
+    const status = detectResultStatus(totalRaw, scratchRaw, getVal(cols.pos));
+    const isNP = status !== 'completed';
 
     posCounter++;
 
@@ -244,10 +288,13 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         excel_total_stableford: null,
         computed_total_stableford: null,
         is_np: true,
+        result_status: status,
+        raw_stableford_points: null,
         is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
       });
       continue;
     }
+
 
     const posRaw = getNum(cols.pos);
     const position = posRaw ? Math.floor(posRaw) : posCounter;
@@ -330,6 +377,8 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
       excel_total_stableford: excelTotalStableford,
       computed_total_stableford: computedTotalStableford,
       is_np: false,
+      result_status: 'completed',
+      raw_stableford_points: null,
       is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
     });
   }

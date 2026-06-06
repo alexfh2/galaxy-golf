@@ -34,6 +34,10 @@ export type PublicResult = {
   official_position?: number | null;
   /** Audit-only: original category label from the source (e.g. "Cat 1", GD category name). */
   official_category?: string | null;
+  /** Detailed result status: 'completed' | 'retired' | 'no_show' | 'disqualified'. */
+  result_status?: string | null;
+  /** Partial Stableford as reported by the source for retired players (audit). */
+  raw_stableford_points?: number | null;
   created_at: string;
   updated_at: string;
   players_public: PublicPlayer | null;
