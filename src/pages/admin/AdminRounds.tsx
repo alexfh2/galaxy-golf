@@ -324,13 +324,14 @@ const AdminRounds = () => {
 
       // Validate competitions selection
       const enabledEntries = Object.entries(competitionsForm).filter(([, v]) => v.enabled);
-      if (enabledEntries.length === 0) {
-        throw new Error('Selecciona al menos una competición para la jornada.');
+      // A published round must have at least one competition associated
+      if (editingRound?.status === 'published' && enabledEntries.length === 0) {
+        throw new Error('Una jornada publicada debe estar asociada a al menos una competición.');
       }
       for (const [, v] of enabledEntries) {
         const n = parseInt(v.competition_round_number);
         if (!v.competition_round_number.trim() || isNaN(n) || n < 1) {
-          throw new Error('Indica el nº de prueba para cada competición seleccionada.');
+          throw new Error('Indica el nº de prueba para cada competición seleccionada (mayor que 0).');
         }
       }
 
@@ -787,12 +788,26 @@ const AdminRounds = () => {
                             (a, b) =>
                               (a.competition?.display_order ?? 0) - (b.competition?.display_order ?? 0),
                           )
-                          .map((rc) => (
-                            <Badge key={rc.id} variant="secondary" className="text-xs">
-                              {rc.competition?.name ?? '—'} · {stageLabels[rc.stage as CompStage] ?? rc.stage}
-                              {rc.competition_round_number != null ? ` · P${rc.competition_round_number}` : ''}
-                            </Badge>
-                          ));
+                          .map((rc) => {
+                            const name = rc.competition?.name ?? '—';
+                            const n = rc.competition_round_number;
+                            const stage = rc.stage as CompStage;
+                            let label: string;
+                            if (stage === 'final') {
+                              label = 'Final';
+                            } else if (stage === 'playoff') {
+                              label = `${name} · PO${n ?? ''}`;
+                            } else if (stage === 'major') {
+                              label = `${name} · P${n ?? ''} · Major`;
+                            } else {
+                              label = `${name} · P${n ?? ''}`;
+                            }
+                            return (
+                              <Badge key={rc.id} variant="secondary" className="text-xs">
+                                {label}
+                              </Badge>
+                            );
+                          });
                       })()}
                     </div>
                     <span className="text-xs text-muted-foreground hidden sm:inline-block mr-2">
@@ -1174,7 +1189,7 @@ const AdminRounds = () => {
 
 
             <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
-              <Label className="font-semibold">Competiciones y ranking</Label>
+              <Label className="font-semibold">Competiciones asociadas</Label>
               {!competitions || competitions.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   No hay competiciones configuradas para esta temporada.
