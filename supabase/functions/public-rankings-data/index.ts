@@ -72,38 +72,58 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
+    const fetchAllResults = async () => {
+      const pageSize = 1000;
+      const all: any[] = [];
+      let from = 0;
+      // Paginate to bypass PostgREST default 1000-row limit
+      // (otherwise full circuit/galaxycup rankings get truncated)
+      while (true) {
+        const { data, error } = await adminClient
+          .from("results")
+          .select(`
+            id,
+            round_id,
+            player_id,
+            handicap_at_round,
+            stableford_points,
+            scratch_score,
+            category,
+            is_female_prize,
+            is_senior_prize,
+            scorecard,
+            play_date,
+            source_url,
+            extra_play_count,
+            official_position,
+            official_category,
+            result_status,
+            raw_stableford_points,
+            created_at,
+            updated_at,
+            rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
+            players!inner(id, name, license, club, gender, is_senior, initial_handicap, current_handicap, photo_url, created_at, updated_at)
+          `)
+          .eq("rounds.status", "published")
+          .in("result_status", ["completed", "retired"])
+          .order("id", { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (error) return { data: null, error };
+        const batch = data ?? [];
+        all.push(...batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      return { data: all, error: null };
+    };
+
     const [
       { data: resultsData, error: resultsError },
       { data: playersData, error: playersError },
       { data: roundCompsData, error: roundCompsError },
     ] = await Promise.all([
-      adminClient
-      .from("results")
-      .select(`
-        id,
-        round_id,
-        player_id,
-        handicap_at_round,
-        stableford_points,
-        scratch_score,
-        category,
-        is_female_prize,
-        is_senior_prize,
-        scorecard,
-        play_date,
-        source_url,
-        extra_play_count,
-        official_position,
-        official_category,
-        result_status,
-        raw_stableford_points,
-        created_at,
-        updated_at,
-        rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
-        players!inner(id, name, license, club, gender, is_senior, initial_handicap, current_handicap, photo_url, created_at, updated_at)
-      `)
-      .eq("rounds.status", "published")
-      .in("result_status", ["completed", "retired"]),
+      fetchAllResults(),
+
       adminClient
         .from("players")
         .select("id, license, name, club, current_handicap, initial_handicap, gender, is_senior, photo_url, created_at, updated_at")
