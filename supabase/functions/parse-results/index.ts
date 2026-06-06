@@ -32,9 +32,19 @@ const RETIRED_TOKENS = new Set([
   "noentregatarjeta","noentrega","noentregado","noentregada",
   "sintarjeta","nr","ne",
   "noterminado","nofinaliza","nofinalitza",
+  // GolfDirecto entry/player.status values
+  "notreturned","noreturned","cardnotreturned",
 ]);
-const NOSHOW_TOKENS = new Set(["nopresentado","nopresentada","nopresentat","np","dns"]);
-const DQ_TOKENS = new Set(["dq","dsq","descalificado","descalificada","desqualificat","desqualificada"]);
+const NOSHOW_TOKENS = new Set([
+  "nopresentado","nopresentada","nopresentat","np","dns",
+  // GolfDirecto entry/player.status values
+  "notpresented","nopresented","absent","ausente",
+]);
+const DQ_TOKENS = new Set([
+  "dq","dsq","descalificado","descalificada","desqualificat","desqualificada",
+  "disqualified",
+]);
+
 
 function detectStatus(...values: unknown[]): ResultStatus {
   for (const v of values) {
@@ -234,10 +244,11 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     // (no presentado = no_show) in flag/status/code/observations and sometimes
     // as the rendered position or result text.
     const status = detectStatus(
+      entry.status, player.status,
       dayView.flag, dayView.flags, dayView.status, dayView.code, dayView.text,
       dayView.observations, dayView.observation, dayView.observaciones,
       dayView.result, dayView.rankingPosition, dayView.realRanking,
-      entry.status, entry.flag, entry.observations,
+      entry.flag, entry.observations,
     );
     const rawStb = stablefordPoints;
 
