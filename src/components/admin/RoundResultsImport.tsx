@@ -1175,7 +1175,42 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         </Card>
       )}
 
+      {importDiagnostics && importSource === 'golfdirecto' && (
+        <Card className={importDiagnostics.requires_split_categories
+          ? 'border-destructive/60 bg-destructive/5'
+          : importDiagnostics.mode !== 'stableford_points'
+            ? 'border-amber-400/60 bg-amber-500/5'
+            : 'border-emerald-500/40 bg-emerald-500/5'}>
+          <CardContent className="p-3 space-y-1 text-sm">
+            <div className="flex items-center gap-2 font-semibold">
+              <AlertTriangle className="h-4 w-4" />
+              Mode detectat:{' '}
+              {importDiagnostics.mode === 'stableford_points' && 'Stableford'}
+              {importDiagnostics.mode === 'strokes' && 'Golpes (recalculat)'}
+              {importDiagnostics.mode === 'relative_to_par' && 'Relatiu al par'}
+              {importDiagnostics.mode === 'unknown' && 'No compatible'}
+            </div>
+            {importDiagnostics.note && (
+              <p className="text-xs text-muted-foreground">{importDiagnostics.note}</p>
+            )}
+            {importDiagnostics.requires_split_categories && (
+              <p className="text-xs">
+                No es pot calcular Stableford net des d'aquest enllaç perquè GolfDirecto no
+                aporta totes les dades necessàries
+                {importDiagnostics.missing_fields.length > 0 && (
+                  <> (falta: {importDiagnostics.missing_fields.join(', ')})</>
+                )}
+                . Puja els enllaços de <strong>Handicap Inferior</strong> i{' '}
+                <strong>Handicap Superior</strong>, ja que aquestes categories tornen els punts
+                Stableford oficials.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {results.length > 0 && (
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">
