@@ -1240,6 +1240,20 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                         {r.name}
                         {r.gender && <span className="text-muted-foreground ml-1">({r.gender})</span>}
                         {r._is_senior && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Sènior</Badge>}
+                        {(() => {
+                          const st = r.result_status ?? 'completed';
+                          if (st === 'completed') return null;
+                          const meta = STATUS_BADGE[st];
+                          return (
+                            <span className="ml-1 inline-flex items-center gap-1">
+                              <Badge variant="outline" className={`text-[10px] px-1 py-0 ${meta.cls}`}>{meta.label}</Badge>
+                              <span className="text-[10px] text-muted-foreground">{meta.effect}</span>
+                              {r.raw_stableford_points != null && (
+                                <span className="text-[10px] text-muted-foreground">(parcial {r.raw_stableford_points})</span>
+                              )}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="p-2 font-mono text-muted-foreground">{r.license || '—'}</td>
                       <td className="p-2 font-mono text-muted-foreground">{r.play_date || '—'}</td>
