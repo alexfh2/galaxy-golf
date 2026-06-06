@@ -230,9 +230,14 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     const isSenior = seniorLicenses.has(license);
 
     // Detect status from any string flag GolfDirecto exposes for this entry.
+    // GolfDirecto puts short codes like "NE" (no entregado = retired) or "NP"
+    // (no presentado = no_show) in flag/status/code/observations and sometimes
+    // as the rendered position or result text.
     const status = detectStatus(
-      dayView.flag, dayView.flags, dayView.status, dayView.code,
-      dayView.result, entry.status, entry.flag,
+      dayView.flag, dayView.flags, dayView.status, dayView.code, dayView.text,
+      dayView.observations, dayView.observation, dayView.observaciones,
+      dayView.result, dayView.rankingPosition, dayView.realRanking,
+      entry.status, entry.flag, entry.observations,
     );
     const rawStb = stablefordPoints;
 
