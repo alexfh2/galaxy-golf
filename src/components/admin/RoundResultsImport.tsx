@@ -164,6 +164,13 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
   const [excelDiagnostics, setExcelDiagnostics] = useState<ExcelDiagnostics | null>(null);
   const [stablefordTotalSource, setStablefordTotalSource] = useState<'excel' | 'sum'>('excel');
+  const [importDiagnostics, setImportDiagnostics] = useState<{
+    mode: 'stableford_points' | 'strokes' | 'relative_to_par' | 'unknown';
+    requires_split_categories: boolean;
+    missing_fields: string[];
+    note: string | null;
+  } | null>(null);
+
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
