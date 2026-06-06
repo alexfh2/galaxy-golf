@@ -399,26 +399,28 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   const missing: Set<string> = new Set();
   let computationNote: string | null = null;
 
-  // Heuristic: in true Stableford mode, `onlyNet` is the net point total per round
-  // (typically 18–45). In stroke-play / relative-to-par mode it's the score relative
-  // to par (typically -10 to +15). We tally votes from completed entries.
+  // Heuristic: Stableford net is always ≥0 and typically 18–45. Stroke-play / relative-to-par
+  // produces values that can be negative or low single digits. Strongest signal: any negative
+  // onlyNet ⇒ stroke mode. Fallback: median onlyNet < 15 ⇒ stroke mode.
   const completedEntries = entryDataList.filter((e) => e.result.result_status === "completed");
-  let strokeVotes = 0;
-  let stbVotes = 0;
-  for (const ed of completedEntries) {
-    const onlyNet = ed.apiOnlyNet;
-    if (onlyNet == null) continue;
-    if (onlyNet < 15) strokeVotes++;
-    else stbVotes++;
+  const onlyNetVals = completedEntries
+    .map((e) => e.apiOnlyNet)
+    .filter((v): v is number => v != null);
+  const hasNegative = onlyNetVals.some((v) => v < 0);
+  let median = 0;
+  if (onlyNetVals.length > 0) {
+    const sorted = [...onlyNetVals].sort((a, b) => a - b);
+    median = sorted[Math.floor(sorted.length / 2)];
   }
-  if (strokeVotes > stbVotes && strokeVotes > 0) {
+  if (hasNegative || (onlyNetVals.length > 0 && median < 15)) {
     computationMode = "strokes";
   }
-  console.log(`[parse-results] mode detection: parTotal=${parTotal}, strokeVotes=${strokeVotes}, stbVotes=${stbVotes}, entries=${completedEntries.length}, mode=${computationMode}`);
+  console.log(`[parse-results] mode detection: parTotal=${parTotal}, hasNeg=${hasNegative}, median=${median}, n=${onlyNetVals.length}, mode=${computationMode}`);
 
   if (computationMode === "strokes" && parTotal === 0) {
     missing.add("par");
   }
+
 
 
   if (computationMode === "strokes") {
