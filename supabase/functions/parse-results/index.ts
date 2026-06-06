@@ -246,6 +246,10 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   interface EntryData {
     playerId: string;
     result: ParsedResult;
+    apiOnlyGross: number | null;
+    apiOnlyNet: number | null;
+    apiStrokeNumber: number | null;
+    hcpGame: number | null;
   }
   const entryDataList: EntryData[] = [];
 
@@ -265,16 +269,16 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     const positionValue = parseNumber(dayView.rankingPosition ?? dayView.realRanking);
     const hcpExact = parseNumber(player.hcpExact);
     const hcpGame = parseNumber(player.hcpGame);
+    const apiOnlyGross = parseNumber(dayView.onlyGross);
+    const apiOnlyNet = parseNumber(dayView.onlyNet);
+    const apiStroke = parseNumber(dayView.strokeNumber);
+    // Initial guess — may be overwritten after mode detection.
     const stablefordPoints = parseNumber(dayView.onlyNet ?? (isNet ? dayView.result : null));
     const scratchScore = parseNumber(dayView.strokeNumber ?? dayView.onlyGross ?? (!isNet ? dayView.result : null));
 
     const license = player.license || "";
     const isSenior = seniorLicenses.has(license);
 
-    // Detect status from any string flag GolfDirecto exposes for this entry.
-    // GolfDirecto puts short codes like "NE" (no entregado = retired) or "NP"
-    // (no presentado = no_show) in flag/status/code/observations and sometimes
-    // as the rendered position or result text.
     const status = detectStatus(
       entry.status, player.status,
       dayView.flag, dayView.flags, dayView.status, dayView.code, dayView.text,
@@ -286,6 +290,10 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
 
     entryDataList.push({
       playerId: player._id || "",
+      apiOnlyGross,
+      apiOnlyNet,
+      apiStrokeNumber: apiStroke,
+      hcpGame,
       result: {
         position: positionValue != null ? Math.trunc(positionValue) : 0,
         name,
@@ -305,6 +313,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
       },
     });
   }
+
 
 
   // Fetch hole-by-hole scorecards in parallel (batches of 10)
