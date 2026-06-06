@@ -415,7 +415,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   if (hasNegative || (onlyNetVals.length > 0 && median < 15)) {
     computationMode = "strokes";
   }
-  console.log(`[parse-results] mode detection: parTotal=${parTotal}, hasNeg=${hasNegative}, median=${median}, n=${onlyNetVals.length}, mode=${computationMode}`);
+  
 
   if (computationMode === "strokes" && parTotal === 0) {
     missing.add("par");
