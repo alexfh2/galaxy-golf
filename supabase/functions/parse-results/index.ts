@@ -29,21 +29,24 @@ interface ParsedResult {
 const RETIRED_TOKENS = new Set([
   "retirado","retirada","retirat","ret","dnf","wd",
   "abandono","abandonado","notermina","noterminanaltarjeta",
-  "noentregatarjeta","noentrega","sintarjeta","nr",
+  "noentregatarjeta","noentrega","noentregado","noentregada",
+  "sintarjeta","nr","ne",
+  "noterminado","nofinaliza","nofinalitza",
 ]);
-const NOSHOW_TOKENS = new Set(["nopresentado","nopresentada","np","dns"]);
-const DQ_TOKENS = new Set(["dq","dsq","descalificado","descalificada","desqualificat"]);
+const NOSHOW_TOKENS = new Set(["nopresentado","nopresentada","nopresentat","np","dns"]);
+const DQ_TOKENS = new Set(["dq","dsq","descalificado","descalificada","desqualificat","desqualificada"]);
 
 function detectStatus(...values: unknown[]): ResultStatus {
   for (const v of values) {
     if (v == null) continue;
     const s = String(v).trim();
     if (!s) continue;
+    // Skip pure numbers — they are scores, not status flags.
+    if (/^-?\d+([.,]\d+)?$/.test(s)) continue;
     const n = s.toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]/g, "");
     if (!n) continue;
-    if (n === "np" || n === "n.p") return "no_show";
     if (DQ_TOKENS.has(n)) return "disqualified";
     if (NOSHOW_TOKENS.has(n)) return "no_show";
     if (RETIRED_TOKENS.has(n)) return "retired";
@@ -227,9 +230,14 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     const isSenior = seniorLicenses.has(license);
 
     // Detect status from any string flag GolfDirecto exposes for this entry.
+    // GolfDirecto puts short codes like "NE" (no entregado = retired) or "NP"
+    // (no presentado = no_show) in flag/status/code/observations and sometimes
+    // as the rendered position or result text.
     const status = detectStatus(
-      dayView.flag, dayView.flags, dayView.status, dayView.code,
-      dayView.result, entry.status, entry.flag,
+      dayView.flag, dayView.flags, dayView.status, dayView.code, dayView.text,
+      dayView.observations, dayView.observation, dayView.observaciones,
+      dayView.result, dayView.rankingPosition, dayView.realRanking,
+      entry.status, entry.flag, entry.observations,
     );
     const rawStb = stablefordPoints;
 
