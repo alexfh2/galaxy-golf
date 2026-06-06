@@ -158,7 +158,12 @@ interface GolfDirectoResult {
   course_handicap?: number[];
   course_handicap_women?: number[];
   game_date?: string | null;
+  computation_mode: ComputationMode;
+  requires_split_categories: boolean;
+  missing_fields: string[];
+  computation_note: string | null;
 }
+
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
   const gameMatch = url.match(/game\/([a-f0-9]{24})/);
