@@ -346,7 +346,10 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const playDate = excelPlayDate || null;
 
       const parsed: ParsedResult[] = excelResults
-        .filter(r => !r.is_np)
+        // Keep retired & disqualified (they affect bonus / are audited).
+        // 'no_show' rows remain skipped — same legacy behaviour, the spec
+        // explicitly says "mantener omitido si ya se omitía".
+        .filter(r => r.result_status !== 'no_show')
         .map(r => ({
           position: r.position,
           name: r.name,
@@ -355,19 +358,27 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           handicap: r.handicap_exact,
           handicap_play: r.handicap_play,
           age: r.age,
-          stableford_points: r.stableford_points,
-          scratch_score: r.scratch_score,
+          // Retired: 0 in ranking, partial card kept in raw_stableford_points.
+          // Disqualified: 0.
+          stableford_points:
+            r.result_status === 'completed' ? r.stableford_points
+            : r.result_status === 'retired' ? 0
+            : 0,
+          scratch_score: r.result_status === 'completed' ? r.scratch_score : null,
           scores: r.scores,
           source_url: `excel:${file.name}`,
           play_date: playDate,
           source_category: r.category != null ? `Cat ${r.category}` : null,
+          result_status: r.result_status,
+          raw_stableford_points: r.result_status === 'retired' ? r.stableford_points : null,
           _uid: uid(),
           _selected: true,
-          _is_np: false,
+          _is_np: r.result_status !== 'completed',
           _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
           _hole_mode: parsedMode,
           _hole_stableford: r.hole_stableford,
         }));
+
 
       setSource(`Excel: ${file.name}`);
       setImportSource('excel');
