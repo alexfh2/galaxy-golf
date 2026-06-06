@@ -89,6 +89,10 @@ serve(async (req) => {
     let course_handicap: number[] | undefined;
     let course_handicap_women: number[] | undefined;
     let game_date: string | null = null;
+    let computation_mode: ComputationMode = "stableford_points";
+    let requires_split_categories = false;
+    let missing_fields: string[] = [];
+    let computation_note: string | null = null;
 
     if (detectedSource === "golfdirecto") {
       const gd = await parseGolfDirecto(url, format);
@@ -98,6 +102,10 @@ serve(async (req) => {
       course_handicap = gd.course_handicap;
       course_handicap_women = gd.course_handicap_women;
       game_date = gd.game_date ?? null;
+      computation_mode = gd.computation_mode;
+      requires_split_categories = gd.requires_split_categories;
+      missing_fields = gd.missing_fields;
+      computation_note = gd.computation_note;
     } else if (detectedSource === "teeone") {
       results = await parseTeeoneViaAPI(url, format);
     } else {
@@ -108,9 +116,24 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap, course_handicap_women, game_date }),
+      JSON.stringify({
+        success: true,
+        source: detectedSource,
+        results,
+        count: results.length,
+        categories,
+        course_par,
+        course_handicap,
+        course_handicap_women,
+        game_date,
+        computation_mode,
+        requires_split_categories,
+        missing_fields,
+        computation_note,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("Error:", error);
     return new Response(
