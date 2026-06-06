@@ -399,33 +399,27 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   const missing: Set<string> = new Set();
   let computationNote: string | null = null;
 
-  if (parTotal > 0) {
-    let strokeVotes = 0;
-    let stbVotes = 0;
-    for (const ed of entryDataList) {
-      if (ed.result.result_status !== "completed") continue;
-      const og = ed.apiOnlyGross;
-      const sn = ed.apiStrokeNumber;
-      if (og == null || sn == null || sn <= 0) continue;
-      if (Math.abs(og - (sn - parTotal)) <= 1) strokeVotes++;
-      else if (og >= 0 && og <= 60) stbVotes++;
-    }
-    console.log(`[parse-results] mode detection: parTotal=${parTotal}, strokeVotes=${strokeVotes}, stbVotes=${stbVotes}, entries=${entryDataList.length}`);
-
-    if (strokeVotes > stbVotes && strokeVotes > 0) {
-      computationMode = "strokes";
-    }
-  } else {
-    // Without parTotal we cannot reliably tell — fall back by inspecting onlyNet range.
-    const completed = entryDataList.filter((e) => e.result.result_status === "completed");
-    const suspicious = completed.filter(
-      (e) => e.apiOnlyNet != null && e.apiOnlyNet < 10 && (e.apiStrokeNumber ?? 0) > 50,
-    ).length;
-    if (suspicious > completed.length / 2) {
-      computationMode = "unknown";
-      missing.add("par");
-    }
+  // Heuristic: in true Stableford mode, `onlyNet` is the net point total per round
+  // (typically 18–45). In stroke-play / relative-to-par mode it's the score relative
+  // to par (typically -10 to +15). We tally votes from completed entries.
+  const completedEntries = entryDataList.filter((e) => e.result.result_status === "completed");
+  let strokeVotes = 0;
+  let stbVotes = 0;
+  for (const ed of completedEntries) {
+    const onlyNet = ed.apiOnlyNet;
+    if (onlyNet == null) continue;
+    if (onlyNet < 15) strokeVotes++;
+    else stbVotes++;
   }
+  if (strokeVotes > stbVotes && strokeVotes > 0) {
+    computationMode = "strokes";
+  }
+  console.log(`[parse-results] mode detection: parTotal=${parTotal}, strokeVotes=${strokeVotes}, stbVotes=${stbVotes}, entries=${completedEntries.length}, mode=${computationMode}`);
+
+  if (computationMode === "strokes" && parTotal === 0) {
+    missing.add("par");
+  }
+
 
   if (computationMode === "strokes") {
     // Need par + handicap (stroke index) to compute net stableford.
