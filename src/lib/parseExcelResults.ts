@@ -265,13 +265,23 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
 
     const totalRaw = getVal(cols.total);
     const scratchRaw = getVal(cols.scratch);
-    // Detect detailed status from total/scratch/position cells.
-    const status = detectResultStatus(totalRaw, scratchRaw, getVal(cols.pos));
+    // Collect raw values from hole/score cells so text like "Retirado" placed
+    // in a strokes column is still detected as a status.
+    const holeRawValues: unknown[] = cols.holeColumns.map((c) => getVal(c));
+    // Detect detailed status from total/scratch/position cells and hole cells.
+    const status = detectResultStatus(
+      totalRaw,
+      scratchRaw,
+      getVal(cols.pos),
+      ...holeRawValues,
+    );
     const isNP = status !== 'completed';
 
     posCounter++;
 
     if (isNP) {
+      // Preserve any partial Stableford reported on the source for audit (only useful for retired).
+      const partial = getNum(cols.total);
       results.push({
         position: posCounter,
         name,
@@ -281,7 +291,7 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         handicap_exact: getNum(cols.hex),
         handicap_play: getNum(cols.hpu),
         category: getNum(cols.category) != null ? Math.floor(getNum(cols.category)!) : null,
-        stableford_points: null,
+        stableford_points: status === 'retired' ? 0 : null,
         scratch_score: null,
         scores: [],
         hole_stableford: [],
@@ -289,7 +299,7 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         computed_total_stableford: null,
         is_np: true,
         result_status: status,
-        raw_stableford_points: null,
+        raw_stableford_points: status === 'retired' && partial != null ? Math.floor(partial) : null,
         is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
       });
       continue;
