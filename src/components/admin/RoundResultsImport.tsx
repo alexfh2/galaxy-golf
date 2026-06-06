@@ -477,6 +477,22 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const parsed = allParsed.sort((a, b) => a.position - b.position);
       setSource(detectedSource);
       setImportSource(detectedSource as 'golfdirecto' | 'teeone' | 'generic');
+
+      // Aggregate computation diagnostics across the imported URLs (worst-case wins).
+      if (detectedSource === 'golfdirecto') {
+        const blocked = responses.find(r => r.requires_split_categories);
+        const stroked = responses.find(r => r.computation_mode && r.computation_mode !== 'stableford_points');
+        const pick = blocked ?? stroked ?? responses[0];
+        if (pick && pick.computation_mode) {
+          setImportDiagnostics({
+            mode: pick.computation_mode,
+            requires_split_categories: !!pick.requires_split_categories,
+            missing_fields: pick.missing_fields ?? [],
+            note: pick.computation_note ?? null,
+          });
+        }
+      }
+
       const matched = await matchPlayers(parsed);
 
       // Auto-import course par + handicap from GolfDirecto scorecards if missing
