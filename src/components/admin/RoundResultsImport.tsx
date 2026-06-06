@@ -18,6 +18,8 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
 
+type ResultStatus = 'completed' | 'retired' | 'no_show' | 'disqualified';
+
 interface ParsedResult {
   position: number;
   name: string;
@@ -33,11 +35,16 @@ interface ParsedResult {
   play_date: string | null;
   /** Original category label from the source (GolfDirecto category name, Excel "Cat" column, etc.). */
   source_category: string | null;
+  /** Detailed result status. 'completed' for normal cards. */
+  result_status: ResultStatus;
+  /** Partial Stableford reported by the source when the player retired (audit). */
+  raw_stableford_points: number | null;
   _uid: string;
   _selected: boolean;
   _conflict_group?: string; // dup key if this row is part of an unresolved conflict
   _matched_player_id?: string;
   _url_index?: number;
+  /** Legacy flag: true for any non-completed status (kept for backwards compat in this component). */
   _is_np?: boolean;
   _is_senior?: boolean;
   /** Excel-only: tells the save mutation how to serialise the scorecard. */
@@ -45,6 +52,14 @@ interface ParsedResult {
   /** Excel-only: stableford points per hole when _hole_mode === 'stableford_points'. */
   _hole_stableford?: (number | null)[];
 }
+
+const STATUS_BADGE: Record<ResultStatus, { label: string; effect: string; cls: string }> = {
+  completed:     { label: 'Completat',    effect: '',                                       cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  retired:       { label: 'Retirat',      effect: 'Ranking 0 · Bonus participació',        cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+  no_show:       { label: 'No presentat', effect: '0 punts · sense bonus',                 cls: 'bg-muted text-muted-foreground border-border' },
+  disqualified:  { label: 'Desqualificat',effect: '0 punts · sense bonus',                 cls: 'bg-red-50 text-red-700 border-red-200' },
+};
+
 
 interface Props {
   round: Round;
