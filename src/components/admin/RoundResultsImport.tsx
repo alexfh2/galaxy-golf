@@ -1243,6 +1243,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                 saveMutation.isPending ||
                 selectedCount === 0 ||
                 hasUnresolvedConflicts ||
+                (importDiagnostics?.requires_split_categories === true) ||
                 (importSource === 'excel' &&
                   results[0]?._hole_mode === 'stableford_points' &&
                   stablefordTotalSource === 'sum' &&
@@ -1251,10 +1252,13 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
               title={
                 hasUnresolvedConflicts
                   ? 'Resol els conflictes de duplicats primer'
+                  : importDiagnostics?.requires_split_categories
+                  ? 'Puja els enllaços de Handicap Inferior i Handicap Superior'
                   : excelDiagnostics?.massDiscrepancy && stablefordTotalSource === 'sum'
                   ? `Hi ha massa discrepàncies. Canvia a "Usar total Stableford de l'Excel" o revisa el mapeig.`
                   : ''
               }
+
             >
               <Check className="h-4 w-4 mr-2" />
               {saveMutation.isPending ? 'Guardant...' : 'Guardar resultats'}
