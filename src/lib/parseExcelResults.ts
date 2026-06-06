@@ -34,31 +34,31 @@ export interface ExcelParsedResult {
 const RETIRED_TOKENS = [
   'retirado', 'retirada', 'retirat', 'ret', 'dnf', 'wd',
   'abandono', 'abandonado', 'noterminanaltarjeta',
-  'noentregatarjeta', 'noentrega', 'sintarjeta', 'nr',
-  'noterminado', 'notermina',
+  'noentregatarjeta', 'noentrega', 'noentregado', 'noentregada',
+  'sintarjeta', 'nr', 'ne',
+  'noterminado', 'notermina', 'nofinaliza', 'nofinalitza',
 ];
-const NOSHOW_TOKENS = ['nopresentado', 'np', 'dns', 'nopresentada'];
-const DQ_TOKENS = ['dq', 'dsq', 'descalificado', 'descalificada', 'desqualificat'];
+const NOSHOW_TOKENS = ['nopresentado', 'nopresentada', 'nopresentat', 'np', 'dns'];
+const DQ_TOKENS = ['dq', 'dsq', 'descalificado', 'descalificada', 'desqualificat', 'desqualificada'];
 
 /**
  * Detect a result status from any cell value. Returns 'completed' when nothing matches.
- * Handles common notations from federation/club exports.
+ * Only triggers on exact normalized matches (after stripping accents and non-alphanum),
+ * so names like "Nestor" or "Nuria" won't be flagged.
  */
 export function detectResultStatus(...values: unknown[]): ResultStatus {
   for (const v of values) {
     if (v == null) continue;
     const s = String(v).trim();
     if (!s) continue;
+    // Skip pure numbers — they are scores, not status flags.
+    if (/^-?\d+([.,]\d+)?$/.test(s)) continue;
     const n = s
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]/g, '');
     if (!n) continue;
-    if (n === 'np' || n === 'n.p') {
-      // Ambiguous: legacy "N.P" = no presentado. Treat as no_show by default.
-      return 'no_show';
-    }
     if (DQ_TOKENS.includes(n)) return 'disqualified';
     if (NOSHOW_TOKENS.includes(n)) return 'no_show';
     if (RETIRED_TOKENS.includes(n)) return 'retired';
