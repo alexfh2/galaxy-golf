@@ -244,10 +244,11 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     // (no presentado = no_show) in flag/status/code/observations and sometimes
     // as the rendered position or result text.
     const status = detectStatus(
+      entry.status, player.status,
       dayView.flag, dayView.flags, dayView.status, dayView.code, dayView.text,
       dayView.observations, dayView.observation, dayView.observaciones,
       dayView.result, dayView.rankingPosition, dayView.realRanking,
-      entry.status, entry.flag, entry.observations,
+      entry.flag, entry.observations,
     );
     const rawStb = stablefordPoints;
 
