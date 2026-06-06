@@ -410,6 +410,8 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
       if (Math.abs(og - (sn - parTotal)) <= 1) strokeVotes++;
       else if (og >= 0 && og <= 60) stbVotes++;
     }
+    console.log(`[parse-results] mode detection: parTotal=${parTotal}, strokeVotes=${strokeVotes}, stbVotes=${stbVotes}, entries=${entryDataList.length}`);
+
     if (strokeVotes > stbVotes && strokeVotes > 0) {
       computationMode = "strokes";
     }
