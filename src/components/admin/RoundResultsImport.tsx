@@ -440,13 +440,24 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         detectedSource = detectedSource || resp.source;
         // Per-URL play_date precedence: admin-entered date > game_date from API > result.play_date
         const urlDate: string | null = resp.urlPlayDate || resp.game_date || null;
-        for (const r of resp.results as (ParsedResult & { category?: string | null })[]) {
+        for (const r of resp.results as (ParsedResult & { category?: string | null; result_status?: ResultStatus; raw_stableford_points?: number | null })[]) {
+          // Skip no_show entries silently (legacy behaviour for N.P).
+          if (r.result_status === 'no_show') continue;
+          const status: ResultStatus = r.result_status ?? 'completed';
           allParsed.push({
             ...r,
             play_date: urlDate || r.play_date || null,
             source_category: r.source_category ?? r.category ?? null,
             age: null,
             scores: r.scores ?? [],
+            result_status: status,
+            raw_stableford_points: r.raw_stableford_points ?? null,
+            stableford_points:
+              status === 'completed' ? r.stableford_points
+              : status === 'retired' ? 0
+              : 0,
+            scratch_score: status === 'completed' ? r.scratch_score : null,
+            _is_np: status !== 'completed',
             _uid: uid(),
             _selected: true,
             _url_index: resp.urlIdx,
