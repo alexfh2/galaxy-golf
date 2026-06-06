@@ -386,6 +386,117 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     await Promise.all(scorecardPromises);
   }
 
+  // ── Mode detection + Stableford recomputation ────────────────────────────
+  // GolfDirecto sometimes serves SCRATCH categories as stroke-play / relative-to-par
+  // instead of as gross-stableford points. We detect this by checking whether the API
+  // `onlyGross` value matches `strokeNumber - parTotal` (i.e. it represents strokes
+  // over par, not stableford points). When it does, the `onlyNet` value is also
+  // relative-to-par and we must recompute net stableford ourselves from the scorecard.
+
+  const parTotal = coursePar ? coursePar.reduce((a, b) => a + b, 0) : 0;
+  let computationMode: ComputationMode = "stableford_points";
+  let requiresSplit = false;
+  const missing: Set<string> = new Set();
+  let computationNote: string | null = null;
+
+  if (parTotal > 0) {
+    let strokeVotes = 0;
+    let stbVotes = 0;
+    for (const ed of entryDataList) {
+      if (ed.result.result_status !== "completed") continue;
+      const og = ed.apiOnlyGross;
+      const sn = ed.apiStrokeNumber;
+      if (og == null || sn == null || sn <= 0) continue;
+      if (Math.abs(og - (sn - parTotal)) <= 1) strokeVotes++;
+      else if (og >= 0 && og <= 60) stbVotes++;
+    }
+    if (strokeVotes > stbVotes && strokeVotes > 0) {
+      computationMode = "strokes";
+    }
+  } else {
+    // Without parTotal we cannot reliably tell — fall back by inspecting onlyNet range.
+    const completed = entryDataList.filter((e) => e.result.result_status === "completed");
+    const suspicious = completed.filter(
+      (e) => e.apiOnlyNet != null && e.apiOnlyNet < 10 && (e.apiStrokeNumber ?? 0) > 50,
+    ).length;
+    if (suspicious > completed.length / 2) {
+      computationMode = "unknown";
+      missing.add("par");
+    }
+  }
+
+  if (computationMode === "strokes") {
+    // Need par + handicap (stroke index) to compute net stableford.
+    if (!coursePar) missing.add("par");
+    const anyFemale = entryDataList.some((e) => (e.result.gender || "").toUpperCase() === "F");
+    if (!courseHandicap && !anyFemale) missing.add("stroke_index");
+    if (anyFemale && !courseHandicapWomen && !courseHandicap) missing.add("stroke_index_women");
+
+    if (coursePar && (courseHandicap || courseHandicapWomen)) {
+      // Compute net stableford per entry.
+      let computedCount = 0;
+      let skippedNoHcp = 0;
+      let skippedNoScores = 0;
+      for (const ed of entryDataList) {
+        if (ed.result.result_status !== "completed") continue;
+        const scores = ed.result.scores;
+        if (!Array.isArray(scores) || scores.length !== 18 || !scores.some((s) => s > 0)) {
+          skippedNoScores++;
+          continue;
+        }
+        const hpu = ed.hcpGame;
+        if (hpu == null) {
+          skippedNoHcp++;
+          continue;
+        }
+        const isFemale = (ed.result.gender || "").toUpperCase() === "F";
+        const sIndex = (isFemale && courseHandicapWomen) ? courseHandicapWomen : courseHandicap;
+        if (!sIndex) {
+          skippedNoHcp++;
+          continue;
+        }
+        // Compute strokes-received per hole from HPU + stroke index.
+        const hpuInt = Math.max(0, Math.round(hpu));
+        const base = Math.floor(hpuInt / 18);
+        const extra = hpuInt % 18;
+        const sr: number[] = sIndex.map((idx) => base + (idx <= extra ? 1 : 0));
+        let total = 0;
+        for (let i = 0; i < 18; i++) {
+          const strokes = scores[i];
+          if (!strokes || strokes <= 0) continue; // picked-up ball → 0 points
+          const par = coursePar[i];
+          const pts = Math.max(0, par + sr[i] + 2 - strokes);
+          total += pts;
+        }
+        ed.result.stableford_points = total;
+        ed.result._stableford_computed = true;
+        computedCount++;
+      }
+      computationNote = `Mode 'golpes' detectat: ${computedCount} resultats recalculats des de la tarjeta.`;
+      if (skippedNoHcp || skippedNoScores) {
+        const parts: string[] = [];
+        if (skippedNoHcp) parts.push(`${skippedNoHcp} sense HPU/stroke index`);
+        if (skippedNoScores) parts.push(`${skippedNoScores} sense tarjeta hoyo a hoyo`);
+        computationNote += ` ${parts.join(', ')}.`;
+        if (skippedNoHcp > 0 || skippedNoScores > 0) {
+          // Some entries could not be computed → require split-category fallback.
+          requiresSplit = true;
+          if (skippedNoHcp) missing.add("HPU");
+          if (skippedNoScores) missing.add("golpes_por_hoyo");
+        }
+      }
+    } else {
+      requiresSplit = true;
+      computationNote =
+        "No es pot calcular Stableford net des d'aquest enllaç perquè falten dades del camp. " +
+        "Puja els enllaços de Handicap Inferior i Handicap Superior — aquestes categories tornen els punts oficials.";
+    }
+  } else if (computationMode === "unknown") {
+    requiresSplit = true;
+    computationNote =
+      "Format desconegut: puja els enllaços de Handicap Inferior i Handicap Superior.";
+  }
+
   const results = entryDataList.map((ed) => ed.result);
   results.sort((a, b) => a.position - b.position);
 
@@ -396,8 +507,13 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     course_handicap: courseHandicap,
     course_handicap_women: courseHandicapWomen,
     game_date: gameDate,
+    computation_mode: computationMode,
+    requires_split_categories: requiresSplit,
+    missing_fields: Array.from(missing),
+    computation_note: computationNote,
   };
 }
+
 
 // ─── TEEONE ────────────────────────────────────────────────────────────────────
 
