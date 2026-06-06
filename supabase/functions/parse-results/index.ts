@@ -32,9 +32,19 @@ const RETIRED_TOKENS = new Set([
   "noentregatarjeta","noentrega","noentregado","noentregada",
   "sintarjeta","nr","ne",
   "noterminado","nofinaliza","nofinalitza",
+  // GolfDirecto entry/player.status values
+  "notreturned","noreturned","cardnotreturned",
 ]);
-const NOSHOW_TOKENS = new Set(["nopresentado","nopresentada","nopresentat","np","dns"]);
-const DQ_TOKENS = new Set(["dq","dsq","descalificado","descalificada","desqualificat","desqualificada"]);
+const NOSHOW_TOKENS = new Set([
+  "nopresentado","nopresentada","nopresentat","np","dns",
+  // GolfDirecto entry/player.status values
+  "notpresented","nopresented","absent","ausente",
+]);
+const DQ_TOKENS = new Set([
+  "dq","dsq","descalificado","descalificada","desqualificat","desqualificada",
+  "disqualified",
+]);
+
 
 function detectStatus(...values: unknown[]): ResultStatus {
   for (const v of values) {
