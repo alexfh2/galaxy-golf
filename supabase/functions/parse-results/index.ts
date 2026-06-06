@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 type ResultStatus = "completed" | "retired" | "no_show" | "disqualified";
+type ComputationMode = "stableford_points" | "strokes" | "relative_to_par" | "unknown";
 
 interface ParsedResult {
   position: number;
@@ -24,7 +25,10 @@ interface ParsedResult {
   result_status?: ResultStatus;
   raw_stableford_points?: number | null;
   _is_senior?: boolean;
+  // Diagnostic (per entry): true when stableford was computed from scorecard instead of API value.
+  _stableford_computed?: boolean;
 }
+
 
 const RETIRED_TOKENS = new Set([
   "retirado","retirada","retirat","ret","dnf","wd",
