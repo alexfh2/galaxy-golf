@@ -377,6 +377,8 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
       excel_total_stableford: excelTotalStableford,
       computed_total_stableford: computedTotalStableford,
       is_np: false,
+      result_status: 'completed',
+      raw_stableford_points: null,
       is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
     });
   }
