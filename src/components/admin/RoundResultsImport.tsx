@@ -631,9 +631,11 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       );
 
       const payloads = toInsert.map(r => {
+        const status: ResultStatus = r.result_status ?? 'completed';
         // Override stableford_points with computed sum when admin chose that source.
         let stb = r.stableford_points;
         if (
+          status === 'completed' &&
           r._hole_mode === 'stableford_points' &&
           stablefordTotalSource === 'sum' &&
           r._hole_stableford && r._hole_stableford.length > 0
@@ -641,6 +643,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           const valid = r._hole_stableford.filter((v): v is number => v != null);
           stb = valid.length > 0 ? valid.reduce((s, n) => s + n, 0) : null;
         }
+        // Force 0 for non-completed (spec: retired → 0 + bonus, DQ → 0).
+        if (status !== 'completed') stb = 0;
         return {
           round_id: round.id,
           player_id: r._matched_player_id!,
