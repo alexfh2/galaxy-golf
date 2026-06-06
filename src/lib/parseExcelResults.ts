@@ -265,7 +265,9 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
 
     const totalRaw = getVal(cols.total);
     const scratchRaw = getVal(cols.scratch);
-    const isNP = totalRaw === 'N.P' || totalRaw === 'NP' || scratchRaw === 'N.P' || scratchRaw === 'NP';
+    // Detect detailed status from total/scratch/position cells.
+    const status = detectResultStatus(totalRaw, scratchRaw, getVal(cols.pos));
+    const isNP = status !== 'completed';
 
     posCounter++;
 
@@ -286,10 +288,13 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         excel_total_stableford: null,
         computed_total_stableford: null,
         is_np: true,
+        result_status: status,
+        raw_stableford_points: null,
         is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
       });
       continue;
     }
+
 
     const posRaw = getNum(cols.pos);
     const position = posRaw ? Math.floor(posRaw) : posCounter;
