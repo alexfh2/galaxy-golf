@@ -226,6 +226,13 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     const license = player.license || "";
     const isSenior = seniorLicenses.has(license);
 
+    // Detect status from any string flag GolfDirecto exposes for this entry.
+    const status = detectStatus(
+      dayView.flag, dayView.flags, dayView.status, dayView.code,
+      dayView.result, entry.status, entry.flag,
+    );
+    const rawStb = stablefordPoints;
+
     entryDataList.push({
       playerId: player._id || "",
       result: {
@@ -235,16 +242,19 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
         gender: player.gender === "F" ? "F" : player.gender === "M" ? "M" : "",
         handicap: hcpExact,
         handicap_play: hcpGame != null ? Math.trunc(hcpGame) : null,
-        stableford_points: stablefordPoints,
-        scratch_score: scratchScore,
+        stableford_points: status === "completed" ? stablefordPoints : (status === "retired" ? 0 : null),
+        scratch_score: status === "completed" ? scratchScore : null,
         scores: [],
         source_url: url,
         play_date: gameDate,
         category: selectedCat?.name ?? null,
+        result_status: status,
+        raw_stableford_points: status === "retired" ? rawStb : null,
         _is_senior: isSenior,
       },
     });
   }
+
 
   // Fetch hole-by-hole scorecards in parallel (batches of 10)
   let coursePar: number[] | undefined;
