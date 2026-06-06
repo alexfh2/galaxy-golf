@@ -164,6 +164,13 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
   const [excelDiagnostics, setExcelDiagnostics] = useState<ExcelDiagnostics | null>(null);
   const [stablefordTotalSource, setStablefordTotalSource] = useState<'excel' | 'sum'>('excel');
+  const [importDiagnostics, setImportDiagnostics] = useState<{
+    mode: 'stableford_points' | 'strokes' | 'relative_to_par' | 'unknown';
+    requires_split_categories: boolean;
+    missing_fields: string[];
+    note: string | null;
+  } | null>(null);
+
   const seniorFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -420,6 +427,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     setLoading(true);
     setWarnings([]);
     setResults([]);
+    setImportDiagnostics(null);
+
 
     try {
       const responses = await Promise.all(
@@ -468,6 +477,22 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const parsed = allParsed.sort((a, b) => a.position - b.position);
       setSource(detectedSource);
       setImportSource(detectedSource as 'golfdirecto' | 'teeone' | 'generic');
+
+      // Aggregate computation diagnostics across the imported URLs (worst-case wins).
+      if (detectedSource === 'golfdirecto') {
+        const blocked = responses.find(r => r.requires_split_categories);
+        const stroked = responses.find(r => r.computation_mode && r.computation_mode !== 'stableford_points');
+        const pick = blocked ?? stroked ?? responses[0];
+        if (pick && pick.computation_mode) {
+          setImportDiagnostics({
+            mode: pick.computation_mode,
+            requires_split_categories: !!pick.requires_split_categories,
+            missing_fields: pick.missing_fields ?? [],
+            note: pick.computation_note ?? null,
+          });
+        }
+      }
+
       const matched = await matchPlayers(parsed);
 
       // Auto-import course par + handicap from GolfDirecto scorecards if missing
@@ -1150,7 +1175,42 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         </Card>
       )}
 
+      {importDiagnostics && importSource === 'golfdirecto' && (
+        <Card className={importDiagnostics.requires_split_categories
+          ? 'border-destructive/60 bg-destructive/5'
+          : importDiagnostics.mode !== 'stableford_points'
+            ? 'border-amber-400/60 bg-amber-500/5'
+            : 'border-emerald-500/40 bg-emerald-500/5'}>
+          <CardContent className="p-3 space-y-1 text-sm">
+            <div className="flex items-center gap-2 font-semibold">
+              <AlertTriangle className="h-4 w-4" />
+              Mode detectat:{' '}
+              {importDiagnostics.mode === 'stableford_points' && 'Stableford'}
+              {importDiagnostics.mode === 'strokes' && 'Golpes (recalculat)'}
+              {importDiagnostics.mode === 'relative_to_par' && 'Relatiu al par'}
+              {importDiagnostics.mode === 'unknown' && 'No compatible'}
+            </div>
+            {importDiagnostics.note && (
+              <p className="text-xs text-muted-foreground">{importDiagnostics.note}</p>
+            )}
+            {importDiagnostics.requires_split_categories && (
+              <p className="text-xs">
+                No es pot calcular Stableford net des d'aquest enllaç perquè GolfDirecto no
+                aporta totes les dades necessàries
+                {importDiagnostics.missing_fields.length > 0 && (
+                  <> (falta: {importDiagnostics.missing_fields.join(', ')})</>
+                )}
+                . Puja els enllaços de <strong>Handicap Inferior</strong> i{' '}
+                <strong>Handicap Superior</strong>, ja que aquestes categories tornen els punts
+                Stableford oficials.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {results.length > 0 && (
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">
@@ -1183,6 +1243,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                 saveMutation.isPending ||
                 selectedCount === 0 ||
                 hasUnresolvedConflicts ||
+                (importDiagnostics?.requires_split_categories === true) ||
                 (importSource === 'excel' &&
                   results[0]?._hole_mode === 'stableford_points' &&
                   stablefordTotalSource === 'sum' &&
@@ -1191,10 +1252,13 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
               title={
                 hasUnresolvedConflicts
                   ? 'Resol els conflictes de duplicats primer'
+                  : importDiagnostics?.requires_split_categories
+                  ? 'Puja els enllaços de Handicap Inferior i Handicap Superior'
                   : excelDiagnostics?.massDiscrepancy && stablefordTotalSource === 'sum'
                   ? `Hi ha massa discrepàncies. Canvia a "Usar total Stableford de l'Excel" o revisa el mapeig.`
                   : ''
               }
+
             >
               <Check className="h-4 w-4 mr-2" />
               {saveMutation.isPending ? 'Guardant...' : 'Guardar resultats'}

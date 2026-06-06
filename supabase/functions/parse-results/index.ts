@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 type ResultStatus = "completed" | "retired" | "no_show" | "disqualified";
+type ComputationMode = "stableford_points" | "strokes" | "relative_to_par" | "unknown";
 
 interface ParsedResult {
   position: number;
@@ -24,7 +25,10 @@ interface ParsedResult {
   result_status?: ResultStatus;
   raw_stableford_points?: number | null;
   _is_senior?: boolean;
+  // Diagnostic (per entry): true when stableford was computed from scorecard instead of API value.
+  _stableford_computed?: boolean;
 }
+
 
 const RETIRED_TOKENS = new Set([
   "retirado","retirada","retirat","ret","dnf","wd",
@@ -85,6 +89,10 @@ serve(async (req) => {
     let course_handicap: number[] | undefined;
     let course_handicap_women: number[] | undefined;
     let game_date: string | null = null;
+    let computation_mode: ComputationMode = "stableford_points";
+    let requires_split_categories = false;
+    let missing_fields: string[] = [];
+    let computation_note: string | null = null;
 
     if (detectedSource === "golfdirecto") {
       const gd = await parseGolfDirecto(url, format);
@@ -94,6 +102,10 @@ serve(async (req) => {
       course_handicap = gd.course_handicap;
       course_handicap_women = gd.course_handicap_women;
       game_date = gd.game_date ?? null;
+      computation_mode = gd.computation_mode;
+      requires_split_categories = gd.requires_split_categories;
+      missing_fields = gd.missing_fields;
+      computation_note = gd.computation_note;
     } else if (detectedSource === "teeone") {
       results = await parseTeeoneViaAPI(url, format);
     } else {
@@ -104,9 +116,24 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, source: detectedSource, results, count: results.length, categories, course_par, course_handicap, course_handicap_women, game_date }),
+      JSON.stringify({
+        success: true,
+        source: detectedSource,
+        results,
+        count: results.length,
+        categories,
+        course_par,
+        course_handicap,
+        course_handicap_women,
+        game_date,
+        computation_mode,
+        requires_split_categories,
+        missing_fields,
+        computation_note,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("Error:", error);
     return new Response(
@@ -131,7 +158,12 @@ interface GolfDirectoResult {
   course_handicap?: number[];
   course_handicap_women?: number[];
   game_date?: string | null;
+  computation_mode: ComputationMode;
+  requires_split_categories: boolean;
+  missing_fields: string[];
+  computation_note: string | null;
 }
+
 
 async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirectoResult> {
   const gameMatch = url.match(/game\/([a-f0-9]{24})/);
@@ -214,6 +246,10 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   interface EntryData {
     playerId: string;
     result: ParsedResult;
+    apiOnlyGross: number | null;
+    apiOnlyNet: number | null;
+    apiStrokeNumber: number | null;
+    hcpGame: number | null;
   }
   const entryDataList: EntryData[] = [];
 
@@ -233,16 +269,16 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     const positionValue = parseNumber(dayView.rankingPosition ?? dayView.realRanking);
     const hcpExact = parseNumber(player.hcpExact);
     const hcpGame = parseNumber(player.hcpGame);
+    const apiOnlyGross = parseNumber(dayView.onlyGross);
+    const apiOnlyNet = parseNumber(dayView.onlyNet);
+    const apiStroke = parseNumber(dayView.strokeNumber);
+    // Initial guess — may be overwritten after mode detection.
     const stablefordPoints = parseNumber(dayView.onlyNet ?? (isNet ? dayView.result : null));
     const scratchScore = parseNumber(dayView.strokeNumber ?? dayView.onlyGross ?? (!isNet ? dayView.result : null));
 
     const license = player.license || "";
     const isSenior = seniorLicenses.has(license);
 
-    // Detect status from any string flag GolfDirecto exposes for this entry.
-    // GolfDirecto puts short codes like "NE" (no entregado = retired) or "NP"
-    // (no presentado = no_show) in flag/status/code/observations and sometimes
-    // as the rendered position or result text.
     const status = detectStatus(
       entry.status, player.status,
       dayView.flag, dayView.flags, dayView.status, dayView.code, dayView.text,
@@ -254,6 +290,10 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
 
     entryDataList.push({
       playerId: player._id || "",
+      apiOnlyGross,
+      apiOnlyNet,
+      apiStrokeNumber: apiStroke,
+      hcpGame,
       result: {
         position: positionValue != null ? Math.trunc(positionValue) : 0,
         name,
@@ -273,6 +313,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
       },
     });
   }
+
 
 
   // Fetch hole-by-hole scorecards in parallel (batches of 10)
@@ -345,6 +386,115 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     await Promise.all(scorecardPromises);
   }
 
+  // ── Mode detection + Stableford recomputation ────────────────────────────
+  // GolfDirecto sometimes serves SCRATCH categories as stroke-play / relative-to-par
+  // instead of as gross-stableford points. We detect this by checking whether the API
+  // `onlyGross` value matches `strokeNumber - parTotal` (i.e. it represents strokes
+  // over par, not stableford points). When it does, the `onlyNet` value is also
+  // relative-to-par and we must recompute net stableford ourselves from the scorecard.
+
+  const parTotal = coursePar ? coursePar.reduce((a, b) => a + b, 0) : 0;
+  let computationMode: ComputationMode = "stableford_points";
+  let requiresSplit = false;
+  const missing: Set<string> = new Set();
+  let computationNote: string | null = null;
+
+  // Heuristic: Stableford net is always ≥0 and typically 18–45. Stroke-play / relative-to-par
+  // produces values that can be negative or low single digits. Strongest signal: any negative
+  // onlyNet ⇒ stroke mode. Fallback: median onlyNet < 15 ⇒ stroke mode.
+  const completedEntries = entryDataList.filter((e) => e.result.result_status === "completed");
+  const onlyNetVals = completedEntries
+    .map((e) => e.apiOnlyNet)
+    .filter((v): v is number => v != null);
+  const hasNegative = onlyNetVals.some((v) => v < 0);
+  let median = 0;
+  if (onlyNetVals.length > 0) {
+    const sorted = [...onlyNetVals].sort((a, b) => a - b);
+    median = sorted[Math.floor(sorted.length / 2)];
+  }
+  if (hasNegative || (onlyNetVals.length > 0 && median < 15)) {
+    computationMode = "strokes";
+  }
+  
+
+  if (computationMode === "strokes" && parTotal === 0) {
+    missing.add("par");
+  }
+
+
+
+  if (computationMode === "strokes") {
+    // Need par + handicap (stroke index) to compute net stableford.
+    if (!coursePar) missing.add("par");
+    const anyFemale = entryDataList.some((e) => (e.result.gender || "").toUpperCase() === "F");
+    if (!courseHandicap && !anyFemale) missing.add("stroke_index");
+    if (anyFemale && !courseHandicapWomen && !courseHandicap) missing.add("stroke_index_women");
+
+    if (coursePar && (courseHandicap || courseHandicapWomen)) {
+      // Compute net stableford per entry.
+      let computedCount = 0;
+      let skippedNoHcp = 0;
+      let skippedNoScores = 0;
+      for (const ed of entryDataList) {
+        if (ed.result.result_status !== "completed") continue;
+        const scores = ed.result.scores;
+        if (!Array.isArray(scores) || scores.length !== 18 || !scores.some((s) => s > 0)) {
+          skippedNoScores++;
+          continue;
+        }
+        const hpu = ed.hcpGame;
+        if (hpu == null) {
+          skippedNoHcp++;
+          continue;
+        }
+        const isFemale = (ed.result.gender || "").toUpperCase() === "F";
+        const sIndex = (isFemale && courseHandicapWomen) ? courseHandicapWomen : courseHandicap;
+        if (!sIndex) {
+          skippedNoHcp++;
+          continue;
+        }
+        // Compute strokes-received per hole from HPU + stroke index.
+        const hpuInt = Math.max(0, Math.round(hpu));
+        const base = Math.floor(hpuInt / 18);
+        const extra = hpuInt % 18;
+        const sr: number[] = sIndex.map((idx) => base + (idx <= extra ? 1 : 0));
+        let total = 0;
+        for (let i = 0; i < 18; i++) {
+          const strokes = scores[i];
+          if (!strokes || strokes <= 0) continue; // picked-up ball → 0 points
+          const par = coursePar[i];
+          const pts = Math.max(0, par + sr[i] + 2 - strokes);
+          total += pts;
+        }
+        ed.result.stableford_points = total;
+        ed.result._stableford_computed = true;
+        computedCount++;
+      }
+      computationNote = `Mode 'golpes' detectat: ${computedCount} resultats recalculats des de la tarjeta.`;
+      if (skippedNoHcp || skippedNoScores) {
+        const parts: string[] = [];
+        if (skippedNoHcp) parts.push(`${skippedNoHcp} sense HPU/stroke index`);
+        if (skippedNoScores) parts.push(`${skippedNoScores} sense tarjeta hoyo a hoyo`);
+        computationNote += ` ${parts.join(', ')}.`;
+        if (skippedNoHcp > 0 || skippedNoScores > 0) {
+          // Some entries could not be computed → require split-category fallback.
+          requiresSplit = true;
+          if (skippedNoHcp) missing.add("HPU");
+          if (skippedNoScores) missing.add("golpes_por_hoyo");
+        }
+      }
+    } else {
+      requiresSplit = true;
+      computationNote =
+        "No es pot calcular Stableford net des d'aquest enllaç perquè falten dades del camp. " +
+        "Puja els enllaços de Handicap Inferior i Handicap Superior — aquestes categories tornen els punts oficials.";
+    }
+  } else if (computationMode === "unknown") {
+    requiresSplit = true;
+    computationNote =
+      "Format desconegut: puja els enllaços de Handicap Inferior i Handicap Superior.";
+  }
+
   const results = entryDataList.map((ed) => ed.result);
   results.sort((a, b) => a.position - b.position);
 
@@ -355,8 +505,13 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
     course_handicap: courseHandicap,
     course_handicap_women: courseHandicapWomen,
     game_date: gameDate,
+    computation_mode: computationMode,
+    requires_split_categories: requiresSplit,
+    missing_fields: Array.from(missing),
+    computation_note: computationNote,
   };
 }
+
 
 // ─── TEEONE ────────────────────────────────────────────────────────────────────
 
