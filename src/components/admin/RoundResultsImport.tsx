@@ -427,6 +427,8 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     setLoading(true);
     setWarnings([]);
     setResults([]);
+    setImportDiagnostics(null);
+
 
     try {
       const responses = await Promise.all(
