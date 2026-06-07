@@ -1109,6 +1109,7 @@ export function GalaxyCupRankingPage() {
               )}
               <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
                 Ranking de fase regular y Majors · Los Playoffs se implementarán en una fase posterior.
+              </p>
               </TabsContent>
               <TabsContent value="rounds">
                 {data ? (
