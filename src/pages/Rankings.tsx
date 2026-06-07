@@ -747,7 +747,14 @@ export function CircuitoRankingPage() {
       <DashboardStrip>
         <DashboardCard
           label="Pruebas puntuables"
-          value={totalPruebas || '—'}
+          value={
+            <span className="flex items-baseline gap-0.5">
+              <span>{totalPruebas || '—'}</span>
+              {totalCircuitoRounds > 0 && (
+                <span className="text-[hsl(var(--gg-navy-deep))]/40 text-xl md:text-2xl font-light">/{totalCircuitoRounds}</span>
+              )}
+            </span>
+          }
           hint="Jornadas con resultados publicadas"
         />
         <DashboardCard
