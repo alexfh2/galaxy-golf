@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import type {
   PublicCircuitData,
   PublicResult,
