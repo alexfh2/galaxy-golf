@@ -495,6 +495,7 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
 export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
   const items = useMemo(() => buildCircuitoRoundBreakdown(data), [data]);
   const [catByRound, setCatByRound] = useState<Record<string, Category>>({});
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return <EmptyMessage>Todavía no hay resultados publicados para esta competición.</EmptyMessage>;
