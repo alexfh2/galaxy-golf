@@ -89,23 +89,27 @@ export default function Players() {
     // Posiciones por categoría dentro de cada competición.
     const circuitoPos = new Map<string, number>();
     const circuitoTotal = new Map<string, number>();
+    const circuitoCat = new Map<string, Category>();
     (['hcp_low', 'hcp_high'] as Category[]).forEach((cat) => {
       circuito
         .filter((r) => r.category === cat)
         .forEach((r, idx) => {
           circuitoPos.set(r.player_id, idx + 1);
           circuitoTotal.set(r.player_id, r.total);
+          circuitoCat.set(r.player_id, cat);
         });
     });
 
     const galaxyCupPos = new Map<string, number>();
     const galaxyCupPoints = new Map<string, number>();
+    const galaxyCupCat = new Map<string, Category>();
     (['hcp_low', 'hcp_high'] as Category[]).forEach((cat) => {
       galaxyCup
         .filter((r) => r.category === cat)
         .forEach((r, idx) => {
           galaxyCupPos.set(r.player_id, idx + 1);
           galaxyCupPoints.set(r.player_id, r.points);
+          galaxyCupCat.set(r.player_id, cat);
         });
     });
 
@@ -122,7 +126,12 @@ export default function Players() {
       const list = byPlayer.get(player.id) ?? [];
       if (list.length === 0) continue; // solo jugadores con resultados publicados
       const lastHcp = lastHcpMap.get(player.id) ?? null;
-      const cat = getGalaxyGolfCategoryByHandicap(lastHcp);
+      // Categoría fija por competición: prioriza la del Circuito; si no, la de GalaxyCup.
+      // El último hándicap solo es fallback informativo si no hay categoría puntuable.
+      const cat: Category | null =
+        circuitoCat.get(player.id) ??
+        galaxyCupCat.get(player.id) ??
+        getGalaxyGolfCategoryByHandicap(lastHcp);
       const sorted = [...list].sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
       const lastResult = sorted[0];
 
