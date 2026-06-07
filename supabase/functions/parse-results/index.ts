@@ -320,7 +320,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
   let coursePar: number[] | undefined;
   let courseHandicap: number[] | undefined;
   let courseHandicapWomen: number[] | undefined;
-  const batchSize = 10;
+  const batchSize = 40;
   for (let i = 0; i < entryDataList.length; i += batchSize) {
     const batch = entryDataList.slice(i, i + batchSize);
     const scorecardPromises = batch.map(async (ed) => {
@@ -328,7 +328,7 @@ async function parseGolfDirecto(url: string, format?: string): Promise<GolfDirec
       try {
         const cardRes = await fetch(
           `https://www.golfdirecto.com/web/home/score/player/${ed.playerId}/result?game=${gameId}`,
-          { headers: { Accept: "application/json" } }
+          { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) }
         );
         if (!cardRes.ok) return;
         const cardData = await cardRes.json();
