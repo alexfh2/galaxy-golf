@@ -920,7 +920,7 @@ export function GalaxyCupRankingPage() {
   const filtered = rows.filter((r) => r.category === category);
   const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
 
-  const { totalPruebas, totalMajors } = useMemo(() => {
+  const { totalPruebas, totalMajors, totalCupRounds, totalCupMajors } = useMemo(() => {
     const ids = new Set<string>();
     const majors = new Set<string>();
     for (const r of rows) {
@@ -929,8 +929,20 @@ export function GalaxyCupRankingPage() {
         if (h.isMajor) majors.add(h.round_id);
       }
     }
-    return { totalPruebas: ids.size, totalMajors: majors.size };
-  }, [rows]);
+    const allIds = new Set<string>();
+    const allMajors = new Set<string>();
+    for (const rc of data?.round_competitions ?? []) {
+      if (rc.competition?.slug !== 'galaxycup') continue;
+      if (rc.stage === 'regular' || rc.stage === 'major') allIds.add(rc.round_id);
+      if (rc.stage === 'major') allMajors.add(rc.round_id);
+    }
+    return {
+      totalPruebas: ids.size,
+      totalMajors: majors.size,
+      totalCupRounds: allIds.size,
+      totalCupMajors: allMajors.size,
+    };
+  }, [rows, data]);
   const categoryLabel = getGalaxyGolfCategoryLabel(category);
   const leaderLow = rows.find((r) => r.category === 'hcp_low') ?? null;
   const leaderHigh = rows.find((r) => r.category === 'hcp_high') ?? null;
