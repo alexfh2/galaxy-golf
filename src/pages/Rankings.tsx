@@ -697,11 +697,17 @@ export function CircuitoRankingPage() {
   const filtered = rows.filter((r) => r.category === category);
   const roundCols = useMemo(() => collectRounds(filtered), [filtered]);
 
-  const totalPruebas = useMemo(() => {
-    const ids = new Set<string>();
-    for (const r of rows) for (const h of r.history) ids.add(h.round_id);
-    return ids.size;
-  }, [rows]);
+  const { totalPruebas, totalCircuitoRounds } = useMemo(() => {
+    const playedIds = new Set<string>();
+    for (const r of rows) for (const h of r.history) playedIds.add(h.round_id);
+    const allIds = new Set<string>();
+    for (const rc of data?.round_competitions ?? []) {
+      if (rc.competition?.slug === 'circuito-galaxygolf' && rc.stage === 'regular') {
+        allIds.add(rc.round_id);
+      }
+    }
+    return { totalPruebas: playedIds.size, totalCircuitoRounds: allIds.size };
+  }, [rows, data]);
   const categoryLabel = getGalaxyGolfCategoryLabel(category);
   const leaderLow = rows.find((r) => r.category === 'hcp_low') ?? null;
   const leaderHigh = rows.find((r) => r.category === 'hcp_high') ?? null;
