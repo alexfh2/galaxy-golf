@@ -4,7 +4,8 @@ import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import { useQuery } from '@tanstack/react-query';
 
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { CircuitoRoundsBreakdown, GalaxyCupRoundsBreakdown } from '@/components/CompetitionBreakdown';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -768,7 +769,22 @@ export function CircuitoRankingPage() {
           ) : error ? (
             <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
           ) : (
-            <>
+            <Tabs defaultValue="ranking" className="w-full">
+              <TabsList className="mb-6 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm">
+                <TabsTrigger
+                  value="ranking"
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                >
+                  Ranking
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rounds"
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                >
+                  Resultados por prueba
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="ranking">
               <CategoryTabs category={category} onChange={setCategory} />
               {rows.length === 0 ? (
                 <EmptyMessage>
@@ -854,7 +870,15 @@ export function CircuitoRankingPage() {
               <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
                 Ranking regular provisional · La Gran Final se implementará en una fase posterior.
               </p>
-            </>
+              </TabsContent>
+              <TabsContent value="rounds">
+                {data ? (
+                  <CircuitoRoundsBreakdown data={data} />
+                ) : (
+                  <EmptyMessage>Cargando resultados...</EmptyMessage>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </section>
@@ -964,7 +988,22 @@ export function GalaxyCupRankingPage() {
           ) : error ? (
             <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
           ) : (
-            <>
+            <Tabs defaultValue="ranking" className="w-full">
+              <TabsList className="mb-6 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm">
+                <TabsTrigger
+                  value="ranking"
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                >
+                  Ranking
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rounds"
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                >
+                  Resultados por prueba
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="ranking">
               <CategoryTabs category={category} onChange={setCategory} accent="copper" />
               {rows.length === 0 ? (
                 <EmptyMessage>
@@ -1071,7 +1110,15 @@ export function GalaxyCupRankingPage() {
               <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
                 Ranking de fase regular y Majors · Los Playoffs se implementarán en una fase posterior.
               </p>
-            </>
+              </TabsContent>
+              <TabsContent value="rounds">
+                {data ? (
+                  <GalaxyCupRoundsBreakdown data={data} />
+                ) : (
+                  <EmptyMessage>Cargando resultados...</EmptyMessage>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </section>
