@@ -501,7 +501,7 @@ export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
     return <EmptyMessage>Todavía no hay resultados publicados para esta competición.</EmptyMessage>;
   }
 
-  return (
+  return (<>
     <Accordion type="multiple" className="space-y-3">
       {items.map(({ round, rowsByCat }) => {
         const total = rowsByCat.hcp_low.length + rowsByCat.hcp_high.length;
@@ -558,7 +558,15 @@ export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
                           {rows.map((row, i) => (
                             <TableRow key={row.player_id} className="border-b border-[hsl(var(--gg-navy-deep))]/8">
                               <TableCell className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/85">{i + 1}</TableCell>
-                              <TableCell className="text-sm text-[hsl(var(--gg-navy-deep))]">{row.name}</TableCell>
+                              <TableCell className="text-sm">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPlayerId(row.player_id)}
+                                  className="text-left hover:underline decoration-[hsl(var(--gg-green))]/50 underline-offset-2 text-[hsl(var(--gg-navy-deep))] hover:text-[hsl(var(--gg-green))] transition-colors cursor-pointer"
+                                >
+                                  {row.name}
+                                </button>
+                              </TableCell>
                               <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{fmtHcp(row.handicap) ?? '—'}</TableCell>
                               <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">{row.stableford}</TableCell>
                               <TableCell className="text-center"><StatusBadge status={row.status} /></TableCell>
@@ -577,7 +585,12 @@ export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
         );
       })}
     </Accordion>
-  );
+    <PlayerProfileDialog
+      playerId={selectedPlayerId}
+      open={!!selectedPlayerId}
+      onOpenChange={(o) => !o && setSelectedPlayerId(null)}
+    />
+  </>);
 }
 
 export function GalaxyCupRoundsBreakdown({ data }: { data: PublicCircuitData }) {
