@@ -4,7 +4,8 @@ import PlayerProfileDialog from '@/components/PlayerProfileDialog';
 import { useQuery } from '@tanstack/react-query';
 
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { CircuitoRoundsBreakdown, GalaxyCupRoundsBreakdown } from '@/components/CompetitionBreakdown';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
