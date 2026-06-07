@@ -984,20 +984,34 @@ export function GalaxyCupRankingPage() {
       />
       <DashboardStrip>
         <DashboardCard
-          label="Jugadores en ranking"
-          value={filtered.length || '—'}
-          hint={categoryLabel}
-        />
-        <DashboardCard
           label="Pruebas puntuables"
-          value={totalPruebas || '—'}
+          value={
+            <span className="flex items-baseline gap-0.5">
+              <span>{totalPruebas || '—'}</span>
+              {totalCupRounds > 0 && (
+                <span className="text-[hsl(var(--gg-navy-deep))]/40 text-xl md:text-2xl font-light">/{totalCupRounds}</span>
+              )}
+            </span>
+          }
           hint="Jornadas con resultados publicadas"
         />
         <DashboardCard
           label="Majors puntuables"
-          value={totalMajors || '—'}
+          value={
+            <span className="flex items-baseline gap-0.5">
+              <span>{totalMajors || '—'}</span>
+              {totalCupMajors > 0 && (
+                <span className="text-[hsl(var(--gg-navy-deep))]/40 text-xl md:text-2xl font-light">/{totalCupMajors}</span>
+              )}
+            </span>
+          }
           hint="Puntuación mayor en torneos especiales"
           accent="copper"
+        />
+        <DashboardCard
+          label="Jugadores en ranking"
+          value={filtered.length || '—'}
+          hint={categoryLabel}
         />
         <DashboardCard
           label="Ruta a Playoffs"
