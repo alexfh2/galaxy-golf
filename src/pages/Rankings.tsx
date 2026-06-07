@@ -315,19 +315,33 @@ export function computeGalaxyCup(
 
     for (const cat of ['hcp_low', 'hcp_high'] as Category[]) {
       const sorted = byCat[cat].sort((a, b) => {
+        // 1) Más puntos Stableford primero.
         const sa = Number(a.stableford_points ?? 0);
         const sb = Number(b.stableford_points ?? 0);
         if (sb !== sa) return sb - sa;
-        const ocA = a.official_category ?? null;
-        const ocB = b.official_category ?? null;
-        const opA = a.official_position ?? null;
-        const opB = b.official_position ?? null;
-        if (ocA && ocB && ocA === ocB && opA != null && opB != null) {
-          return opA - opB;
+        // 2) Hándicap más bajo en esa prueba primero.
+        const hAraw = a.handicap_at_round;
+        const hBraw = b.handicap_at_round;
+        const hAvalid = hAraw != null && !Number.isNaN(Number(hAraw));
+        const hBvalid = hBraw != null && !Number.isNaN(Number(hBraw));
+        if (hAvalid && hBvalid) {
+          const hA = Number(hAraw);
+          const hB = Number(hBraw);
+          if (hA !== hB) return hA - hB;
+        } else if (hAvalid !== hBvalid) {
+          // Si solo uno tiene HCP, ese va por delante.
+          return hAvalid ? -1 : 1;
+        } else {
+          // Ninguno tiene HCP: fallback auditoría a official_position si comparten categoría oficial.
+          const ocA = a.official_category ?? null;
+          const ocB = b.official_category ?? null;
+          const opA = a.official_position ?? null;
+          const opB = b.official_position ?? null;
+          if (ocA && ocB && ocA === ocB && opA != null && opB != null && opA !== opB) {
+            return opA - opB;
+          }
         }
-        const hA = Number(a.handicap_at_round ?? 999);
-        const hB = Number(b.handicap_at_round ?? 999);
-        if (hA !== hB) return hA - hB;
+        // 3) Fallback estable: nombre alfabético.
         const nA = a.players_public?.name ?? '';
         const nB = b.players_public?.name ?? '';
         return nA.localeCompare(nB, 'es');
