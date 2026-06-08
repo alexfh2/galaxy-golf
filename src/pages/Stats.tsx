@@ -165,6 +165,10 @@ export default function Stats() {
   });
 
   const [bestTab, setBestTab] = useState<"hcp_low" | "hcp_high" | "scratch">("hcp_low");
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const openPlayer = (id?: string | null) => {
+    if (id) setSelectedPlayerId(id);
+  };
 
   const completedResults = useMemo(
     () => (data?.results ?? []).filter(isCompleted),
@@ -624,6 +628,12 @@ export default function Stats() {
           </div>
         </div>
       </section>
+
+      <PlayerProfileDialog
+        playerId={selectedPlayerId}
+        open={!!selectedPlayerId}
+        onOpenChange={(o) => !o && setSelectedPlayerId(null)}
+      />
     </>
   );
 }
