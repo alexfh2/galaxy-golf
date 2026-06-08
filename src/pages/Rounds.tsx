@@ -371,7 +371,7 @@ const Rounds = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Segmented control */}
           <div className="-mx-4 px-4 lg:mx-0 lg:px-0 overflow-x-auto">
-            <div className="inline-flex p-1 bg-[hsl(var(--gg-navy))]/60 border border-[hsl(var(--gg-gold))]/20 whitespace-nowrap">
+            <div className="inline-flex p-1 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-border-light))] whitespace-nowrap">
               {filterOptions.map((opt) => {
                 const active = filter === opt.value;
                 return (
@@ -380,8 +380,8 @@ const Rounds = () => {
                     onClick={() => setFilter(opt.value)}
                     className={`px-4 py-2 text-[11px] font-semibold tracking-[0.18em] uppercase transition-all ${
                       active
-                        ? 'bg-[hsl(var(--gg-green))] text-[#FFFDF8] border border-[hsl(var(--gg-gold))]/60'
-                        : 'text-[hsl(var(--gg-ivory))]/60 hover:text-[hsl(var(--gg-gold))] border border-transparent'
+                        ? 'bg-[hsl(var(--gg-green))] text-[#FFFDF8]'
+                        : 'text-[hsl(var(--gg-text-muted))] hover:text-[hsl(var(--gg-green))]'
                     }`}
                   >
                     {opt.label}
@@ -392,19 +392,19 @@ const Rounds = () => {
           </div>
 
           {/* Summary */}
-          <div className="flex items-center gap-4 border border-[hsl(var(--gg-gold))]/20 bg-[hsl(var(--gg-navy))]/40 px-5 py-3">
+          <div className="flex items-center gap-4 border border-[hsl(var(--gg-border-light))] bg-[hsl(var(--gg-surface-light))] px-5 py-3">
             {filter === 'galaxycup' && (
               <Trophy className="h-5 w-5 text-[hsl(var(--gg-copper))]" strokeWidth={1.4} />
             )}
             <div className="flex flex-col">
-              <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-[hsl(var(--gg-gold))]/80">
+              <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-[hsl(var(--gg-green))]">
                 {summary.title}
               </span>
-              <span className="font-display text-xl text-[hsl(var(--gg-ivory))]">
+              <span className="font-display text-xl text-[hsl(var(--gg-navy-deep))]">
                 {summary.count} pruebas
               </span>
               {summary.support && (
-                <span className="text-[10px] text-[hsl(var(--gg-ivory))]/55 tracking-wide">
+                <span className="text-[10px] text-[hsl(var(--gg-text-muted))] tracking-wide">
                   {summary.support}
                 </span>
               )}
