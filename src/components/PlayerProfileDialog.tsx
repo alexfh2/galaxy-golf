@@ -197,7 +197,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
   })();
 
   const summary = [
-    { label: 'Rondas jugadas', value: roundsPlayed },
+    { label: 'Torneos jugados', value: roundsPlayed },
     { label: 'Mejor Stableford', value: bestStb },
     { label: 'Media Stableford', value: avgStb },
     { label: 'Hándicap actual', value: lastHcp ?? '—' },
@@ -238,7 +238,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
               {player.name}
             </h3>
             <p className="text-xs text-[hsl(var(--gg-navy-deep))]/65 mt-1">
-              {roundsPlayed} {roundsPlayed === 1 ? 'ronda' : 'rondas'}
+              {roundsPlayed} {roundsPlayed === 1 ? 'torneo' : 'torneos'}
               {lastHcp != null && <> · Hcp {lastHcp}</>}
               {player.club && <> · {player.club}</>}
             </p>
@@ -376,7 +376,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
           {/* Historial de rondas */}
           <div>
             <h4 className="font-display text-lg text-[hsl(var(--gg-navy-deep))] mb-3">
-              Historial de rondas
+              Historial de torneos
             </h4>
             {results && results.length > 0 ? (
               <Accordion type="multiple" value={openCards} onValueChange={setOpenCards} className="space-y-2">
@@ -497,7 +497,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
               </Accordion>
             ) : (
               <p className="text-sm text-[hsl(var(--gg-navy-deep))]/55 text-center py-4">
-                Sin rondas registradas.
+                Sin torneos registrados.
               </p>
             )}
           </div>
