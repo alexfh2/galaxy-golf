@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Circuito GalaxyGolf', path: '/circuito-galaxygolf' },
   { label: 'GalaxyCup', path: '/galaxycup' },
   { label: 'Calendario', path: '/jornades' },
+  { label: 'Estadísticas', path: '/estadistiques' },
   { label: 'Noticias', path: '/noticies' },
   { label: 'Jugadores', path: '/jugadors' },
 ] as const;
