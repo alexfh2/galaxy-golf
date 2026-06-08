@@ -75,11 +75,11 @@ function Panel({
 }) {
   return (
     <section
-      className={`border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] p-6 md:p-7 shadow-[0_6px_24px_-16px_rgba(11,19,36,0.18)] ${className}`}
+      className={`border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))] p-6 md:p-7 shadow-[0_4px_16px_-10px_rgba(11,19,36,0.10)] ${className}`}
     >
       <header className="flex items-center gap-2 mb-5 pb-3 border-b border-[hsl(var(--gg-navy-deep))]/10">
         {icon && <span className="text-[hsl(var(--gg-copper))]">{icon}</span>}
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/75">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/80">
           {title}
         </h2>
       </header>
@@ -90,7 +90,7 @@ function Panel({
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="py-8 text-center text-sm text-[hsl(var(--gg-navy-deep))]/55 italic">
+    <div className="py-8 text-center text-sm text-[hsl(var(--gg-navy-deep))]/65 italic">
       {text}
     </div>
   );
@@ -122,7 +122,7 @@ function LeaderRow({
             {name || "Pendiente"}
           </div>
           {meta && (
-            <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55 mt-0.5">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65 mt-0.5">
               {meta}
             </div>
           )}
@@ -133,7 +133,7 @@ function LeaderRow({
           {value}
         </div>
         {valueHint && (
-          <div className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/50 mt-1">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/60 mt-1">
             {valueHint}
           </div>
         )}
@@ -335,32 +335,32 @@ export default function Stats() {
             </div>
             <div className="flex lg:justify-end">
               <div
-                className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] p-6 md:p-7 shadow-[0_24px_60px_-24px_rgba(11,19,36,0.4)]"
-                style={{ borderTop: "2px solid hsl(var(--gg-gold))" }}
+                className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] text-[hsl(var(--gg-navy-deep))] p-6 md:p-7 shadow-[0_12px_32px_-12px_rgba(11,19,36,0.14)]"
+                style={{ borderTop: "2px solid hsl(var(--gg-copper))" }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <Trophy className="h-5 w-5 text-[hsl(var(--gg-gold))]" />
-                  <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/80">
+                  <Trophy className="h-5 w-5 text-[hsl(var(--gg-copper))]" />
+                  <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/70">
                     Temporada en curso
                   </span>
                 </div>
-                <div className="font-display text-5xl font-light leading-none mb-5">
+                <div className="font-display text-5xl font-light leading-none mb-5 text-[hsl(var(--gg-green))]">
                   2026
                 </div>
-                <div className="space-y-3 pt-4 border-t border-[hsl(var(--gg-ivory))]/15">
+                <div className="space-y-3 pt-4 border-t border-[hsl(var(--gg-navy-deep))]/10">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/75">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/65">
                       Jornadas disputadas
                     </span>
-                    <span className="font-sans font-semibold text-xl tabular-nums">
+                    <span className="font-sans font-semibold text-xl tabular-nums text-[hsl(var(--gg-copper))]">
                       {isLoading ? "—" : jornadasDisputadas}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/75">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/65">
                       Jugadores en ranking
                     </span>
-                    <span className="font-sans font-semibold text-xl tabular-nums">
+                    <span className="font-sans font-semibold text-xl tabular-nums text-[hsl(var(--gg-copper))]">
                       {isLoading ? "—" : jugadoresEnRanking}
                     </span>
                   </div>
@@ -405,7 +405,7 @@ export default function Stats() {
 
             {/* Mejores vueltas */}
             <Panel title="Mejores vueltas" icon={<Trophy className="h-4 w-4" />}>
-              <div className="grid grid-cols-3 gap-1 p-1 bg-[hsl(var(--gg-bg-light))] mb-4 border border-[hsl(var(--gg-navy-deep))]/10">
+              <div className="grid grid-cols-3 gap-1 p-1 bg-[hsl(var(--gg-surface-light))] mb-4 border border-[hsl(var(--gg-navy-deep))]/10">
                 {([
                   ["hcp_low", "Hcp Inferior"],
                   ["hcp_high", "Hcp Superior"],
@@ -417,7 +417,7 @@ export default function Stats() {
                     className={`text-[10px] uppercase tracking-[0.18em] py-2 transition-colors ${
                       bestTab === key
                         ? "bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))]"
-                        : "text-[hsl(var(--gg-navy-deep))]/60 hover:text-[hsl(var(--gg-navy-deep))]"
+                        : "bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
                     }`}
                   >
                     {label}
@@ -460,18 +460,18 @@ export default function Stats() {
                 <>
                   <div className="grid grid-cols-2 gap-4 mb-5 pb-5 border-b border-[hsl(var(--gg-navy-deep))]/10">
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55">
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
                         Total temporada
                       </div>
-                      <div className="font-display text-3xl text-[hsl(var(--gg-green))] mt-1">
+                      <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1">
                         {birdiesData.totalBirdies}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55">
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
                         Tarjetas usadas
                       </div>
-                      <div className="font-display text-3xl text-[hsl(var(--gg-copper))] mt-1">
+                      <div className="font-display text-2xl text-[hsl(var(--gg-copper))] mt-1">
                         {birdiesData.sample}
                       </div>
                     </div>
@@ -561,7 +561,7 @@ export default function Stats() {
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55">
+      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
         {label}
       </div>
       <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1 tabular-nums">
