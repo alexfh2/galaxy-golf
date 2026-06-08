@@ -245,7 +245,7 @@ export default function Stats() {
     completedResults
       .filter((r) => catMap.get(r.player_id) === cat && r.stableford_points != null)
       .sort((a, b) => Number(b.stableford_points) - Number(a.stableford_points))
-      .slice(0, 5);
+    .slice(0, 20);
 
   const bestLow = useMemo(() => bestStableford("hcp_low"), [completedResults, catMap]);
   const bestHigh = useMemo(() => bestStableford("hcp_high"), [completedResults, catMap]);
@@ -299,7 +299,7 @@ export default function Stats() {
         return { result: s.result, points: pts };
       })
       .sort((a, b) => b.points - a.points)
-      .slice(0, 5);
+    .slice(0, 20);
   }, [reliableStrokes]);
 
   const birdiesData = useMemo(() => {
@@ -320,7 +320,7 @@ export default function Stats() {
       prev.count += birds;
       byPlayer.set(s.result.player_id, prev);
     }
-    const top = [...byPlayer.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+    const top = [...byPlayer.values()].sort((a, b) => b.count - a.count).slice(0, 20);
     return { totalBirdies, top, sample: reliableStrokes.length };
   }, [reliableStrokes]);
 
@@ -388,8 +388,8 @@ export default function Stats() {
 
     const valid = allHoles.filter((h) => h.diff != null);
     if (valid.length === 0) return null;
-    const hard = [...valid].sort((a, b) => b.diff! - a.diff!).slice(0, 5);
-    const easy = [...valid].sort((a, b) => a.diff! - b.diff!).slice(0, 5);
+    const hard = [...valid].sort((a, b) => b.diff! - a.diff!).slice(0, 20);
+    const easy = [...valid].sort((a, b) => a.diff! - b.diff!).slice(0, 20);
     return { hard, easy };
   }, [reliableStrokes]);
 
@@ -554,7 +554,7 @@ export default function Stats() {
                 bestScratch.length === 0 ? (
                   <EmptyState text="Datos scratch no disponibles con los datos actuales." />
                 ) : (
-                  <div>
+                  <div className="max-h-[280px] overflow-y-auto">
                     {bestScratch.map((s, i) => (
                       <LeaderRow
                         key={s.result.id}
@@ -571,7 +571,7 @@ export default function Stats() {
               ) : bestList.length === 0 ? (
                 <EmptyState text="Datos no disponibles todavía" />
               ) : (
-                <div>
+                <div className="max-h-[280px] overflow-y-auto">
                   {bestList.map((r, i) => (
                     <LeaderRow
                       key={r.id}
@@ -614,16 +614,18 @@ export default function Stats() {
                   <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--gg-copper))] mb-2">
                     Top jugadores
                   </div>
-                  {birdiesData.top.map((p, i) => (
-                    <LeaderRow
-                      key={p.id + i}
-                      rank={i + 1}
-                      name={p.name}
-                      value={p.count}
-                      valueHint="birdies"
-                      onNameClick={() => openPlayer(p.id)}
-                    />
-                  ))}
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {birdiesData.top.map((p, i) => (
+                      <LeaderRow
+                        key={p.id + i}
+                        rank={i + 1}
+                        name={p.name}
+                        value={p.count}
+                        valueHint="birdies"
+                        onNameClick={() => openPlayer(p.id)}
+                      />
+                    ))}
+                  </div>
                 </>
               )}
             </Panel>
@@ -636,16 +638,18 @@ export default function Stats() {
               {holesData == null ? (
                 <EmptyState text="Datos no disponibles todavía" />
               ) : (
-                holesData.hard.map((h, i) => (
-                  <LeaderRow
-                    key={`${h.course}__${h.hole}`}
-                    rank={i + 1}
-                    name={`Hoyo ${h.hole}`}
-                    meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
-                    value={h.avg?.toFixed(2)}
-                    valueHint="Promedio"
-                  />
-                ))
+                <div className="max-h-[280px] overflow-y-auto">
+                  {holesData.hard.map((h, i) => (
+                    <LeaderRow
+                      key={`${h.course}__${h.hole}`}
+                      rank={i + 1}
+                      name={`Hoyo ${h.hole}`}
+                      meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
+                      value={h.avg?.toFixed(2)}
+                      valueHint="Promedio"
+                    />
+                  ))}
+                </div>
               )}
             </Panel>
 
@@ -654,16 +658,18 @@ export default function Stats() {
               {holesData == null ? (
                 <EmptyState text="Datos no disponibles todavía" />
               ) : (
-                holesData.easy.map((h, i) => (
-                  <LeaderRow
-                    key={`${h.course}__${h.hole}`}
-                    rank={i + 1}
-                    name={`Hoyo ${h.hole}`}
-                    meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
-                    value={h.avg?.toFixed(2)}
-                    valueHint="Promedio"
-                  />
-                ))
+                <div className="max-h-[280px] overflow-y-auto">
+                  {holesData.easy.map((h, i) => (
+                    <LeaderRow
+                      key={`${h.course}__${h.hole}`}
+                      rank={i + 1}
+                      name={`Hoyo ${h.hole}`}
+                      meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
+                      value={h.avg?.toFixed(2)}
+                      valueHint="Promedio"
+                    />
+                  ))}
+                </div>
               )}
             </Panel>
 
