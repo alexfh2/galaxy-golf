@@ -393,6 +393,99 @@ export default function Stats() {
     return { hard, easy };
   }, [reliableStrokes]);
 
+  /* Campos más difíciles / fáciles — promedio de golpes vs par por vuelta */
+  const coursesData = useMemo(() => {
+    if (reliableStrokes.length === 0) return null;
+    const courseNameOf = (r: PublicResult) =>
+      r.rounds?.course?.trim() ||
+      r.rounds?.club?.trim() ||
+      r.rounds?.name?.trim() ||
+      "Campo no especificado";
+
+    type Agg = { name: string; sumDiff: number; sumStrokes: number; sumPar: number; count: number };
+    const byCourse = new Map<string, Agg>();
+    for (const s of reliableStrokes) {
+      const name = courseNameOf(s.result);
+      let strokes = 0;
+      let par = 0;
+      for (let i = 0; i < 18; i++) {
+        strokes += Number(s.scores[i]);
+        par += Number(s.par[i]);
+      }
+      const cur = byCourse.get(name) ?? { name, sumDiff: 0, sumStrokes: 0, sumPar: 0, count: 0 };
+      cur.sumDiff += strokes - par;
+      cur.sumStrokes += strokes;
+      cur.sumPar += par;
+      cur.count += 1;
+      byCourse.set(name, cur);
+    }
+    const arr = [...byCourse.values()]
+      .filter((c) => c.count >= 2)
+      .map((c) => ({
+        name: c.name,
+        avgDiff: c.sumDiff / c.count,
+        avgStrokes: c.sumStrokes / c.count,
+        avgPar: c.sumPar / c.count,
+        rounds: c.count,
+      }));
+    if (arr.length === 0) return null;
+    const hard = [...arr].sort((a, b) => b.avgDiff - a.avgDiff).slice(0, 20);
+    const easy = [...arr].sort((a, b) => a.avgDiff - b.avgDiff).slice(0, 20);
+    return { hard, easy };
+  }, [reliableStrokes]);
+
+  /* Eagles, Albatros & Hole in One */
+  const specialScores = useMemo(() => {
+    if (reliableStrokes.length === 0) return null;
+    type Entry = {
+      player_id: string;
+      name: string;
+      type: "hio" | "albatross" | "eagle";
+      hole: number;
+      par: number;
+      score: number;
+      course: string;
+      date?: string | null;
+    };
+    const entries: Entry[] = [];
+    for (const s of reliableStrokes) {
+      for (let i = 0; i < 18; i++) {
+        const sc = Number(s.scores[i]);
+        const par = Number(s.par[i]);
+        let type: Entry["type"] | null = null;
+        if (sc === 1) type = "hio";
+        else if (sc === par - 3) type = "albatross";
+        else if (sc === par - 2) type = "eagle";
+        if (!type) continue;
+        entries.push({
+          player_id: s.result.player_id,
+          name: s.result.players_public?.name ?? "—",
+          type,
+          hole: i + 1,
+          par,
+          score: sc,
+          course:
+            s.result.rounds?.course?.trim() ||
+            s.result.rounds?.club?.trim() ||
+            s.result.rounds?.name?.trim() ||
+            "—",
+          date: s.result.rounds?.date || s.result.play_date,
+        });
+      }
+    }
+    const counts = { hio: 0, albatross: 0, eagle: 0 };
+    for (const e of entries) counts[e.type]++;
+    const order: Record<Entry["type"], number> = { hio: 0, albatross: 1, eagle: 2 };
+    const list = [...entries].sort((a, b) => {
+      if (order[a.type] !== order[b.type]) return order[a.type] - order[b.type];
+      return (b.date ?? "").localeCompare(a.date ?? "");
+    }).slice(0, 20);
+    return { counts, list, total: entries.length };
+  }, [reliableStrokes]);
+
+  const specialLabel = (t: "hio" | "albatross" | "eagle") =>
+    t === "hio" ? "Hole in One" : t === "albatross" ? "Albatros" : "Eagle";
+
   return (
     <>
       {/* HERO */}
