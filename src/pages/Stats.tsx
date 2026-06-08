@@ -462,6 +462,7 @@ export default function Stats() {
                             meta={l.cat}
                             value={l.value ?? "—"}
                             valueHint={l.value != null ? l.hint : undefined}
+                            onNameClick={l.player_id ? () => openPlayer(l.player_id) : undefined}
                           />
                         ))}
                     </div>
@@ -504,6 +505,7 @@ export default function Stats() {
                         meta={`${venueName(s.result)} · ${fmtDate(s.result.rounds?.date || s.result.play_date)}`}
                         value={s.points}
                         valueHint="pts"
+                        onNameClick={() => openPlayer(s.result.player_id)}
                       />
                     ))}
                   </div>
@@ -520,6 +522,7 @@ export default function Stats() {
                       meta={`${venueName(r)} · ${fmtDate(r.rounds?.date || r.play_date)}`}
                       value={Number(r.stableford_points)}
                       valueHint="pts"
+                      onNameClick={() => openPlayer(r.player_id)}
                     />
                   ))}
                 </div>
@@ -555,11 +558,12 @@ export default function Stats() {
                   </div>
                   {birdiesData.top.map((p, i) => (
                     <LeaderRow
-                      key={p.name + i}
+                      key={p.id + i}
                       rank={i + 1}
                       name={p.name}
                       value={p.count}
                       valueHint="birdies"
+                      onNameClick={() => openPlayer(p.id)}
                     />
                   ))}
                 </>
