@@ -473,14 +473,25 @@ export default function Stats() {
                   </button>
                 ))}
               </div>
-              {bestList.length === 0 ? (
-                <EmptyState
-                  text={
-                    bestTab === "scratch"
-                      ? "Datos scratch no disponibles."
-                      : "Datos no disponibles todavía"
-                  }
-                />
+              {bestTab === "scratch" ? (
+                bestScratch.length === 0 ? (
+                  <EmptyState text="Datos scratch no disponibles con los datos actuales." />
+                ) : (
+                  <div>
+                    {bestScratch.map((s, i) => (
+                      <LeaderRow
+                        key={s.result.id}
+                        rank={i + 1}
+                        name={s.result.players_public?.name ?? "—"}
+                        meta={`${venueName(s.result)} · ${fmtDate(s.result.rounds?.date || s.result.play_date)}`}
+                        value={s.points}
+                        valueHint="pts"
+                      />
+                    ))}
+                  </div>
+                )
+              ) : bestList.length === 0 ? (
+                <EmptyState text="Datos no disponibles todavía" />
               ) : (
                 <div>
                   {bestList.map((r, i) => (
@@ -489,12 +500,8 @@ export default function Stats() {
                       rank={i + 1}
                       name={r.players_public?.name ?? "—"}
                       meta={`${venueName(r)} · ${fmtDate(r.rounds?.date || r.play_date)}`}
-                      value={
-                        bestTab === "scratch"
-                          ? Number(r.scratch_score)
-                          : Number(r.stableford_points)
-                      }
-                      valueHint={bestTab === "scratch" ? "pts" : "pts"}
+                      value={Number(r.stableford_points)}
+                      valueHint="pts"
                     />
                   ))}
                 </div>
