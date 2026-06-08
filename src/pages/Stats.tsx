@@ -561,7 +561,7 @@ export default function Stats() {
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55">
+      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
         {label}
       </div>
       <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1 tabular-nums">
