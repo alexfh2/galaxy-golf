@@ -30,6 +30,7 @@ const Rounds = () => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [activeResultTab, setActiveResultTab] = useState('hcpLow');
   const [filter, setFilter] = useState<CompetitionFilter>('all');
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
 
   const { data: rounds, isLoading } = useQuery({
     queryKey: ['public-rounds-all-with-competitions'],
