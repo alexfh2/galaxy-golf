@@ -362,7 +362,7 @@ export default function Players() {
                 <SelectItem value="circuito">Por ranking Circuito</SelectItem>
                 <SelectItem value="galaxycup">Por ranking GalaxyCup</SelectItem>
                 <SelectItem value="hcp">Por último hándicap</SelectItem>
-                <SelectItem value="rounds">Por pruebas jugadas</SelectItem>
+                <SelectItem value="rounds">Por torneos jugados</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -456,7 +456,7 @@ function RosterList({
         <div>Categoría</div>
         <div>Circuito</div>
         <div>GalaxyCup</div>
-        <div className="text-center">Pruebas</div>
+        <div className="text-center">Torneos</div>
         <div>Última jornada</div>
         <div />
       </div>
@@ -549,7 +549,7 @@ function PlayerRowItem({ player, onSelect }: { player: PlayerRow; onSelect: () =
                 <ChevronRight className="h-4 w-4 mt-1 shrink-0 text-[hsl(var(--gg-navy-deep))]/40" />
               </div>
               <div className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/55">
-                Hcp {fmtHcp(player.lastHcp)} · {catLabel}
+                {player.roundsPlayed} {player.roundsPlayed === 1 ? 'torneo' : 'torneos'} · Hcp {fmtHcp(player.lastHcp)} · {catLabel}
               </div>
 
               <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -576,8 +576,8 @@ function PlayerRowItem({ player, onSelect }: { player: PlayerRow; onSelect: () =
               </div>
 
               <div className="mt-3 flex items-center justify-between border-t border-[hsl(var(--gg-navy-deep))]/10 pt-2 text-[11px] text-[hsl(var(--gg-navy-deep))]/65">
-                <span>
-                  {player.roundsPlayed} {player.roundsPlayed === 1 ? 'prueba' : 'pruebas'}
+                <span className="uppercase font-semibold tracking-wider">
+                  TORNEOS JUGADOS: {player.roundsPlayed}
                 </span>
                 {player.lastRoundLabel && (
                   <span className="truncate ml-3">Última: {player.lastRoundLabel}</span>
