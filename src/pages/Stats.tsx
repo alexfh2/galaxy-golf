@@ -547,12 +547,12 @@ export default function Stats() {
               ) : (
                 holesData.hard.map((h, i) => (
                   <LeaderRow
-                    key={`${h.course}-${h.hole}`}
+                    key={`${h.course}__${h.hole}`}
                     rank={i + 1}
                     name={`Hoyo ${h.hole}`}
-                    meta={`${h.course} · Par ${h.par}`}
+                    meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
                     value={h.avg?.toFixed(2)}
-                    valueHint="promedio"
+                    valueHint="Promedio"
                   />
                 ))
               )}
@@ -565,12 +565,12 @@ export default function Stats() {
               ) : (
                 holesData.easy.map((h, i) => (
                   <LeaderRow
-                    key={`${h.course}-${h.hole}`}
+                    key={`${h.course}__${h.hole}`}
                     rank={i + 1}
                     name={`Hoyo ${h.hole}`}
-                    meta={`${h.course} · Par ${h.par}`}
+                    meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
                     value={h.avg?.toFixed(2)}
-                    valueHint="promedio"
+                    valueHint="Promedio"
                   />
                 ))
               )}
