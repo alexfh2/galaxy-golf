@@ -204,17 +204,8 @@ export default function Stats() {
 
   const bestLow = useMemo(() => bestStableford("hcp_low"), [completedResults, catMap]);
   const bestHigh = useMemo(() => bestStableford("hcp_high"), [completedResults, catMap]);
-  const bestScratch = useMemo(
-    () =>
-      completedResults
-        .filter((r) => r.scratch_score != null)
-        .sort((a, b) => Number(b.scratch_score) - Number(a.scratch_score))
-        .slice(0, 5),
-    [completedResults],
-  );
-
   const bestList =
-    bestTab === "hcp_low" ? bestLow : bestTab === "hcp_high" ? bestHigh : bestScratch;
+    bestTab === "hcp_low" ? bestLow : bestTab === "hcp_high" ? bestHigh : [];
 
   /* Promedios */
   const promedios = useMemo(() => {
