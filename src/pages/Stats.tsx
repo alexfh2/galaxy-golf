@@ -133,7 +133,7 @@ function LeaderRow({
           {value}
         </div>
         {valueHint && (
-          <div className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/50 mt-1">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/60 mt-1">
             {valueHint}
           </div>
         )}
