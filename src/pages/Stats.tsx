@@ -278,17 +278,38 @@ export default function Stats() {
   const holesData = useMemo(() => {
     if (reliableStrokes.length < 5) return null;
 
+    // Resolve course name with explicit fallback order: course → club → name → default
+    const courseNameOf = (r: PublicResult) =>
+      r.rounds?.course?.trim() ||
+      r.rounds?.club?.trim() ||
+      r.rounds?.name?.trim() ||
+      "Campo no especificado";
+
     // Group strokes by course so averages are per-course (mixing different courses is meaningless)
-    const byCourse = new Map<string, { scores: number[][]; par: number[] }>();
+    const byCourse = new Map<
+      string,
+      { scores: number[][]; par: number[]; hcp: (number | null)[] }
+    >();
     for (const s of reliableStrokes) {
-      const course = venueName(s.result);
+      const course = courseNameOf(s.result);
+      const rawHcp = (s.result.rounds as any)?.course_handicap;
+      const hcpArr: (number | null)[] = Array.isArray(rawHcp)
+        ? (rawHcp as any[]).map((v) => (typeof v === "number" ? v : null))
+        : Array.from({ length: 18 }, () => null);
       if (!byCourse.has(course)) {
-        byCourse.set(course, { scores: [], par: s.par });
+        byCourse.set(course, { scores: [], par: s.par, hcp: hcpArr });
       }
       byCourse.get(course)!.scores.push(s.scores);
     }
 
-    type CourseHole = { hole: number; par: number; avg: number | null; diff: number | null; course: string };
+    type CourseHole = {
+      hole: number;
+      par: number;
+      hcp: number | null;
+      avg: number | null;
+      diff: number | null;
+      course: string;
+    };
     const allHoles: CourseHole[] = [];
 
     for (const [course, data] of byCourse.entries()) {
@@ -305,7 +326,14 @@ export default function Stats() {
         const t = totals[i];
         const avg = t.count > 0 ? t.sum / t.count : null;
         const diff = avg != null ? avg - t.par : null;
-        allHoles.push({ hole: i + 1, par: t.par, avg, diff, course });
+        allHoles.push({
+          hole: i + 1,
+          par: t.par,
+          hcp: data.hcp[i] ?? null,
+          avg,
+          diff,
+          course,
+        });
       }
     }
 
@@ -519,12 +547,12 @@ export default function Stats() {
               ) : (
                 holesData.hard.map((h, i) => (
                   <LeaderRow
-                    key={`${h.course}-${h.hole}`}
+                    key={`${h.course}__${h.hole}`}
                     rank={i + 1}
                     name={`Hoyo ${h.hole}`}
-                    meta={`${h.course} · Par ${h.par}`}
+                    meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
                     value={h.avg?.toFixed(2)}
-                    valueHint="promedio"
+                    valueHint="Promedio"
                   />
                 ))
               )}
@@ -537,12 +565,12 @@ export default function Stats() {
               ) : (
                 holesData.easy.map((h, i) => (
                   <LeaderRow
-                    key={`${h.course}-${h.hole}`}
+                    key={`${h.course}__${h.hole}`}
                     rank={i + 1}
                     name={`Hoyo ${h.hole}`}
-                    meta={`${h.course} · Par ${h.par}`}
+                    meta={`${h.course} · Par ${h.par}${h.hcp != null ? ` · HCP ${h.hcp}` : ""}`}
                     value={h.avg?.toFixed(2)}
-                    valueHint="promedio"
+                    valueHint="Promedio"
                   />
                 ))
               )}
