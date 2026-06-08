@@ -75,7 +75,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] p-6 md:p-7 shadow-[0_6px_24px_-16px_rgba(11,19,36,0.18)] ${className}`}
+      className={`border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))] p-6 md:p-7 shadow-[0_4px_16px_-10px_rgba(11,19,36,0.10)] ${className}`}
     >
       <header className="flex items-center gap-2 mb-5 pb-3 border-b border-[hsl(var(--gg-navy-deep))]/10">
         {icon && <span className="text-[hsl(var(--gg-copper))]">{icon}</span>}
