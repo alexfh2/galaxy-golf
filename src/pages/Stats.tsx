@@ -208,7 +208,7 @@ export default function Stats() {
     () =>
       completedResults
         .filter((r) => r.scratch_score != null)
-        .sort((a, b) => Number(a.scratch_score) - Number(b.scratch_score))
+        .sort((a, b) => Number(b.scratch_score) - Number(a.scratch_score))
         .slice(0, 5),
     [completedResults],
   );
@@ -490,7 +490,7 @@ export default function Stats() {
                           ? Number(r.scratch_score)
                           : Number(r.stableford_points)
                       }
-                      valueHint={bestTab === "scratch" ? "golpes" : "pts"}
+                      valueHint={bestTab === "scratch" ? "pts" : "pts"}
                     />
                   ))}
                 </div>
