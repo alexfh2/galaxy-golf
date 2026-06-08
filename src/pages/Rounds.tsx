@@ -31,6 +31,16 @@ const Rounds = () => {
   const [activeResultTab, setActiveResultTab] = useState('hcpLow');
   const [filter, setFilter] = useState<CompetitionFilter>('all');
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const downloadBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const toggleDownloadMenu = () => {
+    if (!downloadMenuOpen && downloadBtnRef.current) {
+      const r = downloadBtnRef.current.getBoundingClientRect();
+      setMenuPos({ top: r.bottom + 8, right: window.innerWidth - r.right });
+    }
+    setDownloadMenuOpen((v) => !v);
+  };
 
   const { data: rounds, isLoading } = useQuery({
     queryKey: ['public-rounds-all-with-competitions'],
