@@ -72,6 +72,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authErr = await requireAdmin(req);
+  if (authErr) return authErr;
+
   try {
     const { url, file, mode } = await req.json();
     const isWomen = mode === 'women';
@@ -80,6 +83,10 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    if (url) {
+      const urlErr = validateExternalUrl(url);
+      if (urlErr) return urlErr;
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
