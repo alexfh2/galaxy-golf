@@ -89,6 +89,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authErr = await requireAdmin(req);
+  if (authErr) return authErr;
+
   try {
     const body = await req.json();
     const { url, file } = body;
@@ -98,6 +101,11 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: "URL or file is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (url) {
+      const urlErr = validateExternalUrl(url);
+      if (urlErr) return urlErr;
     }
 
     // If file (image/PDF) is provided, use AI to extract calendar data
