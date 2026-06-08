@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Users, ChevronDown, BarChart3, CalendarPlus, Trophy } from 'lucide-react';
