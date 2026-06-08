@@ -79,7 +79,7 @@ function Panel({
     >
       <header className="flex items-center gap-2 mb-5 pb-3 border-b border-[hsl(var(--gg-navy-deep))]/10">
         {icon && <span className="text-[hsl(var(--gg-copper))]">{icon}</span>}
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/75">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/80">
           {title}
         </h2>
       </header>
