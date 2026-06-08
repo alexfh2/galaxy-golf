@@ -460,18 +460,18 @@ export default function Stats() {
                 <>
                   <div className="grid grid-cols-2 gap-4 mb-5 pb-5 border-b border-[hsl(var(--gg-navy-deep))]/10">
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55">
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
                         Total temporada
                       </div>
-                      <div className="font-display text-3xl text-[hsl(var(--gg-green))] mt-1">
+                      <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1">
                         {birdiesData.totalBirdies}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55">
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
                         Tarjetas usadas
                       </div>
-                      <div className="font-display text-3xl text-[hsl(var(--gg-copper))] mt-1">
+                      <div className="font-display text-2xl text-[hsl(var(--gg-copper))] mt-1">
                         {birdiesData.sample}
                       </div>
                     </div>
