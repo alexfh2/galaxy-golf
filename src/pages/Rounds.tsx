@@ -178,10 +178,14 @@ const Rounds = () => {
     URL.revokeObjectURL(url);
   };
 
-  const downloadAllIcs = () => {
-    if (!visibleRounds?.length) return;
+  const downloadCalendarIcs = (scope: 'all' | CompetitionSlug) => {
+    if (!rounds?.length) return;
+    const source = scope === 'all'
+      ? rounds
+      : rounds.filter((r: any) => getLinks(r).some((l) => l.competitions?.slug === scope));
+    if (!source.length) return;
     const seen = new Set<string>();
-    const events = visibleRounds
+    const events = source
       .filter((r: any) => {
         if (seen.has(r.id)) return false;
         seen.add(r.id);
@@ -189,8 +193,15 @@ const Rounds = () => {
       })
       .map((r: any) => buildIcsEvent(r))
       .join('\r\n');
-    const ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//GalaxyGolf//CA\r\n${events}\r\nEND:VCALENDAR`;
-    downloadIcs(ics, 'galaxygolf-2026.ics');
+    const ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//GalaxyGolf//ES\r\n${events}\r\nEND:VCALENDAR`;
+    const filename =
+      scope === 'circuito-galaxygolf'
+        ? 'circuito-galaxygolf-2026.ics'
+        : scope === 'galaxycup'
+          ? 'galaxycup-2026.ics'
+          : 'galaxygolf-2026.ics';
+    downloadIcs(ics, filename);
+    setDownloadMenuOpen(false);
   };
 
   const { data: roundData } = useQuery({
