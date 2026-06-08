@@ -165,14 +165,34 @@ export default function Stats() {
   });
 
   const [bestTab, setBestTab] = useState<"hcp_low" | "hcp_high" | "scratch">("hcp_low");
+  const [scope, setScope] = useState<"all" | "circuito" | "galaxycup">("all");
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const openPlayer = (id?: string | null) => {
     if (id) setSelectedPlayerId(id);
   };
 
+  /* Round id sets per competition scope */
+  const roundIdsByScope = useMemo(() => {
+    const circ = new Set<string>();
+    const cup = new Set<string>();
+    for (const rc of data?.round_competitions ?? []) {
+      const slug = rc.competition?.slug;
+      if (slug === "circuito-galaxygolf") circ.add(rc.round_id);
+      else if (slug === "galaxycup") cup.add(rc.round_id);
+    }
+    return { circ, cup };
+  }, [data]);
+
+  const scopedResults = useMemo(() => {
+    const all = data?.results ?? [];
+    if (scope === "circuito") return all.filter((r) => roundIdsByScope.circ.has(r.round_id));
+    if (scope === "galaxycup") return all.filter((r) => roundIdsByScope.cup.has(r.round_id));
+    return all;
+  }, [data, scope, roundIdsByScope]);
+
   const completedResults = useMemo(
-    () => (data?.results ?? []).filter(isCompleted),
-    [data],
+    () => scopedResults.filter(isCompleted),
+    [scopedResults],
   );
 
   const circuito = useMemo(
