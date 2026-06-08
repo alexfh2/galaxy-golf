@@ -244,6 +244,19 @@ export default function Stats() {
     return out;
   }, [completedResults]);
 
+  const bestScratch = useMemo(() => {
+    return reliableStrokes
+      .map((s) => {
+        let pts = 0;
+        for (let i = 0; i < 18; i++) {
+          pts += Math.max(0, 2 + Number(s.par[i]) - Number(s.scores[i]));
+        }
+        return { result: s.result, points: pts };
+      })
+      .sort((a, b) => b.points - a.points)
+      .slice(0, 5);
+  }, [reliableStrokes]);
+
   const birdiesData = useMemo(() => {
     if (reliableStrokes.length === 0) return null;
     let totalBirdies = 0;
