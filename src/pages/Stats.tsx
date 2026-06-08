@@ -393,6 +393,99 @@ export default function Stats() {
     return { hard, easy };
   }, [reliableStrokes]);
 
+  /* Campos más difíciles / fáciles — promedio de golpes vs par por vuelta */
+  const coursesData = useMemo(() => {
+    if (reliableStrokes.length === 0) return null;
+    const courseNameOf = (r: PublicResult) =>
+      r.rounds?.course?.trim() ||
+      r.rounds?.club?.trim() ||
+      r.rounds?.name?.trim() ||
+      "Campo no especificado";
+
+    type Agg = { name: string; sumDiff: number; sumStrokes: number; sumPar: number; count: number };
+    const byCourse = new Map<string, Agg>();
+    for (const s of reliableStrokes) {
+      const name = courseNameOf(s.result);
+      let strokes = 0;
+      let par = 0;
+      for (let i = 0; i < 18; i++) {
+        strokes += Number(s.scores[i]);
+        par += Number(s.par[i]);
+      }
+      const cur = byCourse.get(name) ?? { name, sumDiff: 0, sumStrokes: 0, sumPar: 0, count: 0 };
+      cur.sumDiff += strokes - par;
+      cur.sumStrokes += strokes;
+      cur.sumPar += par;
+      cur.count += 1;
+      byCourse.set(name, cur);
+    }
+    const arr = [...byCourse.values()]
+      .filter((c) => c.count >= 2)
+      .map((c) => ({
+        name: c.name,
+        avgDiff: c.sumDiff / c.count,
+        avgStrokes: c.sumStrokes / c.count,
+        avgPar: c.sumPar / c.count,
+        rounds: c.count,
+      }));
+    if (arr.length === 0) return null;
+    const hard = [...arr].sort((a, b) => b.avgDiff - a.avgDiff).slice(0, 20);
+    const easy = [...arr].sort((a, b) => a.avgDiff - b.avgDiff).slice(0, 20);
+    return { hard, easy };
+  }, [reliableStrokes]);
+
+  /* Eagles, Albatros & Hole in One */
+  const specialScores = useMemo(() => {
+    if (reliableStrokes.length === 0) return null;
+    type Entry = {
+      player_id: string;
+      name: string;
+      type: "hio" | "albatross" | "eagle";
+      hole: number;
+      par: number;
+      score: number;
+      course: string;
+      date?: string | null;
+    };
+    const entries: Entry[] = [];
+    for (const s of reliableStrokes) {
+      for (let i = 0; i < 18; i++) {
+        const sc = Number(s.scores[i]);
+        const par = Number(s.par[i]);
+        let type: Entry["type"] | null = null;
+        if (sc === 1) type = "hio";
+        else if (sc === par - 3) type = "albatross";
+        else if (sc === par - 2) type = "eagle";
+        if (!type) continue;
+        entries.push({
+          player_id: s.result.player_id,
+          name: s.result.players_public?.name ?? "—",
+          type,
+          hole: i + 1,
+          par,
+          score: sc,
+          course:
+            s.result.rounds?.course?.trim() ||
+            s.result.rounds?.club?.trim() ||
+            s.result.rounds?.name?.trim() ||
+            "—",
+          date: s.result.rounds?.date || s.result.play_date,
+        });
+      }
+    }
+    const counts = { hio: 0, albatross: 0, eagle: 0 };
+    for (const e of entries) counts[e.type]++;
+    const order: Record<Entry["type"], number> = { hio: 0, albatross: 1, eagle: 2 };
+    const list = [...entries].sort((a, b) => {
+      if (order[a.type] !== order[b.type]) return order[a.type] - order[b.type];
+      return (b.date ?? "").localeCompare(a.date ?? "");
+    }).slice(0, 20);
+    return { counts, list, total: entries.length };
+  }, [reliableStrokes]);
+
+  const specialLabel = (t: "hio" | "albatross" | "eagle") =>
+    t === "hio" ? "Hole in One" : t === "albatross" ? "Albatros" : "Eagle";
+
   return (
     <>
       {/* HERO */}
@@ -692,6 +785,96 @@ export default function Stats() {
                 <Metric label="Jornadas publicadas" value={promedios.jornadas} />
                 <Metric label="Jugadores con resultados" value={promedios.jugadores} />
               </div>
+            </Panel>
+          </div>
+
+          {/* Tercera fila */}
+          <div className="grid lg:grid-cols-3 gap-6 mt-6">
+            {/* Campos más difíciles */}
+            <Panel title="Campos más difíciles" icon={<TrendingUp className="h-4 w-4" />}>
+              {coursesData == null ? (
+                <EmptyState text="Datos no disponibles todavía" />
+              ) : (
+                <div className="max-h-[280px] overflow-y-auto">
+                  {coursesData.hard.map((c, i) => (
+                    <LeaderRow
+                      key={`hard-${c.name}`}
+                      rank={i + 1}
+                      name={c.name}
+                      meta={`${c.rounds} vuelta${c.rounds === 1 ? "" : "s"} · Par ${Math.round(c.avgPar)}`}
+                      value={`${c.avgDiff >= 0 ? "+" : ""}${c.avgDiff.toFixed(1)}`}
+                      valueHint="vs Par"
+                    />
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            {/* Campos más fáciles */}
+            <Panel title="Campos más fáciles" icon={<Target className="h-4 w-4" />}>
+              {coursesData == null ? (
+                <EmptyState text="Datos no disponibles todavía" />
+              ) : (
+                <div className="max-h-[280px] overflow-y-auto">
+                  {coursesData.easy.map((c, i) => (
+                    <LeaderRow
+                      key={`easy-${c.name}`}
+                      rank={i + 1}
+                      name={c.name}
+                      meta={`${c.rounds} vuelta${c.rounds === 1 ? "" : "s"} · Par ${Math.round(c.avgPar)}`}
+                      value={`${c.avgDiff >= 0 ? "+" : ""}${c.avgDiff.toFixed(1)}`}
+                      valueHint="vs Par"
+                    />
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            {/* Eagles, Albatros & Hole in One */}
+            <Panel title="Eagles, Albatros & Hole in One" icon={<Flag className="h-4 w-4" />}>
+              {specialScores == null || specialScores.total === 0 ? (
+                <EmptyState text="Sin registros con los datos actuales." />
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-3 mb-5 pb-5 border-b border-[hsl(var(--gg-navy-deep))]/10">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
+                        Hole in One
+                      </div>
+                      <div className="font-display text-2xl text-[hsl(var(--gg-copper))] mt-1">
+                        {specialScores.counts.hio}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
+                        Albatros
+                      </div>
+                      <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1">
+                        {specialScores.counts.albatross}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
+                        Eagles
+                      </div>
+                      <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1">
+                        {specialScores.counts.eagle}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {specialScores.list.map((e, i) => (
+                      <LeaderRow
+                        key={`${e.player_id}-${e.hole}-${e.date ?? i}-${i}`}
+                        name={e.name}
+                        meta={`${e.course} · Hoyo ${e.hole} (Par ${e.par})${e.date ? ` · ${fmtDate(e.date)}` : ""}`}
+                        value={specialLabel(e.type)}
+                        onNameClick={() => openPlayer(e.player_id)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </Panel>
           </div>
         </div>
