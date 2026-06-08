@@ -235,8 +235,6 @@ const Rounds = () => {
   const roundCategories = [
     { key: 'hcpLow', label: 'Hándicap Inferior (≤15,4)' },
     { key: 'hcpHigh', label: 'Hándicap Superior (≥15,5)' },
-    { key: 'female', label: 'Femenino' },
-    { key: 'senior', label: 'Sénior' },
     { key: 'scratch', label: 'Scratch' },
   ];
 
