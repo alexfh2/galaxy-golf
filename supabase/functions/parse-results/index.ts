@@ -144,6 +144,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authErr = await requireAdmin(req);
+  if (authErr) return authErr;
+
   try {
     const { url, format } = await req.json();
     if (!url) {
@@ -152,6 +155,11 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const urlErr = validateExternalUrl(url, [
+      "golfdirecto.com", "teeone.golf", "teeone.es", "gastronomicgolf.com",
+    ]);
+    if (urlErr) return urlErr;
 
     const detectedSource = detectSource(url);
     let results: ParsedResult[];
