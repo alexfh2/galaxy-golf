@@ -13,6 +13,7 @@ import {
   getGalaxyGolfCategoryLabel,
 } from "@/lib/playerCategoryHandicap";
 import heroCircuito from "@/assets/hero-circuito.jpg";
+import PlayerProfileDialog from "@/components/PlayerProfileDialog";
 
 /* ============================================================
  * Stats GalaxyGolf 2026
@@ -102,13 +103,16 @@ function LeaderRow({
   meta,
   value,
   valueHint,
+  onNameClick,
 }: {
   rank?: number;
   name: string | null;
   meta?: string;
   value: React.ReactNode;
   valueHint?: string;
+  onNameClick?: () => void;
 }) {
+  const nameNode = name || "Pendiente";
   return (
     <div className="flex items-center justify-between py-3 border-b border-[hsl(var(--gg-navy-deep))]/8 last:border-b-0">
       <div className="flex items-center gap-3 min-w-0">
@@ -118,9 +122,19 @@ function LeaderRow({
           </span>
         )}
         <div className="min-w-0">
-          <div className="font-display text-[15px] text-[hsl(var(--gg-navy-deep))] truncate">
-            {name || "Pendiente"}
-          </div>
+          {onNameClick && name ? (
+            <button
+              type="button"
+              onClick={onNameClick}
+              className="font-display text-[15px] text-[hsl(var(--gg-navy-deep))] truncate text-left cursor-pointer hover:text-[hsl(var(--gg-copper))] transition-colors"
+            >
+              {nameNode}
+            </button>
+          ) : (
+            <div className="font-display text-[15px] text-[hsl(var(--gg-navy-deep))] truncate">
+              {nameNode}
+            </div>
+          )}
           {meta && (
             <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65 mt-0.5">
               {meta}
@@ -188,10 +202,10 @@ export default function Stats() {
     const cupLow = galaxyCup.find((r) => r.category === "hcp_low");
     const cupHigh = galaxyCup.find((r) => r.category === "hcp_high");
     return [
-      { comp: "Circuito GalaxyGolf", cat: getGalaxyGolfCategoryLabel("hcp_low"), name: circLow?.name ?? null, value: circLow?.total ?? null, hint: "pts" },
-      { comp: "Circuito GalaxyGolf", cat: getGalaxyGolfCategoryLabel("hcp_high"), name: circHigh?.name ?? null, value: circHigh?.total ?? null, hint: "pts" },
-      { comp: "GalaxyCup", cat: getGalaxyGolfCategoryLabel("hcp_low"), name: cupLow?.name ?? null, value: cupLow?.points ?? null, hint: "pts" },
-      { comp: "GalaxyCup", cat: getGalaxyGolfCategoryLabel("hcp_high"), name: cupHigh?.name ?? null, value: cupHigh?.points ?? null, hint: "pts" },
+      { comp: "Circuito GalaxyGolf", cat: getGalaxyGolfCategoryLabel("hcp_low"), name: circLow?.name ?? null, player_id: circLow?.player_id ?? null, value: circLow?.total ?? null, hint: "pts" },
+      { comp: "Circuito GalaxyGolf", cat: getGalaxyGolfCategoryLabel("hcp_high"), name: circHigh?.name ?? null, player_id: circHigh?.player_id ?? null, value: circHigh?.total ?? null, hint: "pts" },
+      { comp: "GalaxyCup", cat: getGalaxyGolfCategoryLabel("hcp_low"), name: cupLow?.name ?? null, player_id: cupLow?.player_id ?? null, value: cupLow?.points ?? null, hint: "pts" },
+      { comp: "GalaxyCup", cat: getGalaxyGolfCategoryLabel("hcp_high"), name: cupHigh?.name ?? null, player_id: cupHigh?.player_id ?? null, value: cupHigh?.points ?? null, hint: "pts" },
     ];
   }, [circuito, galaxyCup]);
 
@@ -260,7 +274,7 @@ export default function Stats() {
   const birdiesData = useMemo(() => {
     if (reliableStrokes.length === 0) return null;
     let totalBirdies = 0;
-    const byPlayer = new Map<string, { name: string; count: number }>();
+    const byPlayer = new Map<string, { id: string; name: string; count: number }>();
     for (const s of reliableStrokes) {
       let birds = 0;
       for (let i = 0; i < 18; i++) {
@@ -271,7 +285,7 @@ export default function Stats() {
       }
       totalBirdies += birds;
       const name = s.result.players_public?.name ?? "—";
-      const prev = byPlayer.get(s.result.player_id) ?? { name, count: 0 };
+      const prev = byPlayer.get(s.result.player_id) ?? { id: s.result.player_id, name, count: 0 };
       prev.count += birds;
       byPlayer.set(s.result.player_id, prev);
     }
