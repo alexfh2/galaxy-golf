@@ -420,118 +420,147 @@ const Rounds = () => {
         ) : !visibleRounds?.length ? (
           <p className="text-muted-foreground text-sm py-8 text-center">Sin datos</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {visibleRounds.map((round: any) => {
               const played = round.date < today || (round.end_date && round.end_date < today);
+              const isOngoing = !played && round.date <= today && (!round.end_date || round.end_date >= today);
               const hasResults = round.status === 'published';
               const isExpanded = expandedRound === round.id;
               const links = getLinks(round);
               const isGalaxyCup = links.some((l) => l.competitions?.slug === 'galaxycup');
               const isCircuito = links.some((l) => l.competitions?.slug === 'circuito-galaxygolf');
 
+              // Surface treatment: played/published = denser, upcoming = lighter
+              const cardSurface = hasResults
+                ? 'bg-[hsl(var(--gg-surface-light))] border-[hsl(var(--gg-border-light))] shadow-sm'
+                : isOngoing
+                ? 'bg-[hsl(var(--gg-surface-light))] border-[hsl(var(--gg-copper))]/40'
+                : 'bg-[hsl(var(--gg-bg-light))] border-[hsl(var(--gg-border-light))]/70 border-dashed';
+
+              const accentColor = isCircuito
+                ? 'bg-[hsl(var(--gg-green))]'
+                : isGalaxyCup
+                ? 'bg-[hsl(var(--gg-copper))]'
+                : 'bg-[hsl(var(--gg-border-light))]';
+
+              const accentWidth = hasResults ? 'w-[4px]' : isOngoing ? 'w-[3px]' : 'w-[2px]';
+
               return (
                 <div
                   key={round.id}
-                  className={`relative border bg-[hsl(var(--gg-navy))]/50 transition-all ${
-                    played
-                      ? 'border-[hsl(var(--gg-gold))]/35'
-                      : 'border-[hsl(var(--gg-gold))]/15'
-                  }`}
+                  className={`relative border transition-all ${cardSurface}`}
                 >
-                  {/* left accent */}
+                  {/* left accent bar */}
                   <span
                     aria-hidden
-                    className={`absolute left-0 top-0 bottom-0 w-[2px] ${
-                      isCircuito
-                        ? 'bg-[hsl(var(--gg-green))]'
-                        : isGalaxyCup
-                        ? 'bg-[hsl(var(--gg-copper))]/70'
-                        : 'bg-transparent'
+                    className={`absolute left-0 top-0 bottom-0 ${accentWidth} ${accentColor} ${
+                      !hasResults && !isOngoing ? 'opacity-50' : ''
                     }`}
                   />
+
                   <button
                     onClick={() => (hasResults ? setExpandedRound(isExpanded ? null : round.id) : null)}
-                    className={`w-full text-left px-5 py-4 ${!hasResults ? 'cursor-default' : 'hover:bg-[hsl(var(--gg-green))]/10'}`}
+                    className={`w-full text-left pl-5 pr-4 py-3.5 ${
+                      hasResults ? 'cursor-pointer hover:bg-[hsl(var(--gg-green))]/[0.04]' : 'cursor-default'
+                    }`}
                   >
                     <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
+                      {/* LEFT: chips + title + meta + status */}
+                      <div className="flex-1 min-w-0">
+                        {/* chips row */}
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
                           {renderRoundBadges(round)}
-                          {isGalaxyCup && (
-                            <Trophy className="h-3.5 w-3.5 text-[hsl(var(--gg-copper))]/80" strokeWidth={1.4} />
-                          )}
                         </div>
-                        <h3
-                          className={`font-display text-lg lg:text-xl font-medium leading-tight ${
-                            played ? 'text-[hsl(var(--gg-ivory))]' : 'text-[hsl(var(--gg-ivory))]/70'
-                          }`}
-                        >
-                          {round.name}
+
+                        {/* title + meta inline for density */}
+                        <div className="flex items-baseline gap-3 flex-wrap">
+                          <h3
+                            className={`font-display font-medium leading-tight text-lg lg:text-xl ${
+                              hasResults || isOngoing
+                                ? 'text-[hsl(var(--gg-navy-deep))]'
+                                : 'text-[hsl(var(--gg-navy-deep))]/75'
+                            }`}
+                          >
+                            {round.name}
+                          </h3>
                           {round.sponsor && (
-                            <span className="ml-2 text-[11px] font-sans font-normal text-[hsl(var(--gg-ivory))]/45">
+                            <span className="text-[11px] font-sans text-[hsl(var(--gg-text-muted))]">
                               · {round.sponsor}
                             </span>
                           )}
-                        </h3>
-                        <div
-                          className={`flex items-center gap-5 text-[11px] ${
-                            played ? 'text-[hsl(var(--gg-ivory))]/65' : 'text-[hsl(var(--gg-ivory))]/45'
-                          }`}
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="h-3 w-3 text-[hsl(var(--gg-gold))]/70" />
-                            {format(new Date(round.date), 'dd MMM yyyy', { locale })}
-                            {round.end_date && round.end_date !== round.date && (
-                              <> — {format(new Date(round.end_date), 'dd MMM yyyy', { locale })}</>
-                            )}
+                        </div>
+
+                        <div className="mt-1 flex items-center gap-4 text-[11px] text-[hsl(var(--gg-text-muted))]">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3 text-[hsl(var(--gg-green))]/70" strokeWidth={1.6} />
+                            <span className="font-medium text-[hsl(var(--gg-navy-deep))]/75">
+                              {format(new Date(round.date), 'dd MMM yyyy', { locale })}
+                              {round.end_date && round.end_date !== round.date && (
+                                <> — {format(new Date(round.end_date), 'dd MMM yyyy', { locale })}</>
+                              )}
+                            </span>
                           </span>
                           {round.course && (
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="h-3 w-3 text-[hsl(var(--gg-gold))]/70" />
+                            <span className="inline-flex items-center gap-1.5">
+                              <MapPin className="h-3 w-3 text-[hsl(var(--gg-gold))]/80" strokeWidth={1.6} />
                               {round.course}
                             </span>
                           )}
+                          {/* status pill */}
+                          {hasResults ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.18em] uppercase bg-[hsl(var(--gg-green))]/10 text-[hsl(var(--gg-green))] border border-[hsl(var(--gg-green))]/25">
+                              Resultados publicados
+                            </span>
+                          ) : isOngoing ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.18em] uppercase bg-[hsl(var(--gg-copper))]/10 text-[hsl(var(--gg-copper))] border border-[hsl(var(--gg-copper))]/30">
+                              En curso
+                            </span>
+                          ) : played ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.18em] uppercase text-[hsl(var(--gg-text-muted))] border border-[hsl(var(--gg-border-light))]">
+                              Pendiente de publicación
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.18em] uppercase text-[hsl(var(--gg-green))]/85 border border-[hsl(var(--gg-green))]/30">
+                              Próxima prueba
+                            </span>
+                          )}
                         </div>
+                      </div>
+
+                      {/* RIGHT: CTA */}
+                      <div className="flex items-center gap-2 shrink-0">
                         {hasResults ? (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] text-[hsl(var(--gg-gold))] font-semibold tracking-[0.2em] uppercase">
-                            <BarChart3 className="h-3 w-3" />
+                          <span className="inline-flex items-center gap-2 px-3.5 py-2 text-[10px] font-semibold tracking-[0.2em] uppercase bg-[hsl(var(--gg-green))] text-[#FFFDF8] hover:bg-[hsl(var(--gg-green))]/90 transition-colors">
+                            <BarChart3 className="h-3.5 w-3.5" />
                             Ver resultados
+                            <ChevronDown
+                              className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            />
                           </span>
-                        ) : played ? (
-                          <span className="text-[10px] text-[hsl(var(--gg-ivory))]/50 italic tracking-wide">
-                            Resultados pendientes de publicación
+                        ) : isOngoing ? (
+                          <span className="inline-flex items-center gap-2 px-3.5 py-2 text-[10px] font-semibold tracking-[0.2em] uppercase border border-[hsl(var(--gg-copper))]/60 text-[hsl(var(--gg-copper))]">
+                            <Trophy className="h-3.5 w-3.5" />
+                            Ver jornada
                           </span>
                         ) : (
-                          <span className="text-[10px] text-[hsl(var(--gg-copper))]/80 font-semibold tracking-[0.2em] uppercase">
-                            Próxima prueba
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {!played && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               downloadIcs(buildIcsContent(round), `${round.name.replace(/\s+/g, '-').toLowerCase()}.ics`);
                             }}
-                            className="p-1.5 hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
-                            title="Añadir al calendario"
+                            className="inline-flex items-center gap-2 px-3.5 py-2 text-[10px] font-semibold tracking-[0.2em] uppercase border border-[hsl(var(--gg-green))]/55 text-[hsl(var(--gg-green))] hover:bg-[hsl(var(--gg-green))]/8 transition-colors"
                           >
-                            <CalendarPlus className="h-4 w-4 text-[hsl(var(--gg-ivory))]/50 hover:text-[hsl(var(--gg-gold))] transition-colors" />
+                            <CalendarPlus className="h-3.5 w-3.5" />
+                            Añadir al calendario
                           </button>
-                        )}
-                        {hasResults && (
-                          <ChevronDown
-                            className={`h-4 w-4 text-[hsl(var(--gg-gold))]/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                          />
                         )}
                       </div>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t border-[hsl(var(--gg-gold))]/15 px-5 py-4">
-                      <div className="flex items-center gap-2 mb-3 text-[11px] text-[hsl(var(--gg-ivory))]/65 tracking-wide">
+                    <div className="border-t border-[hsl(var(--gg-border-light))] px-5 py-4 bg-[hsl(var(--gg-bg-light))]/40">
+                      <div className="flex items-center gap-2 mb-3 text-[11px] text-[hsl(var(--gg-text-muted))] tracking-wide">
                         <Users className="h-3.5 w-3.5" />
                         <span>{roundResults?.length || 0} participantes</span>
                       </div>
@@ -545,8 +574,8 @@ const Rounds = () => {
                                 onClick={() => setActiveResultTab(cat.key)}
                                 className={`px-4 py-2 text-[11px] font-semibold tracking-[0.15em] uppercase transition-all border ${
                                   activeResultTab === cat.key
-                                    ? 'border-[hsl(var(--gg-gold))]/60 bg-[hsl(var(--gg-green))]/40 text-[hsl(var(--gg-gold))]'
-                                    : 'border-[hsl(var(--gg-gold))]/15 text-[hsl(var(--gg-ivory))]/55 hover:text-[hsl(var(--gg-gold))]'
+                                    ? 'border-[hsl(var(--gg-green))]/60 bg-[hsl(var(--gg-green))] text-[#FFFDF8]'
+                                    : 'border-[hsl(var(--gg-border-light))] text-[hsl(var(--gg-text-muted))] hover:text-[hsl(var(--gg-green))] hover:border-[hsl(var(--gg-green))]/40'
                                 }`}
                               >
                                 {cat.label}
