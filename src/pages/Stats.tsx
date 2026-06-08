@@ -213,6 +213,13 @@ export default function Stats() {
     return ids.size;
   }, [completedResults]);
 
+  const totalJornadas = useMemo(() => {
+    if (scope === "circuito") return roundIdsByScope.circ.size;
+    if (scope === "galaxycup") return roundIdsByScope.cup.size;
+    const all = new Set<string>([...roundIdsByScope.circ, ...roundIdsByScope.cup]);
+    return all.size;
+  }, [scope, roundIdsByScope]);
+
   const jugadoresEnRanking = useMemo(() => {
     const ids = new Set<string>();
     for (const r of completedResults) ids.add(r.player_id);
@@ -440,7 +447,7 @@ export default function Stats() {
                       Jornadas disputadas
                     </span>
                     <span className="font-sans font-semibold text-xl tabular-nums text-[hsl(var(--gg-copper))]">
-                      {isLoading ? "—" : jornadasDisputadas}
+                      {isLoading ? "—" : `${jornadasDisputadas} / ${totalJornadas}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
