@@ -164,7 +164,7 @@ const Rounds = () => {
     return [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//GalaxyGolf//CA',
+      'PRODID:-//GalaxyGolf//ES',
       buildIcsEvent(round),
       'END:VCALENDAR',
     ].join('\r\n');
