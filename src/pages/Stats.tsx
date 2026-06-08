@@ -122,7 +122,7 @@ function LeaderRow({
             {name || "Pendiente"}
           </div>
           {meta && (
-            <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/55 mt-0.5">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65 mt-0.5">
               {meta}
             </div>
           )}
