@@ -405,7 +405,7 @@ export default function Stats() {
 
             {/* Mejores vueltas */}
             <Panel title="Mejores vueltas" icon={<Trophy className="h-4 w-4" />}>
-              <div className="grid grid-cols-3 gap-1 p-1 bg-[hsl(var(--gg-bg-light))] mb-4 border border-[hsl(var(--gg-navy-deep))]/10">
+              <div className="grid grid-cols-3 gap-1 p-1 bg-[hsl(var(--gg-surface-light))] mb-4 border border-[hsl(var(--gg-navy-deep))]/10">
                 {([
                   ["hcp_low", "Hcp Inferior"],
                   ["hcp_high", "Hcp Superior"],
@@ -417,7 +417,7 @@ export default function Stats() {
                     className={`text-[10px] uppercase tracking-[0.18em] py-2 transition-colors ${
                       bestTab === key
                         ? "bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))]"
-                        : "text-[hsl(var(--gg-navy-deep))]/60 hover:text-[hsl(var(--gg-navy-deep))]"
+                        : "bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
                     }`}
                   >
                     {label}
