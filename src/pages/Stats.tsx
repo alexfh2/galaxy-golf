@@ -416,7 +416,7 @@ export default function Stats() {
                     onClick={() => setBestTab(key)}
                     className={`text-[10px] uppercase tracking-[0.18em] py-2 transition-colors ${
                       bestTab === key
-                        ? "bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))]"
+                        ? "bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] bg-[#c78a66]"
                         : "bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
                     }`}
                   >
