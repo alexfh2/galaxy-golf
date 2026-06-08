@@ -204,17 +204,8 @@ export default function Stats() {
 
   const bestLow = useMemo(() => bestStableford("hcp_low"), [completedResults, catMap]);
   const bestHigh = useMemo(() => bestStableford("hcp_high"), [completedResults, catMap]);
-  const bestScratch = useMemo(
-    () =>
-      completedResults
-        .filter((r) => r.scratch_score != null)
-        .sort((a, b) => Number(b.scratch_score) - Number(a.scratch_score))
-        .slice(0, 5),
-    [completedResults],
-  );
-
   const bestList =
-    bestTab === "hcp_low" ? bestLow : bestTab === "hcp_high" ? bestHigh : bestScratch;
+    bestTab === "hcp_low" ? bestLow : bestTab === "hcp_high" ? bestHigh : [];
 
   /* Promedios */
   const promedios = useMemo(() => {
@@ -252,6 +243,19 @@ export default function Stats() {
     }
     return out;
   }, [completedResults]);
+
+  const bestScratch = useMemo(() => {
+    return reliableStrokes
+      .map((s) => {
+        let pts = 0;
+        for (let i = 0; i < 18; i++) {
+          pts += Math.max(0, 2 + Number(s.par[i]) - Number(s.scores[i]));
+        }
+        return { result: s.result, points: pts };
+      })
+      .sort((a, b) => b.points - a.points)
+      .slice(0, 5);
+  }, [reliableStrokes]);
 
   const birdiesData = useMemo(() => {
     if (reliableStrokes.length === 0) return null;
@@ -469,14 +473,25 @@ export default function Stats() {
                   </button>
                 ))}
               </div>
-              {bestList.length === 0 ? (
-                <EmptyState
-                  text={
-                    bestTab === "scratch"
-                      ? "Datos scratch no disponibles."
-                      : "Datos no disponibles todavía"
-                  }
-                />
+              {bestTab === "scratch" ? (
+                bestScratch.length === 0 ? (
+                  <EmptyState text="Datos scratch no disponibles con los datos actuales." />
+                ) : (
+                  <div>
+                    {bestScratch.map((s, i) => (
+                      <LeaderRow
+                        key={s.result.id}
+                        rank={i + 1}
+                        name={s.result.players_public?.name ?? "—"}
+                        meta={`${venueName(s.result)} · ${fmtDate(s.result.rounds?.date || s.result.play_date)}`}
+                        value={s.points}
+                        valueHint="pts"
+                      />
+                    ))}
+                  </div>
+                )
+              ) : bestList.length === 0 ? (
+                <EmptyState text="Datos no disponibles todavía" />
               ) : (
                 <div>
                   {bestList.map((r, i) => (
@@ -485,12 +500,8 @@ export default function Stats() {
                       rank={i + 1}
                       name={r.players_public?.name ?? "—"}
                       meta={`${venueName(r)} · ${fmtDate(r.rounds?.date || r.play_date)}`}
-                      value={
-                        bestTab === "scratch"
-                          ? Number(r.scratch_score)
-                          : Number(r.stableford_points)
-                      }
-                      valueHint={bestTab === "scratch" ? "pts" : "pts"}
+                      value={Number(r.stableford_points)}
+                      valueHint="pts"
                     />
                   ))}
                 </div>
