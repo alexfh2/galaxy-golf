@@ -458,6 +458,31 @@ export default function Stats() {
         </div>
       </section>
 
+      {/* SCOPE TABS */}
+      <section className="bg-[hsl(var(--gg-bg-light))] pt-8 md:pt-10">
+        <div className="container mx-auto px-4">
+          <div className="inline-flex p-1 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/10">
+            {([
+              ["all", "Todos", "bg-[hsl(var(--gg-green))]"],
+              ["circuito", "Circuito GalaxyGolf", "bg-[hsl(var(--gg-green))]"],
+              ["galaxycup", "GalaxyCup", "bg-[hsl(var(--gg-copper))]"],
+            ] as const).map(([key, label, activeBg]) => (
+              <button
+                key={key}
+                onClick={() => setScope(key)}
+                className={`text-[10px] uppercase tracking-[0.18em] px-4 py-2 transition-colors ${
+                  scope === key
+                    ? `${activeBg} text-[hsl(var(--gg-ivory))]`
+                    : "text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* DASHBOARD */}
       <section className="bg-[hsl(var(--gg-bg-light))] pb-20 pt-10 md:pt-14">
         <div className="container mx-auto px-4">
@@ -468,7 +493,13 @@ export default function Stats() {
                 <EmptyState text="Cargando…" />
               ) : (
                 <div className="space-y-5">
-                  {(["Circuito GalaxyGolf", "GalaxyCup"] as const).map((comp) => (
+                  {(
+                    scope === "circuito"
+                      ? (["Circuito GalaxyGolf"] as const)
+                      : scope === "galaxycup"
+                      ? (["GalaxyCup"] as const)
+                      : (["Circuito GalaxyGolf", "GalaxyCup"] as const)
+                  ).map((comp) => (
                     <div key={comp}>
                       <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--gg-copper))] mb-1">
                         {comp}
