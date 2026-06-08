@@ -787,6 +787,96 @@ export default function Stats() {
               </div>
             </Panel>
           </div>
+
+          {/* Tercera fila */}
+          <div className="grid lg:grid-cols-3 gap-6 mt-6">
+            {/* Campos más difíciles */}
+            <Panel title="Campos más difíciles" icon={<TrendingUp className="h-4 w-4" />}>
+              {coursesData == null ? (
+                <EmptyState text="Datos no disponibles todavía" />
+              ) : (
+                <div className="max-h-[280px] overflow-y-auto">
+                  {coursesData.hard.map((c, i) => (
+                    <LeaderRow
+                      key={`hard-${c.name}`}
+                      rank={i + 1}
+                      name={c.name}
+                      meta={`${c.rounds} vuelta${c.rounds === 1 ? "" : "s"} · Par ${Math.round(c.avgPar)}`}
+                      value={`${c.avgDiff >= 0 ? "+" : ""}${c.avgDiff.toFixed(1)}`}
+                      valueHint="vs Par"
+                    />
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            {/* Campos más fáciles */}
+            <Panel title="Campos más fáciles" icon={<Target className="h-4 w-4" />}>
+              {coursesData == null ? (
+                <EmptyState text="Datos no disponibles todavía" />
+              ) : (
+                <div className="max-h-[280px] overflow-y-auto">
+                  {coursesData.easy.map((c, i) => (
+                    <LeaderRow
+                      key={`easy-${c.name}`}
+                      rank={i + 1}
+                      name={c.name}
+                      meta={`${c.rounds} vuelta${c.rounds === 1 ? "" : "s"} · Par ${Math.round(c.avgPar)}`}
+                      value={`${c.avgDiff >= 0 ? "+" : ""}${c.avgDiff.toFixed(1)}`}
+                      valueHint="vs Par"
+                    />
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            {/* Eagles, Albatros & Hole in One */}
+            <Panel title="Eagles, Albatros & Hole in One" icon={<Flag className="h-4 w-4" />}>
+              {specialScores == null || specialScores.total === 0 ? (
+                <EmptyState text="Sin registros con los datos actuales." />
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-3 mb-5 pb-5 border-b border-[hsl(var(--gg-navy-deep))]/10">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
+                        Hole in One
+                      </div>
+                      <div className="font-display text-2xl text-[hsl(var(--gg-copper))] mt-1">
+                        {specialScores.counts.hio}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
+                        Albatros
+                      </div>
+                      <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1">
+                        {specialScores.counts.albatross}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65">
+                        Eagles
+                      </div>
+                      <div className="font-display text-2xl text-[hsl(var(--gg-navy-deep))] mt-1">
+                        {specialScores.counts.eagle}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {specialScores.list.map((e, i) => (
+                      <LeaderRow
+                        key={`${e.player_id}-${e.hole}-${e.date ?? i}-${i}`}
+                        name={e.name}
+                        meta={`${e.course} · Hoyo ${e.hole} (Par ${e.par})${e.date ? ` · ${fmtDate(e.date)}` : ""}`}
+                        value={specialLabel(e.type)}
+                        onNameClick={() => openPlayer(e.player_id)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </Panel>
+          </div>
         </div>
       </section>
 
