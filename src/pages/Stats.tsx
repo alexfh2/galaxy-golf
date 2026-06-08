@@ -472,7 +472,7 @@ export default function Stats() {
                 onClick={() => setScope(key)}
                 className={`text-[10px] uppercase tracking-[0.18em] px-4 py-2 transition-colors ${
                   scope === key
-                    ? `${activeBg} text-[hsl(var(--gg-ivory))]`
+                    ? `${activeBg} text-[hsl(var(--gg-ivory))] bg-[#c88965]`
                     : "text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
                 }`}
               >
