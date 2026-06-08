@@ -1,10 +1,81 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function requireAdmin(req: Request): Promise<Response | null> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const sb = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const token = authHeader.replace("Bearer ", "");
+  const { data: claims, error } = await sb.auth.getClaims(token);
+  if (error || !claims?.claims) {
+    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: isAdmin } = await sb.rpc("has_role", { _user_id: claims.claims.sub, _role: "admin" });
+  if (!isAdmin) {
+    return new Response(JSON.stringify({ success: false, error: "Forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  return null;
+}
+
+function isPrivateHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (h === "localhost" || h.endsWith(".localhost") || h === "0.0.0.0") return true;
+  if (h === "::1" || h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe80")) return true;
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const [a, b] = [parseInt(m[1]), parseInt(m[2])];
+    if (a === 10 || a === 127 || a === 0) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+  }
+  return false;
+}
+
+function validateExternalUrl(raw: string, allowedHosts?: string[]): Response | null {
+  let u: URL;
+  try { u = new URL(raw); } catch {
+    return new Response(JSON.stringify({ success: false, error: "Invalid URL" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    return new Response(JSON.stringify({ success: false, error: "Only http(s) URLs allowed" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (isPrivateHost(u.hostname)) {
+    return new Response(JSON.stringify({ success: false, error: "Disallowed host" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (allowedHosts && allowedHosts.length > 0) {
+    const ok = allowedHosts.some((h) => u.hostname === h || u.hostname.endsWith("." + h));
+    if (!ok) {
+      return new Response(JSON.stringify({ success: false, error: "Host not in allowlist" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+  return null;
+}
 
 type ResultStatus = "completed" | "retired" | "no_show" | "disqualified";
 type ComputationMode = "stableford_points" | "strokes" | "relative_to_par" | "unknown";
