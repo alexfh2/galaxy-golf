@@ -335,32 +335,32 @@ export default function Stats() {
             </div>
             <div className="flex lg:justify-end">
               <div
-                className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] p-6 md:p-7 shadow-[0_24px_60px_-24px_rgba(11,19,36,0.4)]"
-                style={{ borderTop: "2px solid hsl(var(--gg-gold))" }}
+                className="relative w-full max-w-sm border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] text-[hsl(var(--gg-navy-deep))] p-6 md:p-7 shadow-[0_12px_32px_-12px_rgba(11,19,36,0.14)]"
+                style={{ borderTop: "2px solid hsl(var(--gg-copper))" }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <Trophy className="h-5 w-5 text-[hsl(var(--gg-gold))]" />
-                  <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-ivory))]/80">
+                  <Trophy className="h-5 w-5 text-[hsl(var(--gg-copper))]" />
+                  <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--gg-navy-deep))]/70">
                     Temporada en curso
                   </span>
                 </div>
-                <div className="font-display text-5xl font-light leading-none mb-5">
+                <div className="font-display text-5xl font-light leading-none mb-5 text-[hsl(var(--gg-green))]">
                   2026
                 </div>
-                <div className="space-y-3 pt-4 border-t border-[hsl(var(--gg-ivory))]/15">
+                <div className="space-y-3 pt-4 border-t border-[hsl(var(--gg-navy-deep))]/10">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/75">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/65">
                       Jornadas disputadas
                     </span>
-                    <span className="font-sans font-semibold text-xl tabular-nums">
+                    <span className="font-sans font-semibold text-xl tabular-nums text-[hsl(var(--gg-copper))]">
                       {isLoading ? "—" : jornadasDisputadas}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-ivory))]/75">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/65">
                       Jugadores en ranking
                     </span>
-                    <span className="font-sans font-semibold text-xl tabular-nums">
+                    <span className="font-sans font-semibold text-xl tabular-nums text-[hsl(var(--gg-copper))]">
                       {isLoading ? "—" : jugadoresEnRanking}
                     </span>
                   </div>
