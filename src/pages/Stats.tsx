@@ -90,7 +90,7 @@ function Panel({
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="py-8 text-center text-sm text-[hsl(var(--gg-navy-deep))]/55 italic">
+    <div className="py-8 text-center text-sm text-[hsl(var(--gg-navy-deep))]/65 italic">
       {text}
     </div>
   );
