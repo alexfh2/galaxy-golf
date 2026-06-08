@@ -563,16 +563,17 @@ export default function Stats() {
         <div className="container mx-auto px-4">
           <div className="inline-flex p-1 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/10">
             {([
-              ["all", "Todos", "bg-[hsl(var(--gg-green))]"],
-              ["circuito", "Circuito GalaxyGolf", "bg-[hsl(var(--gg-green))]"],
-              ["galaxycup", "GalaxyCup", "bg-[hsl(var(--gg-copper))]"],
-            ] as const).map(([key, label, activeBg]) => (
+              ["all", "Todos"],
+              ["circuito", "Circuito GalaxyGolf"],
+              ["galaxycup", "GalaxyCup"],
+            ] as const).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setScope(key)}
+                style={scope === key ? { backgroundColor: "#c88965" } : undefined}
                 className={`text-[10px] uppercase tracking-[0.18em] px-4 py-2 transition-colors ${
                   scope === key
-                    ? `${activeBg} text-[hsl(var(--gg-ivory))] bg-[#c88965]`
+                    ? "text-[hsl(var(--gg-ivory))]"
                     : "text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
                 }`}
               >
@@ -633,9 +634,10 @@ export default function Stats() {
                   <button
                     key={key}
                     onClick={() => setBestTab(key)}
+                    style={bestTab === key ? { backgroundColor: "#c78a66" } : undefined}
                     className={`text-[10px] uppercase tracking-[0.18em] py-2 transition-colors ${
                       bestTab === key
-                        ? "bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-ivory))] bg-[#c78a66]"
+                        ? "text-[hsl(var(--gg-ivory))]"
                         : "bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))]/70 hover:text-[hsl(var(--gg-navy-deep))]"
                     }`}
                   >
