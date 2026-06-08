@@ -360,71 +360,72 @@ const Rounds = () => {
         />
 
         <div className="container relative py-14 lg:py-20">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-            <div className="max-w-2xl">
-              <p className="mb-4 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
-                TEMPORADA 2026
-              </p>
-              <h1
-                className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))] mb-5"
-                style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
-              >
-                Calendario
-              </h1>
-              <p className="text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light max-w-xl">
-                Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
-              </p>
-            </div>
-            <div className="relative self-start lg:self-end">
-              <button
-                onClick={() => setDownloadMenuOpen((v) => !v)}
-                aria-haspopup="menu"
-                aria-expanded={downloadMenuOpen}
-                className="inline-flex items-center gap-2 px-6 py-3 text-[11px] font-semibold tracking-[0.22em] uppercase border border-[hsl(var(--gg-green))]/60 text-[hsl(var(--gg-green))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors bg-[hsl(var(--gg-surface-light))]/70 backdrop-blur-sm"
-              >
-                <CalendarPlus className="h-4 w-4" />
-                Descargar calendario
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${downloadMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {downloadMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setDownloadMenuOpen(false)}
-                    aria-hidden="true"
-                  />
-                  <div
-                    role="menu"
-                    className="absolute right-0 mt-2 w-72 z-50 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-border-light))] shadow-lg overflow-hidden"
-                  >
-                    <button
-                      role="menuitem"
-                      onClick={() => downloadCalendarIcs('all')}
-                      className="w-full text-left px-5 py-3 text-[12px] tracking-[0.08em] text-[hsl(var(--gg-navy-deep))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors border-b border-[hsl(var(--gg-border-light))]"
-                    >
-                      Todo el calendario
-                    </button>
-                    <button
-                      role="menuitem"
-                      onClick={() => downloadCalendarIcs('circuito-galaxygolf')}
-                      className="w-full text-left px-5 py-3 text-[12px] tracking-[0.08em] text-[hsl(var(--gg-navy-deep))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors border-b border-[hsl(var(--gg-border-light))]"
-                    >
-                      Circuito GalaxyGolf
-                    </button>
-                    <button
-                      role="menuitem"
-                      onClick={() => downloadCalendarIcs('galaxycup')}
-                      className="w-full text-left px-5 py-3 text-[12px] tracking-[0.08em] text-[hsl(var(--gg-navy-deep))] hover:bg-[hsl(var(--gg-copper))]/10 transition-colors"
-                    >
-                      GalaxyCup
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+          <button
+            ref={downloadBtnRef}
+            onClick={toggleDownloadMenu}
+            aria-haspopup="menu"
+            aria-expanded={downloadMenuOpen}
+            className="absolute top-4 right-4 lg:top-6 lg:right-6 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold tracking-[0.2em] uppercase border border-[hsl(var(--gg-green))]/60 text-[hsl(var(--gg-green))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors bg-[hsl(var(--gg-surface-light))]/85 backdrop-blur-sm"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Descargar calendario</span>
+            <span className="sm:hidden">Descargar</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${downloadMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          <div className="max-w-2xl">
+            <p className="mb-4 text-[10px] font-semibold tracking-[0.32em] text-[hsl(var(--gg-green))]">
+              TEMPORADA 2026
+            </p>
+            <h1
+              className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))] mb-5"
+              style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
+            >
+              Calendario
+            </h1>
+            <p className="text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light max-w-xl">
+              Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
+            </p>
           </div>
         </div>
       </section>
+
+      {downloadMenuOpen && menuPos && (
+        <>
+          <div
+            className="fixed inset-0 z-[60]"
+            onClick={() => setDownloadMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            role="menu"
+            style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+            className="w-64 z-[70] bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-border-light))] shadow-xl overflow-hidden"
+          >
+            <button
+              role="menuitem"
+              onClick={() => downloadCalendarIcs('all')}
+              className="w-full text-left px-5 py-3 text-[12px] tracking-[0.08em] text-[hsl(var(--gg-navy-deep))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors border-b border-[hsl(var(--gg-border-light))]"
+            >
+              Todo el calendario
+            </button>
+            <button
+              role="menuitem"
+              onClick={() => downloadCalendarIcs('circuito-galaxygolf')}
+              className="w-full text-left px-5 py-3 text-[12px] tracking-[0.08em] text-[hsl(var(--gg-navy-deep))] hover:bg-[hsl(var(--gg-green))]/10 transition-colors border-b border-[hsl(var(--gg-border-light))]"
+            >
+              Circuito GalaxyGolf
+            </button>
+            <button
+              role="menuitem"
+              onClick={() => downloadCalendarIcs('galaxycup')}
+              className="w-full text-left px-5 py-3 text-[12px] tracking-[0.08em] text-[hsl(var(--gg-navy-deep))] hover:bg-[hsl(var(--gg-copper))]/10 transition-colors"
+            >
+              GalaxyCup
+            </button>
+          </div>
+        </>
+      )}
 
       {/* ——— FILTERS + SUMMARY ——— */}
       <section className="container pt-10 pb-6">
