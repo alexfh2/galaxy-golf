@@ -203,12 +203,9 @@ const News = () => {
                         </button>
                       )}
 
-                      <div
-                        className="prose prose-sm max-w-none text-foreground/90 font-body"
-                        dangerouslySetInnerHTML={{
-                          __html: article.body?.replace(/\n/g, '<br/>') || '',
-                        }}
-                      />
+                      <div className="prose prose-sm max-w-none text-foreground/90 font-body whitespace-pre-wrap">
+                        {article.body || ''}
+                      </div>
 
                       {/* Vertical / extra photos: preserve aspect ratio, clickable thumbs */}
                       {otherPhotos.length > 0 && (
