@@ -277,25 +277,42 @@ export default function Stats() {
 
   const holesData = useMemo(() => {
     if (reliableStrokes.length < 5) return null;
-    // Group by round → average diff vs par per hole
-    const totals = Array.from({ length: 18 }, () => ({ sum: 0, count: 0, par: 0 }));
+
+    // Group strokes by course so averages are per-course (mixing different courses is meaningless)
+    const byCourse = new Map<string, { scores: number[][]; par: number[] }>();
     for (const s of reliableStrokes) {
+      const course = venueName(s.result);
+      if (!byCourse.has(course)) {
+        byCourse.set(course, { scores: [], par: s.par });
+      }
+      byCourse.get(course)!.scores.push(s.scores);
+    }
+
+    type CourseHole = { hole: number; par: number; avg: number | null; diff: number | null; course: string };
+    const allHoles: CourseHole[] = [];
+
+    for (const [course, data] of byCourse.entries()) {
+      if (data.scores.length < 3) continue; // need at least 3 rounds for significance
+      const totals = Array.from({ length: 18 }, () => ({ sum: 0, count: 0, par: 0 }));
+      for (const scores of data.scores) {
+        for (let i = 0; i < 18; i++) {
+          totals[i].sum += scores[i];
+          totals[i].count += 1;
+          totals[i].par = data.par[i];
+        }
+      }
       for (let i = 0; i < 18; i++) {
-        totals[i].sum += s.scores[i];
-        totals[i].count += 1;
-        totals[i].par = s.par[i];
+        const t = totals[i];
+        const avg = t.count > 0 ? t.sum / t.count : null;
+        const diff = avg != null ? avg - t.par : null;
+        allHoles.push({ hole: i + 1, par: t.par, avg, diff, course });
       }
     }
-    const holes = totals.map((t, i) => ({
-      hole: i + 1,
-      par: t.par,
-      avg: t.count > 0 ? t.sum / t.count : null,
-      diff: t.count > 0 ? t.sum / t.count - t.par : null,
-    }));
-    const valid = holes.filter((h) => h.diff != null);
+
+    const valid = allHoles.filter((h) => h.diff != null);
     if (valid.length === 0) return null;
-    const hard = [...valid].sort((a, b) => (b.diff! - a.diff!)).slice(0, 3);
-    const easy = [...valid].sort((a, b) => (a.diff! - b.diff!)).slice(0, 3);
+    const hard = [...valid].sort((a, b) => b.diff! - a.diff!).slice(0, 5);
+    const easy = [...valid].sort((a, b) => a.diff! - b.diff!).slice(0, 5);
     return { hard, easy };
   }, [reliableStrokes]);
 
@@ -502,10 +519,10 @@ export default function Stats() {
               ) : (
                 holesData.hard.map((h, i) => (
                   <LeaderRow
-                    key={h.hole}
+                    key={`${h.course}-${h.hole}`}
                     rank={i + 1}
                     name={`Hoyo ${h.hole}`}
-                    meta={`Par ${h.par}`}
+                    meta={`${h.course} · Par ${h.par}`}
                     value={h.avg?.toFixed(2)}
                     valueHint="promedio"
                   />
@@ -520,10 +537,10 @@ export default function Stats() {
               ) : (
                 holesData.easy.map((h, i) => (
                   <LeaderRow
-                    key={h.hole}
+                    key={`${h.course}-${h.hole}`}
                     rank={i + 1}
                     name={`Hoyo ${h.hole}`}
-                    meta={`Par ${h.par}`}
+                    meta={`${h.course} · Par ${h.par}`}
                     value={h.avg?.toFixed(2)}
                     valueHint="promedio"
                   />
