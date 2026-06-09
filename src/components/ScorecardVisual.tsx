@@ -17,14 +17,17 @@ const calcPlayingHcp = (hcp: number): number => Math.round(hcp);
 const calcExtraStrokes = (strokeIndex: number, playerHcp: number): number => {
   const playingHcp = calcPlayingHcp(playerHcp);
   if (playingHcp === 0) return 0;
-  const sign = playingHcp > 0 ? 1 : -1;
-  const abs = Math.abs(playingHcp);
+  if (playingHcp > 0) {
+    // Positive HPU: receives strokes on the hardest holes first (lowest SI).
+    const fullStrokes = Math.floor(playingHcp / 18);
+    const remainder = playingHcp % 18;
+    return fullStrokes + (strokeIndex <= remainder ? 1 : 0);
+  }
+  // Negative HPU (plus handicap): gives back strokes on the easiest holes first (highest SI).
+  const abs = -playingHcp;
   const fullStrokes = Math.floor(abs / 18);
   const remainder = abs % 18;
-  // Positive HPU: receives strokes on lowest SI first (SI <= remainder).
-  // Negative HPU: gives back strokes only on lowest SI holes (SI <= remainder).
-  const perHole = fullStrokes + (strokeIndex <= remainder ? 1 : 0);
-  return sign * perHole;
+  return -(fullStrokes + (strokeIndex > 18 - remainder ? 1 : 0));
 };
 
 const calcStablefordPoints = (
@@ -96,6 +99,18 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
     return calcExtraStrokes(effectiveHandicap[holeIdx], playerHandicap!);
   };
 
+  // Holes (1-based numbers) penalized by negative HPU, in order of SI desc
+  const penaltyHoles: number[] = [];
+  if (canCalcStableford && playingHcp != null && playingHcp < 0 && effectiveHandicap) {
+    const abs = -playingHcp;
+    const remainder = abs % 18;
+    const threshold = 18 - remainder;
+    effectiveHandicap.forEach((si, idx) => {
+      if (si > threshold) penaltyHoles.push(si);
+    });
+    penaltyHoles.sort((a, b) => b - a);
+  }
+
   const renderScore = (score: number, holePar: number) => {
     if (score == null || score === 0) return <span className="text-muted-foreground/60 font-semibold">—</span>;
 
@@ -142,20 +157,6 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
     );
   };
 
-  const renderStrokeDots = (extraStrokes: number) => {
-    if (extraStrokes === 0) return null;
-    return (
-      <div className="absolute top-0.5 right-0.5 flex gap-[2px]">
-        {Array.from({ length: Math.min(extraStrokes, 3) }).map((_, i) => (
-          <span
-            key={i}
-            className="w-[4px] h-[4px] rounded-full bg-accent inline-block"
-          />
-        ))}
-      </div>
-    );
-  };
-
   const headerCellClass = "text-center py-1.5 px-1 font-mono text-[10px] bg-[hsl(var(--primary)/0.08)] text-muted-foreground/70 border border-border/30";
   const headerLabelClass = "py-1.5 px-2 font-medium text-[10px] bg-[hsl(var(--primary)/0.08)] text-muted-foreground/70 border border-border/30 w-14";
   const holeCellClass = "text-center py-2 px-1 font-mono text-sm font-bold bg-[hsl(var(--primary)/0.08)] text-foreground border border-border/30";
@@ -165,6 +166,27 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
   const totalCellClass = "text-center py-2 px-1 font-mono font-bold border border-border/30 w-12";
   const strokeDotCellClass = "text-center py-0.5 px-1 bg-[hsl(var(--primary)/0.08)] border-x border-border/30 h-3";
   const strokeDotLabelClass = "py-0.5 px-2 bg-[hsl(var(--primary)/0.08)] border-x border-border/30 w-14 h-3";
+
+  const renderStrokeCell = (strokes: number) => {
+    if (strokes === 0) return null;
+    if (strokes > 0) {
+      return (
+        <div className="flex justify-center gap-[3px]">
+          {Array.from({ length: Math.min(strokes, 3) }).map((_, j) => (
+            <span key={j} className="w-[6px] h-[6px] rounded-full bg-accent inline-block" />
+          ))}
+        </div>
+      );
+    }
+    // Plus-handicap penalty marker — copper, distinct from accent dots
+    return (
+      <div className="flex justify-center">
+        <span className="inline-flex items-center justify-center min-w-[14px] h-[10px] px-[3px] rounded-sm text-[8px] font-bold leading-none bg-[hsl(var(--gg-copper)/0.18)] text-[hsl(var(--gg-copper))] ring-1 ring-[hsl(var(--gg-copper)/0.4)]">
+          −{Math.abs(strokes)}
+        </span>
+      </div>
+    );
+  };
 
   const renderHalf = (
     halfScores: number[],
@@ -193,13 +215,7 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
               const strokes = getStrokeMarker(holeOffset + i);
               return (
                 <td key={i} className={strokeDotCellClass}>
-                  {strokes > 0 && (
-                    <div className="flex justify-center gap-[3px]">
-                      {Array.from({ length: Math.min(strokes, 3) }).map((_, j) => (
-                        <span key={j} className="w-[6px] h-[6px] rounded-full bg-accent inline-block" />
-                      ))}
-                    </div>
-                  )}
+                  {renderStrokeCell(strokes)}
                 </td>
               );
             })}
@@ -240,13 +256,20 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
         {halfStb && (
           <tr>
             <td className={`${resultLabelClass} font-bold text-accent uppercase tracking-wider bg-secondary/30`}>Stb</td>
-            {halfStb.map((pts, i) => (
-              <td key={i} className={`${resultCellClass} bg-secondary/20`}>
-                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md text-sm ${getStbStyle(pts)}`}>
-                  {pts != null ? pts : '—'}
-                </span>
-              </td>
-            ))}
+            {halfStb.map((pts, i) => {
+              const strokes = getStrokeMarker(holeOffset + i);
+              const isPenalty = strokes < 0;
+              return (
+                <td
+                  key={i}
+                  className={`${resultCellClass} ${isPenalty ? 'bg-[hsl(var(--gg-copper)/0.08)] ring-1 ring-inset ring-[hsl(var(--gg-copper)/0.35)]' : 'bg-secondary/20'}`}
+                >
+                  <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md text-sm ${getStbStyle(pts)}`}>
+                    {pts != null ? pts : '—'}
+                  </span>
+                </td>
+              );
+            })}
             <td className={`${resultCellClass} ${totalCellClass} text-accent-foreground bg-accent text-base font-bold`}>
               {sumStb(halfStb)}
             </td>
@@ -262,6 +285,18 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
 
   return (
     <div className="space-y-3">
+      {playingHcp != null && playingHcp < 0 && penaltyHoles.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-[hsl(var(--gg-copper)/0.08)] border border-[hsl(var(--gg-copper)/0.3)] text-[11px]">
+          <span className="inline-flex items-center justify-center min-w-[18px] h-[14px] px-1 rounded-sm text-[9px] font-bold bg-[hsl(var(--gg-copper)/0.2)] text-[hsl(var(--gg-copper))] ring-1 ring-[hsl(var(--gg-copper)/0.4)]">
+            −1
+          </span>
+          <span className="text-muted-foreground">
+            HPU <strong className="text-foreground font-mono">{playingHcp}</strong> · Penalitza en HCP{' '}
+            <strong className="text-foreground font-mono">{penaltyHoles.join(' i ')}</strong>
+          </span>
+        </div>
+      )}
+
       {renderHalf(front9, frontPar, 1, frontTotal, frontHcp, frontStb ?? undefined, 0)}
       {renderHalf(back9, backPar, 10, backTotal, backHcp, backStb ?? undefined, 9)}
 
@@ -308,6 +343,14 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
                 <span className="w-[5px] h-[5px] rounded-full bg-accent inline-block" />
               </span>
               Punts HCP
+            </span>
+          )}
+          {canCalcStableford && (
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center justify-center min-w-[16px] h-[11px] px-1 rounded-sm text-[8px] font-bold bg-[hsl(var(--gg-copper)/0.18)] text-[hsl(var(--gg-copper))] ring-1 ring-[hsl(var(--gg-copper)/0.4)]">
+                −1
+              </span>
+              Penalització HCP Plus
             </span>
           )}
         </div>
