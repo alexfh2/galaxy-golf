@@ -16,9 +16,15 @@ const calcPlayingHcp = (hcp: number): number => Math.round(hcp);
 
 const calcExtraStrokes = (strokeIndex: number, playerHcp: number): number => {
   const playingHcp = calcPlayingHcp(playerHcp);
-  const fullStrokes = Math.floor(playingHcp / 18);
-  const remainder = playingHcp % 18;
-  return fullStrokes + (strokeIndex <= remainder ? 1 : 0);
+  if (playingHcp === 0) return 0;
+  const sign = playingHcp > 0 ? 1 : -1;
+  const abs = Math.abs(playingHcp);
+  const fullStrokes = Math.floor(abs / 18);
+  const remainder = abs % 18;
+  // Positive HPU: receives strokes on lowest SI first (SI <= remainder).
+  // Negative HPU: gives back strokes only on lowest SI holes (SI <= remainder).
+  const perHole = fullStrokes + (strokeIndex <= remainder ? 1 : 0);
+  return sign * perHole;
 };
 
 const calcStablefordPoints = (
