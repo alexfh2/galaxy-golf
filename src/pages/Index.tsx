@@ -21,7 +21,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent" />
 
         <div className="relative z-10 container py-16 max-w-3xl">
-          <p className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4">
+          <p className="font-semibold tracking-[0.35em] uppercase text-[hsl(var(--gg-gold))] mb-4 text-xl">
             Temporada 2026
           </p>
           <h1 className="font-display text-5xl lg:text-7xl font-medium leading-[0.95] mb-5 text-[hsl(var(--gg-navy-deep))]">
