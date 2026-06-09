@@ -13,7 +13,7 @@ const Index = () => {
       {/* ——— HERO ——— */}
       <section className="relative min-h-[68vh] overflow-hidden flex items-center">
         <div className="absolute inset-0">
-          <img src={heroBg} alt="" className="w-full h-full object-cover object-center" />
+          <img src={heroBg} alt="" className="w-full h-full object-cover object-[center_35%]" />
         </div>
         {/* Overlay lateral cálido para apoyo del titular */}
         <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--gg-bg-light))]/95 from-0% via-[hsl(var(--gg-bg-light))]/70 via-45% to-[hsl(var(--gg-bg-light))]/15 to-100%" />
