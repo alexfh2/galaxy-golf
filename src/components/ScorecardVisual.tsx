@@ -291,7 +291,7 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
             −1
           </span>
           <span className="text-muted-foreground">
-            HPU <strong className="text-foreground font-mono">{playingHcp}</strong> · Penalitza en HCP{' '}
+            HPU <strong className="text-foreground font-mono">{playingHcp}</strong> · Penaliza en HCP{' '}
             <strong className="text-foreground font-mono">{penaltyHoles.join(' i ')}</strong>
           </span>
         </div>
@@ -346,11 +346,11 @@ const ScorecardVisual: React.FC<ScorecardVisualProps> = ({ scores, par = DEFAULT
             </span>
           )}
           {canCalcStableford && (
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex flex-col items-center gap-0.5">
               <span className="inline-flex items-center justify-center min-w-[16px] h-[11px] px-1 rounded-sm text-[8px] font-bold bg-[hsl(var(--gg-copper)/0.18)] text-[hsl(var(--gg-copper))] ring-1 ring-[hsl(var(--gg-copper)/0.4)]">
                 −1
               </span>
-              Penalització HCP Plus
+              <span className="text-[9px] text-center">Penalización HCP Plus</span>
             </span>
           )}
         </div>
