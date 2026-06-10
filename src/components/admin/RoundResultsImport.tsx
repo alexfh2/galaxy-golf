@@ -244,14 +244,17 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     const { data: players } = await supabase.from('players').select('id, name, license').range(0, 49999);
     const w: string[] = [];
 
+    const normLic = (s?: string | null) => (s ?? '').trim().toUpperCase();
     const matched = parsed.map(r => {
+      const rLic = normLic(r.license);
       const match = players?.find(
-        p => (r.license && p.license === r.license) ||
+        p => (rLic && normLic(p.license) === rLic) ||
           normaliseName(p.name) === normaliseName(r.name)
       );
       if (!match && !r._is_np) w.push(`"${r.name}" no trobat a la base de dades`);
       return { ...r, _matched_player_id: match?.id };
     });
+
 
     const withGroups = applyDuplicateResolution(matched);
     setResults(withGroups);
