@@ -624,25 +624,40 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
         const birthYear = r.age != null ? new Date().getFullYear() - Math.floor(r.age) : null;
         const isSenior = r._is_senior ?? (r.age != null ? r.age >= SENIOR_AGE : false);
+        const licenseValue = (r.license || '').trim().toUpperCase() ||
+          `AUTO-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-        const { data: newPlayer, error } = await supabase
+        const { data: upserted, error } = await supabase
           .from('players')
-          .insert({
+          .upsert({
             name: r.name,
-            license: r.license || `AUTO-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            license: licenseValue,
             current_handicap: r.handicap,
             initial_handicap: r.handicap,
             gender: r.gender === 'F' ? 'F' : r.gender === 'M' ? 'M' : null,
             is_senior: isSenior,
             birth_year: birthYear,
-          })
+          }, { onConflict: 'license', ignoreDuplicates: false })
           .select('id')
           .single();
 
-        if (error) throw new Error(`Error creant jugador "${r.name}": ${error.message}`);
-        r._matched_player_id = newPlayer.id;
+        if (error || !upserted) {
+          // Final fallback: licence already exists with different casing/spacing — look it up.
+          const { data: existing } = await supabase
+            .from('players')
+            .select('id')
+            .ilike('license', licenseValue)
+            .maybeSingle();
+          if (existing?.id) {
+            r._matched_player_id = existing.id;
+            continue;
+          }
+          throw new Error(`Error creant jugador "${r.name}": ${error?.message ?? 'sense dades'}`);
+        }
+        r._matched_player_id = upserted.id;
         newPlayers.push(r.name);
       }
+
 
       // Detect already-existing results for these players (if not deleting first)
       const duplicatedExisting: string[] = [];
