@@ -245,15 +245,25 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     const w: string[] = [];
 
     const normLic = (s?: string | null) => (s ?? '').trim().toUpperCase();
+    // Last 6 digits = real licence number; the CB/CM + 2 digits prefix encodes
+    // the federation/club and can change when the player changes club.
+    const licSuffix = (s?: string | null) => {
+      const digits = (s ?? '').replace(/\D/g, '');
+      return digits.length >= 6 ? digits.slice(-6) : '';
+    };
     const matched = parsed.map(r => {
       const rLic = normLic(r.license);
-      const match = players?.find(
-        p => (rLic && normLic(p.license) === rLic) ||
-          normaliseName(p.name) === normaliseName(r.name)
-      );
+      const rSuffix = licSuffix(r.license);
+      const match = players?.find(p => {
+        const pLic = normLic(p.license);
+        if (rLic && pLic === rLic) return true;
+        if (rSuffix && licSuffix(p.license) === rSuffix) return true;
+        return normaliseName(p.name) === normaliseName(r.name);
+      });
       if (!match && !r._is_np) w.push(`"${r.name}" no trobat a la base de dades`);
       return { ...r, _matched_player_id: match?.id };
     });
+
 
 
     const withGroups = applyDuplicateResolution(matched);
