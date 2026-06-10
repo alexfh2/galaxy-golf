@@ -241,7 +241,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   };
 
   const matchPlayers = async (parsed: ParsedResult[]) => {
-    const { data: players } = await supabase.from('players').select('id, name, license');
+    const { data: players } = await supabase.from('players').select('id, name, license').range(0, 49999);
     const w: string[] = [];
 
     const matched = parsed.map(r => {
