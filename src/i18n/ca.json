@@ -6,7 +6,7 @@
     "players": "Jugadors",
     "compare": "Comparador",
     "stats": "Estadístiques",
-    "news": "Notícies",
+    "news": "Noticias",
     "admin": "Administració",
     "login": "Accés admin"
   },
@@ -128,7 +128,7 @@
     "participation": "Participació"
   },
   "news": {
-    "title": "Notícies",
+    "title": "Noticias",
     "readMore": "Llegir més",
     "shareArticle": "Compartir article"
   }
