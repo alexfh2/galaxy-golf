@@ -56,12 +56,89 @@ function fmtDate(d?: string | null): string {
   return `${dd}/${m}/${y}`;
 }
 
-function venueName(r?: PublicResult['rounds'] | null): string {
+function venueName(r?: PublicResult['rounds'] | null | { name?: string | null; course?: string | null; club?: string | null }): string {
   return (
-    r?.club?.trim() ||
-    r?.course?.trim() ||
-    r?.name?.trim() ||
-    '—'
+    (r as any)?.club?.trim() ||
+    (r as any)?.course?.trim() ||
+    (r as any)?.name?.trim() ||
+    'Sede por confirmar'
+  );
+}
+
+type RoundMetaInfo = { name: string | null; course: string | null; club: string | null; date: string | null };
+
+function useRoundsMetaMap() {
+  return useQuery({
+    queryKey: ['public-rounds-meta-map'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('rounds')
+        .select('id, name, course, club, date');
+      const map = new Map<string, RoundMetaInfo>();
+      (data ?? []).forEach((r: any) => {
+        map.set(r.id, { name: r.name ?? null, course: r.course ?? null, club: r.club ?? null, date: r.date ?? null });
+      });
+      return map;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+function enrichRoundsMeta<T extends { round: { round_id: string; name: string; date: string | null } }>(
+  items: T[],
+  meta: Map<string, RoundMetaInfo> | undefined,
+): T[] {
+  if (!meta) return items;
+  return items.map((it) => {
+    const m = meta.get(it.round.round_id);
+    if (!m) return it;
+    const fallbackName = venueName(m);
+    return {
+      ...it,
+      round: {
+        ...it.round,
+        name: it.round.name && it.round.name !== '—' && it.round.name !== 'Sede por confirmar' ? it.round.name : fallbackName,
+        date: it.round.date ?? m.date ?? null,
+      },
+    };
+  });
+}
+
+function splitPlayedPending<T extends { round: { date: string | null }; rowsByCat: { hcp_low: unknown[]; hcp_high: unknown[] } }>(items: T[]): { played: T[]; pending: T[] } {
+  const played: T[] = [];
+  const pending: T[] = [];
+  for (const it of items) {
+    const total = it.rowsByCat.hcp_low.length + it.rowsByCat.hcp_high.length;
+    if (total > 0) played.push(it);
+    else pending.push(it);
+  }
+  // Played: most recent first
+  played.sort((a, b) => (b.round.date ?? '').localeCompare(a.round.date ?? ''));
+  // Pending: nearest first; rounds without date go last
+  pending.sort((a, b) => {
+    const da = a.round.date ?? '';
+    const db = b.round.date ?? '';
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da.localeCompare(db);
+  });
+  return { played, pending };
+}
+
+function SectionDivider({ label, accent }: { label: string; accent: 'green' | 'copper' }) {
+  const color = accent === 'copper' ? 'hsl(var(--gg-copper))' : 'hsl(var(--gg-green))';
+  return (
+    <div className="flex items-center gap-3 my-4">
+      <span className="h-px flex-1" style={{ background: `${color}33` }} />
+      <span
+        className="text-[10px] font-semibold tracking-[0.28em] uppercase"
+        style={{ color }}
+      >
+        {label}
+      </span>
+      <span className="h-px flex-1" style={{ background: `${color}33` }} />
+    </div>
   );
 }
 
