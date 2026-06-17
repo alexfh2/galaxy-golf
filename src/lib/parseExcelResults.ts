@@ -208,7 +208,6 @@ export interface ExcelDiagnostics {
 
 export interface ExcelParseOutput {
   results: ExcelParsedResult[];
-  hasSeniorInfo: boolean;
   mode: HoleMode;
   warnings: string[];
   diagnostics: ExcelDiagnostics;
