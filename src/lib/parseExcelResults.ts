@@ -28,7 +28,6 @@ export interface ExcelParsedResult {
   result_status: ResultStatus;
   /** Partial Stableford as reported by the source (kept for audit when retired with partial card). */
   raw_stableford_points: number | null;
-  is_senior: boolean;
 }
 
 const RETIRED_TOKENS = [
