@@ -11,7 +11,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar, Newspaper } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import heroNews from '@/assets/hero-news.png.asset.json';
-import { resolvePhotoUrl } from '@/lib/photoUrl';
+import { signPhotoUrl } from '@/lib/photoUrl';
 
 type PhotoMeta = {
   id: string;
@@ -58,9 +58,9 @@ const News = () => {
     let cancelled = false;
     Promise.all(
       rawPhotos.map(
-        (p) =>
-          new Promise<PhotoMeta>((resolve) => {
-            const resolvedUrl = resolvePhotoUrl(p.url) ?? p.url;
+        async (p) =>
+          new Promise<PhotoMeta>(async (resolve) => {
+            const resolvedUrl = (await signPhotoUrl(p.url)) ?? p.url;
             const img = new Image();
             img.onload = () => {
               const ratio = img.naturalWidth / img.naturalHeight;
