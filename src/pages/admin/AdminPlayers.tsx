@@ -96,7 +96,7 @@ const AdminPlayers = () => {
                 <TableHead>Telèfon</TableHead>
                 <TableHead>Últim HCP</TableHead>
                 <TableHead>Gènere</TableHead>
-                <TableHead>Sènior</TableHead>
+                
                 <TableHead className="text-right">Accions</TableHead>
               </TableRow>
             </TableHeader>
