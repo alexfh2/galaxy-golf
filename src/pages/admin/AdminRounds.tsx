@@ -102,6 +102,7 @@ const AdminRounds = () => {
   const [resultsRound, setResultsRound] = useState<Round | null>(null);
   const [deletingRound, setDeletingRound] = useState<Round | null>(null);
   const [newsRound, setNewsRound] = useState<Round | null>(null);
+  const [manualEditRound, setManualEditRound] = useState<Round | null>(null);
   const [courseUrl, setCourseUrl] = useState('');
   const [extractingPar, setExtractingPar] = useState(false);
   const [courseFile, setCourseFile] = useState<File | null>(null);
