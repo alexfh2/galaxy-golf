@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Check, X, Phone, Upload, Trash2, User as UserIcon } from 'lucide-react';
+import { Pencil, Check, X, Phone, Upload, Trash2, User as UserIcon, Search } from 'lucide-react';
 
 type EditState = {
   name: string;
@@ -34,9 +34,11 @@ const AdminPlayers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditState | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'handicap'>('name');
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const { data: players, isLoading } = useQuery({
+  const { data: playersRaw, isLoading } = useQuery({
     queryKey: ['admin-players'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,6 +49,24 @@ const AdminPlayers = () => {
       return data;
     },
   });
+
+  const players = useMemo(() => {
+    let list = playersRaw ? [...playersRaw] : [];
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p: any) => (p.name ?? '').toLowerCase().includes(q));
+    }
+    if (sortBy === 'name') {
+      list.sort((a: any, b: any) => (a.name ?? '').localeCompare(b.name ?? ''));
+    } else if (sortBy === 'handicap') {
+      list.sort((a: any, b: any) => {
+        const ha = a.current_handicap == null ? Infinity : Number(a.current_handicap);
+        const hb = b.current_handicap == null ? Infinity : Number(b.current_handicap);
+        return ha - hb;
+      });
+    }
+    return list;
+  }, [playersRaw, searchQuery, sortBy]);
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<EditState> }) => {
@@ -148,6 +168,29 @@ const AdminPlayers = () => {
   return (
     <div className="animate-fade-in">
       <h1 className="font-display text-2xl font-bold mb-6">Jugadors</h1>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cercar per nom..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Ordenar per:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'name' | 'handicap')}
+            className="h-9 rounded border border-border bg-background px-3 text-sm"
+          >
+            <option value="name">Alfabètic</option>
+            <option value="handicap">Hàndicap</option>
+          </select>
+        </div>
+      </div>
 
       <Card className="border-border/60">
         <CardContent className="p-0 overflow-x-auto">
