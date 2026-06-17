@@ -69,6 +69,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
   const [revalidating, setRevalidating] = useState(false);
   const [rows, setRows] = useState<Record<string, RowState>>({});
   const [pendingSave, setPendingSave] = useState<string | null>(null);
+  const [holeEditResultId, setHoleEditResultId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
