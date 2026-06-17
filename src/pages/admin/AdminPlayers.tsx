@@ -42,7 +42,6 @@ const AdminPlayers = () => {
         club: patch.club?.trim() || null,
         phone: patch.phone?.trim() || null,
         gender: patch.gender || null,
-        is_senior: patch.is_senior,
         current_handicap:
           patch.current_handicap === '' || patch.current_handicap == null
             ? null
