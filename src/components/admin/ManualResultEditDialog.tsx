@@ -215,9 +215,6 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
-                Edició hoyo a hoyo pendiente de próxima fase.
-              </div>
 
               {isLoading && (
                 <div className="flex items-center justify-center py-10 text-muted-foreground">
