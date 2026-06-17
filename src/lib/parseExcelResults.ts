@@ -298,7 +298,6 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         is_np: true,
         result_status: status,
         raw_stableford_points: status === 'retired' && partial != null ? Math.floor(partial) : null,
-        is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
       });
       continue;
     }
