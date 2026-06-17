@@ -596,7 +596,7 @@ const Rounds = () => {
                                 : 'text-[hsl(var(--gg-navy-deep))]/75'
                             }`}
                           >
-                            {round.name}
+                            {roundDisplayName(round)}
                           </h3>
                           {round.sponsor && (
                             <span className="text-[11px] font-sans text-[hsl(var(--gg-text-muted))]">
