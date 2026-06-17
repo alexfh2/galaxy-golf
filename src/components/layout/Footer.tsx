@@ -40,6 +40,14 @@ const Footer = () => {
           © {new Date().getFullYear()}
         </p>
       </div>
+      <div className="container pb-4 flex justify-end">
+        <Link
+          to="/admin"
+          className="text-[10px] tracking-[0.18em] uppercase text-[hsl(var(--gg-ivory))]/30 hover:text-[hsl(var(--gg-ivory))]/60 transition-colors"
+        >
+          Admin
+        </Link>
+      </div>
     </footer>
   );
 };
