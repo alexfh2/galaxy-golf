@@ -4,13 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchPublicCircuitData, publicCircuitDataQueryKey } from '@/lib/publicCircuitData';
 import { buildPlayerCategoryHandicapMap } from '@/lib/playerCategoryHandicap';
 
-export type CategoryKey = 'hcpInf' | 'hcpSup' | 'female' | 'senior';
+export type CategoryKey = 'hcpInf' | 'hcpSup' | 'female';
 
 export type RankedPlayer = {
   id: string;
   name: string;
   gender: string | null;
-  is_senior: boolean;
   handicap: number | null;
   total: number;
   roundsPlayed: number;
@@ -23,7 +22,7 @@ type Result = {
   stableford_points: number | null;
   handicap_at_round: number | null;
   round_id: string;
-  players_public: { name: string; gender: string | null; is_senior: boolean; current_handicap: number | null } | null;
+  players_public: { name: string; gender: string | null; current_handicap: number | null } | null;
   rounds: { status: string } | null;
 };
 
@@ -45,7 +44,7 @@ export function useCategoryRankings() {
   const bestN = (season?.rules_config as any)?.best_n_scores || 8;
 
   const rankings = useMemo<CategoryRankings>(() => {
-    const empty: CategoryRankings = { hcpInf: [], hcpSup: [], female: [], senior: [] };
+    const empty: CategoryRankings = { hcpInf: [], hcpSup: [], female: [] };
     if (!results?.length) return empty;
 
     const categoryHcpMap = buildPlayerCategoryHandicapMap(results as any);
@@ -53,7 +52,6 @@ export function useCategoryRankings() {
     const byPlayer = new Map<string, {
       name: string;
       gender: string | null;
-      is_senior: boolean;
       handicap: number | null;
       scores: { points: number; weighted: number }[];
     }>();
@@ -65,18 +63,15 @@ export function useCategoryRankings() {
         byPlayer.set(pid, {
           name: r.players_public.name,
           gender: r.players_public.gender,
-          is_senior: r.players_public.is_senior,
           handicap: categoryHcpMap.get(pid) ?? r.players_public.current_handicap ?? r.handicap_at_round,
           scores: [],
         });
       }
-      // GalaxyGolf 2026: sin multiplicador Master. Los Majors se identifican por
-      // round_competitions.stage = 'major', no afectan al peso del Stableford.
       const weighted = r.stableford_points;
       byPlayer.get(pid)!.scores.push({ points: r.stableford_points, weighted });
     }
 
-    const build = (filterFn: (p: { gender: string | null; is_senior: boolean; handicap: number | null }) => boolean): RankedPlayer[] => {
+    const build = (filterFn: (p: { gender: string | null; handicap: number | null }) => boolean): RankedPlayer[] => {
       const list: RankedPlayer[] = [];
       for (const [id, p] of byPlayer.entries()) {
         if (!filterFn(p)) continue;
@@ -86,7 +81,6 @@ export function useCategoryRankings() {
           id,
           name: p.name,
           gender: p.gender,
-          is_senior: p.is_senior,
           handicap: p.handicap,
           total,
           roundsPlayed: p.scores.length,
@@ -100,7 +94,6 @@ export function useCategoryRankings() {
       hcpInf: build(p => p.handicap != null && p.handicap <= 15.4),
       hcpSup: build(p => p.handicap != null && p.handicap >= 15.5),
       female: build(p => p.gender === 'F'),
-      senior: build(p => p.is_senior),
     };
   }, [results, bestN]);
 
