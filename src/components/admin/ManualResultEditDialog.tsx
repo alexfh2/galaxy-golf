@@ -349,6 +349,211 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {holeEditResultId && results && (() => {
+        const r = results.find((x) => x.id === holeEditResultId);
+        if (!r) return null;
+        return (
+          <HoleByHoleEditDialog
+            open={!!holeEditResultId}
+            onClose={() => setHoleEditResultId(null)}
+            result={r}
+            round={round}
+            onSaved={async () => {
+              await refetch();
+              queryClient.invalidateQueries({ queryKey: ['rankings'] });
+              queryClient.invalidateQueries({ queryKey: ['results'] });
+            }}
+          />
+        );
+      })()}
+    </>
+  );
+}
+
+// =============================================================
+// Hole-by-hole edit sub-dialog
+// =============================================================
+
+interface HoleEditProps {
+  open: boolean;
+  onClose: () => void;
+  result: Result & { players: { id: string; name: string } | null };
+  round: Round;
+  onSaved: () => void | Promise<void>;
+}
+
+function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEditProps) {
+  const { toast } = useToast();
+  const sc = (result.scorecard ?? null) as
+    | { mode?: string; scores?: (number | null)[]; hole_points?: unknown[]; handicap_play?: number | null }
+    | null;
+  const isStablefordMode = sc?.mode === 'stableford_points';
+
+  const initialScores: (number | null)[] = (() => {
+    const arr = Array.isArray(sc?.scores) ? sc!.scores! : [];
+    const out: (number | null)[] = [];
+    for (let i = 0; i < 18; i++) {
+      const v = arr[i];
+      out.push(typeof v === 'number' ? v : null);
+    }
+    return out;
+  })();
+
+  const [scores, setScores] = useState<string[]>(
+    initialScores.map((v) => (v == null ? '' : String(v)))
+  );
+  const [updateStableford, setUpdateStableford] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setConfirming(false);
+      setSaving(false);
+      setUpdateStableford(false);
+    }
+  }, [open]);
+
+  const coursePar = (round as unknown as { course_par?: unknown }).course_par;
+  const parArr: number[] | null = Array.isArray(coursePar) && coursePar.length === 18
+    ? (coursePar as number[])
+    : null;
+
+  const numericScores: (number | null)[] = scores.map((s) => {
+    const t = s.trim();
+    if (t === '') return null;
+    const n = Number(t);
+    return Number.isFinite(n) ? n : null;
+  });
+
+  const previewScratch = parArr
+    ? computeScratchStableford({ scores: numericScores }, parArr)
+    : null;
+
+  const handleSave = async () => {
+    setSaving(true);
+    const newScorecard = {
+      ...(sc ?? {}),
+      scores: numericScores,
+    };
+    const update: Record<string, unknown> = { scorecard: newScorecard };
+    if (updateStableford && previewScratch != null) {
+      update.stableford_points = previewScratch;
+    }
+    const { error } = await supabase
+      .from('results')
+      .update(update as never)
+      .eq('id', result.id);
+    setSaving(false);
+    setConfirming(false);
+    if (error) {
+      toast({ title: 'Error en desar', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Tarja desada' });
+    await onSaved();
+    onClose();
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              Editar hoyos — {result.players?.name ?? '—'}
+            </DialogTitle>
+            <DialogDescription>
+              Correcció hoyo a hoyo de la tarja. Els canvis afecten el resultat publicat.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isStablefordMode ? (
+            <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-3 text-sm text-amber-900 dark:text-amber-200">
+              Esta tarjeta viene importada como puntos Stableford por hoyo; no se puede editar como golpes.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {[0, 9].map((start) => (
+                <div key={start}>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    {start === 0 ? 'Hoyos 1-9' : 'Hoyos 10-18'}
+                  </div>
+                  <div className="grid grid-cols-9 gap-1">
+                    {scores.slice(start, start + 9).map((val, idx) => {
+                      const i = start + idx;
+                      return (
+                        <div key={i} className="flex flex-col items-center">
+                          <div className="text-[10px] text-muted-foreground">
+                            {i + 1}{parArr ? ` · p${parArr[i]}` : ''}
+                          </div>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={val}
+                            onChange={(e) => {
+                              const next = [...scores];
+                              next[i] = e.target.value;
+                              setScores(next);
+                            }}
+                            className="h-9 text-center px-1"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {parArr && (
+                <div className="text-xs text-muted-foreground">
+                  Stableford scratch calculat: <span className="font-medium">{previewScratch ?? '—'}</span>
+                </div>
+              )}
+
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={updateStableford}
+                  onCheckedChange={(v) => setUpdateStableford(v === true)}
+                  disabled={!parArr || previewScratch == null}
+                />
+                <span>
+                  També actualitzar <code>stableford_points</code> amb el valor calculat
+                  {parArr ? '' : ' (no disponible: falta course_par)'}
+                </span>
+              </label>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel·lar</Button>
+            {!isStablefordMode && (
+              <Button onClick={() => setConfirming(true)} disabled={saving}>
+                <Save className="h-4 w-4 mr-1" /> Guardar tarja
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={confirming} onOpenChange={(o) => !o && !saving && setConfirming(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar correcció hoyo a hoyo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta corrección modificará la tarjeta hoyo a hoyo y puede afectar al resultado publicado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel·lar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Guardar tarja
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
