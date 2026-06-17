@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Accordion,
   AccordionItem,
@@ -54,12 +56,89 @@ function fmtDate(d?: string | null): string {
   return `${dd}/${m}/${y}`;
 }
 
-function venueName(r?: PublicResult['rounds'] | null): string {
+function venueName(r?: PublicResult['rounds'] | null | { name?: string | null; course?: string | null; club?: string | null }): string {
   return (
-    r?.club?.trim() ||
-    r?.course?.trim() ||
-    r?.name?.trim() ||
-    '—'
+    (r as any)?.club?.trim() ||
+    (r as any)?.course?.trim() ||
+    (r as any)?.name?.trim() ||
+    'Sede por confirmar'
+  );
+}
+
+type RoundMetaInfo = { name: string | null; course: string | null; club: string | null; date: string | null };
+
+function useRoundsMetaMap() {
+  return useQuery({
+    queryKey: ['public-rounds-meta-map'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('rounds')
+        .select('id, name, course, club, date');
+      const map = new Map<string, RoundMetaInfo>();
+      (data ?? []).forEach((r: any) => {
+        map.set(r.id, { name: r.name ?? null, course: r.course ?? null, club: r.club ?? null, date: r.date ?? null });
+      });
+      return map;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+function enrichRoundsMeta<T extends { round: { round_id: string; name: string; date: string | null } }>(
+  items: T[],
+  meta: Map<string, RoundMetaInfo> | undefined,
+): T[] {
+  if (!meta) return items;
+  return items.map((it) => {
+    const m = meta.get(it.round.round_id);
+    if (!m) return it;
+    const fallbackName = venueName(m);
+    return {
+      ...it,
+      round: {
+        ...it.round,
+        name: it.round.name && it.round.name !== '—' && it.round.name !== 'Sede por confirmar' ? it.round.name : fallbackName,
+        date: it.round.date ?? m.date ?? null,
+      },
+    };
+  });
+}
+
+function splitPlayedPending<T extends { round: { date: string | null }; rowsByCat: { hcp_low: unknown[]; hcp_high: unknown[] } }>(items: T[]): { played: T[]; pending: T[] } {
+  const played: T[] = [];
+  const pending: T[] = [];
+  for (const it of items) {
+    const total = it.rowsByCat.hcp_low.length + it.rowsByCat.hcp_high.length;
+    if (total > 0) played.push(it);
+    else pending.push(it);
+  }
+  // Played: most recent first
+  played.sort((a, b) => (b.round.date ?? '').localeCompare(a.round.date ?? ''));
+  // Pending: nearest first; rounds without date go last
+  pending.sort((a, b) => {
+    const da = a.round.date ?? '';
+    const db = b.round.date ?? '';
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da.localeCompare(db);
+  });
+  return { played, pending };
+}
+
+function SectionDivider({ label, accent }: { label: string; accent: 'green' | 'copper' }) {
+  const color = accent === 'copper' ? 'hsl(var(--gg-copper))' : 'hsl(var(--gg-green))';
+  return (
+    <div className="flex items-center gap-3 my-4">
+      <span className="h-px flex-1" style={{ background: `${color}33` }} />
+      <span
+        className="text-[10px] font-semibold tracking-[0.28em] uppercase"
+        style={{ color }}
+      >
+        {label}
+      </span>
+      <span className="h-px flex-1" style={{ background: `${color}33` }} />
+    </div>
   );
 }
 
@@ -493,7 +572,10 @@ function EmptyMessage({ children }: { children: React.ReactNode }) {
 }
 
 export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
-  const items = useMemo(() => buildCircuitoRoundBreakdown(data), [data]);
+  const rawItems = useMemo(() => buildCircuitoRoundBreakdown(data), [data]);
+  const { data: metaMap } = useRoundsMetaMap();
+  const items = useMemo(() => enrichRoundsMeta(rawItems, metaMap), [rawItems, metaMap]);
+  const { played, pending } = useMemo(() => splitPlayedPending(items), [items]);
   const [catByRound, setCatByRound] = useState<Record<string, Category>>({});
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
@@ -501,90 +583,105 @@ export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
     return <EmptyMessage>Todavía no hay resultados publicados para esta competición.</EmptyMessage>;
   }
 
-  return (<>
-    <Accordion type="multiple" className="space-y-3">
-      {items.map(({ round, rowsByCat }) => {
-        const total = rowsByCat.hcp_low.length + rowsByCat.hcp_high.length;
-        const cat = catByRound[round.round_id] ?? 'hcp_low';
-        const rows = rowsByCat[cat];
-        return (
-          <AccordionItem
-            key={round.round_id}
-            value={round.round_id}
-            className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] rounded-sm shadow-[0_6px_24px_-18px_rgba(11,19,36,0.25)]"
-          >
-            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-[hsl(var(--gg-bg-light))]">
-              <RoundHeader
-                label={round.label}
-                name={round.name}
-                date={round.date}
-                count={total}
+  const renderItem = ({ round, rowsByCat }: typeof items[number]) => {
+    const total = rowsByCat.hcp_low.length + rowsByCat.hcp_high.length;
+    const cat = catByRound[round.round_id] ?? 'hcp_low';
+    const rows = rowsByCat[cat];
+    return (
+      <AccordionItem
+        key={round.round_id}
+        value={round.round_id}
+        className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] rounded-sm shadow-[0_6px_24px_-18px_rgba(11,19,36,0.25)]"
+      >
+        <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-[hsl(var(--gg-bg-light))]">
+          <RoundHeader
+            label={round.label}
+            name={round.name}
+            date={round.date}
+            count={total}
+            accent="green"
+          />
+        </AccordionTrigger>
+        <AccordionContent className="px-4">
+          {total === 0 ? (
+            <p className="py-4 text-sm text-center text-muted-foreground">
+              Resultados pendientes de publicación.
+            </p>
+          ) : (
+            <>
+              <CatSwitcher
+                value={cat}
+                onChange={(c) =>
+                  setCatByRound((prev) => ({ ...prev, [round.round_id]: c }))
+                }
                 accent="green"
               />
-            </AccordionTrigger>
-            <AccordionContent className="px-4">
-              {total === 0 ? (
+              {rows.length === 0 ? (
                 <p className="py-4 text-sm text-center text-muted-foreground">
-                  Resultados pendientes de publicación.
+                  No hay jugadores en {getGalaxyGolfCategoryLabel(cat)} en esta prueba.
                 </p>
               ) : (
-                <>
-                  <CatSwitcher
-                    value={cat}
-                    onChange={(c) =>
-                      setCatByRound((prev) => ({ ...prev, [round.round_id]: c }))
-                    }
-                    accent="green"
-                  />
-                  {rows.length === 0 ? (
-                    <p className="py-4 text-sm text-center text-muted-foreground">
-                      No hay jugadores en {getGalaxyGolfCategoryLabel(cat)} en esta prueba.
-                    </p>
-                  ) : (
-                    <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
-                            <TableHead className="w-12 text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Pos.</TableHead>
-                            <TableHead className="text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Jugador</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">HCP</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Stableford</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Estado</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Bonus</TableHead>
-                            <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Contribución</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rows.map((row, i) => (
-                            <TableRow key={row.player_id} className="border-b border-[hsl(var(--gg-navy-deep))]/8">
-                              <TableCell className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/85">{i + 1}</TableCell>
-                              <TableCell className="text-sm">
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPlayerId(row.player_id)}
-                                  className="text-left hover:underline decoration-[hsl(var(--gg-green))]/50 underline-offset-2 text-[hsl(var(--gg-navy-deep))] hover:text-[hsl(var(--gg-green))] transition-colors cursor-pointer"
-                                >
-                                  {row.name}
-                                </button>
-                              </TableCell>
-                              <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{fmtHcp(row.handicap) ?? '—'}</TableCell>
-                              <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">{row.stableford}</TableCell>
-                              <TableCell className="text-center"><StatusBadge status={row.status} /></TableCell>
-                              <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">+{row.bonus}</TableCell>
-                              <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">{row.contribution}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </>
+                <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                        <TableHead className="w-12 text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Pos.</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Jugador</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">HCP</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Stableford</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Estado</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-green))]">Bonus</TableHead>
+                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Contribución</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row, i) => (
+                        <TableRow key={row.player_id} className="border-b border-[hsl(var(--gg-navy-deep))]/8">
+                          <TableCell className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/85">{i + 1}</TableCell>
+                          <TableCell className="text-sm">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPlayerId(row.player_id)}
+                              className="text-left hover:underline decoration-[hsl(var(--gg-green))]/50 underline-offset-2 text-[hsl(var(--gg-navy-deep))] hover:text-[hsl(var(--gg-green))] transition-colors cursor-pointer"
+                            >
+                              {row.name}
+                            </button>
+                          </TableCell>
+                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{fmtHcp(row.handicap) ?? '—'}</TableCell>
+                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">{row.stableford}</TableCell>
+                          <TableCell className="text-center"><StatusBadge status={row.status} /></TableCell>
+                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">+{row.bonus}</TableCell>
+                          <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">{row.contribution}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
-    </Accordion>
+            </>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    );
+  };
+
+  return (<>
+    {played.length > 0 && (
+      <>
+        <SectionDivider label="Resultados publicados" accent="green" />
+        <Accordion type="multiple" className="space-y-3">
+          {played.map(renderItem)}
+        </Accordion>
+      </>
+    )}
+    {pending.length > 0 && (
+      <>
+        <SectionDivider label="Próximas pruebas" accent="green" />
+        <Accordion type="multiple" className="space-y-3">
+          {pending.map(renderItem)}
+        </Accordion>
+      </>
+    )}
     <PlayerProfileDialog
       playerId={selectedPlayerId}
       open={!!selectedPlayerId}
@@ -594,7 +691,10 @@ export function CircuitoRoundsBreakdown({ data }: { data: PublicCircuitData }) {
 }
 
 export function GalaxyCupRoundsBreakdown({ data }: { data: PublicCircuitData }) {
-  const items = useMemo(() => buildGalaxyCupRoundBreakdown(data), [data]);
+  const rawItems = useMemo(() => buildGalaxyCupRoundBreakdown(data), [data]);
+  const { data: metaMap } = useRoundsMetaMap();
+  const items = useMemo(() => enrichRoundsMeta(rawItems, metaMap), [rawItems, metaMap]);
+  const { played, pending } = useMemo(() => splitPlayedPending(items), [items]);
   const [catByRound, setCatByRound] = useState<Record<string, Category>>({});
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
@@ -602,103 +702,118 @@ export function GalaxyCupRoundsBreakdown({ data }: { data: PublicCircuitData }) 
     return <EmptyMessage>Todavía no hay resultados publicados para esta competición.</EmptyMessage>;
   }
 
-  return (<>
-    <Accordion type="multiple" className="space-y-3">
-      {items.map(({ round, rowsByCat }) => {
-        const total = rowsByCat.hcp_low.length + rowsByCat.hcp_high.length;
-        const cat = catByRound[round.round_id] ?? 'hcp_low';
-        const rows = rowsByCat[cat];
-        return (
-          <AccordionItem
-            key={round.round_id}
-            value={round.round_id}
-            className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] rounded-sm shadow-[0_6px_24px_-18px_rgba(11,19,36,0.25)]"
-          >
-            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-[hsl(var(--gg-bg-light))]">
-              <RoundHeader
-                label={round.label}
-                name={round.name}
-                date={round.date}
-                count={total}
+  const renderItem = ({ round, rowsByCat }: typeof items[number]) => {
+    const total = rowsByCat.hcp_low.length + rowsByCat.hcp_high.length;
+    const cat = catByRound[round.round_id] ?? 'hcp_low';
+    const rows = rowsByCat[cat];
+    return (
+      <AccordionItem
+        key={round.round_id}
+        value={round.round_id}
+        className="border border-[hsl(var(--gg-navy-deep))]/12 bg-[hsl(var(--gg-surface-light))] rounded-sm shadow-[0_6px_24px_-18px_rgba(11,19,36,0.25)]"
+      >
+        <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-[hsl(var(--gg-bg-light))]">
+          <RoundHeader
+            label={round.label}
+            name={round.name}
+            date={round.date}
+            count={total}
+            accent="copper"
+            isMajor={round.isMajor}
+          />
+        </AccordionTrigger>
+        <AccordionContent className="px-4">
+          {total === 0 ? (
+            <p className="py-4 text-sm text-center text-muted-foreground">
+              Resultados pendientes de publicación.
+            </p>
+          ) : (
+            <>
+              <CatSwitcher
+                value={cat}
+                onChange={(c) =>
+                  setCatByRound((prev) => ({ ...prev, [round.round_id]: c }))
+                }
                 accent="copper"
-                isMajor={round.isMajor}
               />
-            </AccordionTrigger>
-            <AccordionContent className="px-4">
-              {total === 0 ? (
+              {rows.length === 0 ? (
                 <p className="py-4 text-sm text-center text-muted-foreground">
-                  Resultados pendientes de publicación.
+                  No hay jugadores en {getGalaxyGolfCategoryLabel(cat)} en esta prueba.
                 </p>
               ) : (
-                <>
-                  <CatSwitcher
-                    value={cat}
-                    onChange={(c) =>
-                      setCatByRound((prev) => ({ ...prev, [round.round_id]: c }))
-                    }
-                    accent="copper"
-                  />
-                  {rows.length === 0 ? (
-                    <p className="py-4 text-sm text-center text-muted-foreground">
-                      No hay jugadores en {getGalaxyGolfCategoryLabel(cat)} en esta prueba.
-                    </p>
-                  ) : (
-                    <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
-                            <TableHead className="w-12 text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
-                            <TableHead className="text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">HCP</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Stableford</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Estado</TableHead>
-                            <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Puntos GalaxyCup</TableHead>
-                            <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Tipo</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rows.map((row) => (
-                            <TableRow key={row.player_id} className="border-b border-[hsl(var(--gg-navy-deep))]/8">
-                              <TableCell className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/85">
-                                {row.position ?? <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
-                              </TableCell>
-                              <TableCell className="text-sm">
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPlayerId(row.player_id)}
-                                  className="text-left hover:underline decoration-[hsl(var(--gg-copper))]/50 underline-offset-2 text-[hsl(var(--gg-navy-deep))] hover:text-[hsl(var(--gg-copper))] transition-colors cursor-pointer"
-                                >
-                                  {row.name}
-                                </button>
-                              </TableCell>
-                              <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{fmtHcp(row.handicap) ?? '—'}</TableCell>
-                              <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">
-                                {row.status === 'completed' ? row.stableford : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
-                              </TableCell>
-                              <TableCell className="text-center"><StatusBadge status={row.status} /></TableCell>
-                              <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
-                                {row.status === 'completed' ? row.points : 0}
-                              </TableCell>
-                              <TableCell className="text-center text-[10px] uppercase tracking-[0.16em]">
-                                {row.isMajor ? (
-                                  <span className="text-[hsl(var(--gg-copper))]">Major</span>
-                                ) : (
-                                  <span className="text-[hsl(var(--gg-navy-deep))]/55">Regular</span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </>
+                <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                        <TableHead className="w-12 text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">HCP</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Stableford</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Estado</TableHead>
+                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Puntos GalaxyCup</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Tipo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row) => (
+                        <TableRow key={row.player_id} className="border-b border-[hsl(var(--gg-navy-deep))]/8">
+                          <TableCell className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                            {row.position ?? <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPlayerId(row.player_id)}
+                              className="text-left hover:underline decoration-[hsl(var(--gg-copper))]/50 underline-offset-2 text-[hsl(var(--gg-navy-deep))] hover:text-[hsl(var(--gg-copper))] transition-colors cursor-pointer"
+                            >
+                              {row.name}
+                            </button>
+                          </TableCell>
+                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{fmtHcp(row.handicap) ?? '—'}</TableCell>
+                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">
+                            {row.status === 'completed' ? row.stableford : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
+                          </TableCell>
+                          <TableCell className="text-center"><StatusBadge status={row.status} /></TableCell>
+                          <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
+                            {row.status === 'completed' ? row.points : 0}
+                          </TableCell>
+                          <TableCell className="text-center text-[10px] uppercase tracking-[0.16em]">
+                            {row.isMajor ? (
+                              <span className="text-[hsl(var(--gg-copper))]">Major</span>
+                            ) : (
+                              <span className="text-[hsl(var(--gg-navy-deep))]/55">Regular</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
-    </Accordion>
+            </>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    );
+  };
+
+  return (<>
+    {played.length > 0 && (
+      <>
+        <SectionDivider label="Resultados publicados" accent="copper" />
+        <Accordion type="multiple" className="space-y-3">
+          {played.map(renderItem)}
+        </Accordion>
+      </>
+    )}
+    {pending.length > 0 && (
+      <>
+        <SectionDivider label="Próximas pruebas" accent="copper" />
+        <Accordion type="multiple" className="space-y-3">
+          {pending.map(renderItem)}
+        </Accordion>
+      </>
+    )}
     <PlayerProfileDialog
       playerId={selectedPlayerId}
       open={!!selectedPlayerId}

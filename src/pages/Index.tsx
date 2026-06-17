@@ -35,7 +35,7 @@ const Index = () => {
               to="/jornades"
               className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-[hsl(var(--gg-green))] text-[hsl(var(--gg-surface-light))] text-[11px] font-semibold uppercase tracking-[0.22em] shadow-[0_8px_24px_-12px_rgba(11,19,36,0.4)] hover:bg-[hsl(var(--gg-green))]/85 transition-colors"
             >
-              Ver calendario
+              Ver torneos
               <ArrowRight className="h-4 w-4" />
             </Link>
             <button
@@ -111,7 +111,7 @@ const Index = () => {
                 to="/jornades"
                 className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65 hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
-                Ver calendario
+                Ver torneos
               </Link>
             </div>
           </article>
@@ -145,7 +145,7 @@ const Index = () => {
                 to="/jornades"
                 className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-[hsl(var(--gg-navy-deep))]/65 hover:text-[hsl(var(--gg-navy-deep))] transition-colors"
               >
-                Ver calendario
+                Ver torneos
               </Link>
             </div>
           </article>

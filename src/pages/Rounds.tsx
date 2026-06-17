@@ -65,13 +65,44 @@ const Rounds = () => {
       );
   };
 
-  const visibleRounds = useMemo(() => {
+  const filteredRounds = useMemo(() => {
     if (!rounds) return [];
     if (filter === 'all') return rounds;
     return rounds.filter((r: any) =>
       getLinks(r).some((l) => l.competitions?.slug === filter),
     );
   }, [rounds, filter]);
+
+  const splitRounds = useMemo(() => {
+    const played: any[] = [];
+    const pending: any[] = [];
+    for (const r of filteredRounds) {
+      if (r.status === 'published') played.push(r);
+      else pending.push(r);
+    }
+    played.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    pending.sort((a, b) => {
+      const da = a.date ?? '';
+      const db = b.date ?? '';
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da.localeCompare(db);
+    });
+    return { played, pending };
+  }, [filteredRounds]);
+
+  const visibleRounds = useMemo(
+    () => [...splitRounds.played, ...splitRounds.pending],
+    [splitRounds],
+  );
+
+  const roundDisplayName = (r: any): string =>
+    (r?.name && String(r.name).trim()) ||
+    (r?.course && String(r.course).trim()) ||
+    (r?.club && String(r.club).trim()) ||
+    (r?.venue && String(r.venue).trim()) ||
+    'Sede por confirmar';
 
   const filterOptions: { value: CompetitionFilter; label: string }[] = [
     { value: 'all', label: 'Todas las pruebas' },
@@ -379,7 +410,7 @@ const Rounds = () => {
               className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))] mb-5"
               style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
             >
-              Calendario
+              Torneos
             </h1>
             <p className="text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light max-w-xl">
               Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
@@ -480,7 +511,13 @@ const Rounds = () => {
           <p className="text-muted-foreground text-sm py-8 text-center">Sin datos</p>
         ) : (
           <div className="space-y-3">
-            {visibleRounds.map((round: any) => {
+            {visibleRounds.map((round: any, idx: number) => {
+              const showDivider =
+                splitRounds.played.length > 0 &&
+                splitRounds.pending.length > 0 &&
+                idx === splitRounds.played.length;
+              const showFirstDivider =
+                splitRounds.played.length > 0 && idx === 0;
               const played = round.date < today || (round.end_date && round.end_date < today);
               const isOngoing = !played && round.date <= today && (!round.end_date || round.end_date >= today);
               const hasResults = round.status === 'published';
@@ -505,6 +542,25 @@ const Rounds = () => {
               const accentWidth = hasResults ? 'w-[4px]' : isOngoing ? 'w-[3px]' : 'w-[2px]';
 
               return (
+                <div key={`wrap-${round.id}`}>
+                  {showFirstDivider && (
+                    <div className="flex items-center gap-3 mb-3 mt-1">
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
+                      <span className="text-[10px] font-semibold tracking-[0.28em] uppercase text-[hsl(var(--gg-green))]">
+                        Resultados publicados
+                      </span>
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
+                    </div>
+                  )}
+                  {showDivider && (
+                    <div className="flex items-center gap-3 mb-3 mt-6">
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-gold))]/30" />
+                      <span className="text-[10px] font-semibold tracking-[0.28em] uppercase text-[hsl(var(--gg-gold))]">
+                        Próximas pruebas
+                      </span>
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-gold))]/30" />
+                    </div>
+                  )}
                 <div
                   key={round.id}
                   className={`relative border transition-all ${cardSurface}`}
@@ -540,7 +596,7 @@ const Rounds = () => {
                                 : 'text-[hsl(var(--gg-navy-deep))]/75'
                             }`}
                           >
-                            {round.name}
+                            {roundDisplayName(round)}
                           </h3>
                           {round.sponsor && (
                             <span className="text-[11px] font-sans text-[hsl(var(--gg-text-muted))]">
@@ -648,6 +704,7 @@ const Rounds = () => {
                       )}
                     </div>
                   )}
+                </div>
                 </div>
               );
             })}
