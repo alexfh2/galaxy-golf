@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Round competitions are publicly readable" ON public.round_competitions;
