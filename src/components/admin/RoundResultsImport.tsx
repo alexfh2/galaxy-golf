@@ -46,7 +46,6 @@ interface ParsedResult {
   _url_index?: number;
   /** Legacy flag: true for any non-completed status (kept for backwards compat in this component). */
   _is_np?: boolean;
-  _is_senior?: boolean;
   /** Excel-only: tells the save mutation how to serialise the scorecard. */
   _hole_mode?: HoleMode;
   /** Excel-only: stableford points per hole when _hole_mode === 'stableford_points'. */
