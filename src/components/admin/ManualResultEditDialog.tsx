@@ -285,6 +285,16 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
                             <td className="border border-border px-1 py-1 text-center">
                               <Button
                                 size="sm"
+                                variant="outline"
+                                onClick={() => setHoleEditResultId(r.id)}
+                              >
+                                <Grid3x3 className="h-3.5 w-3.5 mr-1" />
+                                Editar hoyos
+                              </Button>
+                            </td>
+                            <td className="border border-border px-1 py-1 text-center">
+                              <Button
+                                size="sm"
                                 variant={row.dirty ? 'default' : 'outline'}
                                 disabled={!row.dirty || row.saving}
                                 onClick={() => setPendingSave(r.id)}
