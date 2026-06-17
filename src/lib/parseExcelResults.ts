@@ -386,7 +386,6 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
       is_np: false,
       result_status: 'completed',
       raw_stableford_points: null,
-      is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
     });
   }
 
