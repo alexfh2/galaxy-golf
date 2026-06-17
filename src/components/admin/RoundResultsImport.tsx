@@ -46,7 +46,6 @@ interface ParsedResult {
   _url_index?: number;
   /** Legacy flag: true for any non-completed status (kept for backwards compat in this component). */
   _is_np?: boolean;
-  _is_senior?: boolean;
   /** Excel-only: tells the save mutation how to serialise the scorecard. */
   _hole_mode?: HoleMode;
   /** Excel-only: stableford points per hole when _hole_mode === 'stableford_points'. */
@@ -66,7 +65,7 @@ interface Props {
   onClose: () => void;
 }
 
-const SENIOR_AGE = 65;
+
 
 // Normalise a name for duplicate detection: lowercase, strip accents, collapse spaces, trim
 const normaliseName = (s: string): string =>
@@ -160,7 +159,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
   const [deleteExisting, setDeleteExisting] = useState(false);
   const [existingCount, setExistingCount] = useState<number | null>(null);
   const [existingPlayerIds, setExistingPlayerIds] = useState<Set<string>>(new Set());
-  const [needsSeniorFile, setNeedsSeniorFile] = useState(false);
   const [excelHoleMode, setExcelHoleMode] = useState<HoleMode>('strokes');
   const [excelDiagnostics, setExcelDiagnostics] = useState<ExcelDiagnostics | null>(null);
   const [stablefordTotalSource, setStablefordTotalSource] = useState<'excel' | 'sum'>('excel');
@@ -171,7 +169,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     note: string | null;
   } | null>(null);
 
-  const seniorFileRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     supabase.from('results').select('id, player_id', { count: 'exact' })
@@ -272,69 +270,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     return withGroups;
   };
 
-  // --- Senior file cross-reference (Excel or PDF) ---
-  const handleSeniorFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const isPdf = file.name.toLowerCase().endsWith('.pdf');
-      const seniorLicenses = new Set<string>();
-      const seniorNames = new Set<string>();
-      let seniorCount = 0;
-
-      if (isPdf) {
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(',')[1]);
-          };
-          reader.readAsDataURL(file);
-        });
-
-        const { data, error } = await supabase.functions.invoke('parse-senior-pdf', {
-          body: { pdf_base64: base64 },
-        });
-        if (error) throw new Error(error.message);
-
-        const players: { name: string; license: string }[] = data?.players || [];
-        seniorCount = players.length;
-        for (const p of players) {
-          if (p.license) seniorLicenses.add(p.license.trim().toUpperCase());
-          if (p.name) seniorNames.add(p.name.trim().toUpperCase());
-        }
-      } else {
-        const buffer = await file.arrayBuffer();
-        const { results: seniorRows } = parseExcelResults(buffer);
-        seniorCount = seniorRows.length;
-        for (const sr of seniorRows) {
-          if (sr.license) seniorLicenses.add(sr.license.trim().toUpperCase());
-          if (sr.name) seniorNames.add(sr.name.trim().toUpperCase());
-        }
-      }
-
-      let matched = 0;
-      setResults(prev => prev.map(r => {
-        const matchByLic = r.license && seniorLicenses.has(r.license.trim().toUpperCase());
-        const matchByName = seniorNames.has(r.name.trim().toUpperCase());
-        const isSenior = !!(matchByLic || matchByName);
-        if (isSenior) matched++;
-        return { ...r, _is_senior: isSenior };
-      }));
-
-      setNeedsSeniorFile(false);
-      toast({
-        title: `${matched} jugadors sènior identificats`,
-        description: `${seniorCount} jugadors al fitxer sènior, ${matched} coincidències amb els resultats.`,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconegut';
-      toast({ title: "Error llegint fitxer sènior", description: message, variant: 'destructive' });
-    } finally {
-      if (seniorFileRef.current) seniorFileRef.current.value = '';
-    }
-  };
 
   // --- Excel import ---
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,14 +279,12 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     setLoading(true);
     setWarnings([]);
     setResults([]);
-    setNeedsSeniorFile(false);
     setExcelDiagnostics(null);
 
     try {
       const buffer = await file.arrayBuffer();
       const {
         results: excelResults,
-        hasSeniorInfo,
         warnings: parserWarnings,
         mode: parsedMode,
         diagnostics,
@@ -394,7 +327,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           _uid: uid(),
           _selected: true,
           _is_np: r.result_status !== 'completed',
-          _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
           _hole_mode: parsedMode,
           _hole_stableford: r.hole_stableford,
         }));
@@ -403,10 +335,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       setSource(`Excel: ${file.name}`);
       setImportSource('excel');
       const matched = await matchPlayers(parsed);
-
-      if (!hasSeniorInfo) {
-        setNeedsSeniorFile(true);
-      }
 
       if (parserWarnings.length > 0) {
         setWarnings(prev => [...parserWarnings, ...prev]);
@@ -421,7 +349,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
       toast({
         title: `${matched.length} resultats importats des d'Excel`,
-        description: `${modeLabel}. ${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
+        description: `${modeLabel}. ${excelResults.filter(r => r.is_np).length} N.P exclosos.${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
       });
 
     } catch (err: unknown) {
@@ -632,8 +560,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       for (const r of selected) {
         if (r._matched_player_id) continue;
 
-        const birthYear = r.age != null ? new Date().getFullYear() - Math.floor(r.age) : null;
-        const isSenior = r._is_senior ?? (r.age != null ? r.age >= SENIOR_AGE : false);
         const licenseValue = (r.license || '').trim().toUpperCase() ||
           `AUTO-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -645,8 +571,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             current_handicap: r.handicap,
             initial_handicap: r.handicap,
             gender: r.gender === 'F' ? 'F' : r.gender === 'M' ? 'M' : null,
-            is_senior: isSenior,
-            birth_year: birthYear,
           }, { onConflict: 'license', ignoreDuplicates: false })
           .select('id')
           .single();
@@ -747,11 +671,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           const updates: Record<string, unknown> = {};
           if (r.handicap != null) updates.current_handicap = r.handicap;
           if (r.gender === 'F' || r.gender === 'M') updates.gender = r.gender;
-          if (r._is_senior != null) updates.is_senior = r._is_senior;
-          if (r.age != null) {
-            updates.birth_year = new Date().getFullYear() - Math.floor(r.age);
-            updates.is_senior = r.age >= SENIOR_AGE;
-          }
           if (Object.keys(updates).length > 0) {
             await supabase
               .from('players')
@@ -916,41 +835,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             </div>
           </div>
 
-          {needsSeniorFile && results.length > 0 && (
-            <Card className="border-amber-300 bg-amber-50/50">
-              <CardContent className="py-3 space-y-2">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-semibold text-amber-800">
-                      No s'ha detectat informació de sènior (ni Edat ni Niv)
-                    </p>
-                    <p className="text-xs text-amber-700">
-                      Puja la classificació sènior per identificar automàticament els jugadors sènior.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    ref={seniorFileRef}
-                    type="file"
-                    accept=".xlsx,.xls,.pdf"
-                    onChange={handleSeniorFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => seniorFileRef.current?.click()}
-                    className="w-full"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Pujar classificació sènior
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
         <TabsContent value="url" className="space-y-3 mt-3">
@@ -1331,7 +1215,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                       <td className="p-2 font-medium">
                         {r.name}
                         {r.gender && <span className="text-muted-foreground ml-1">({r.gender})</span>}
-                        {r._is_senior && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Sènior</Badge>}
+                        
                         {(() => {
                           const st = r.result_status ?? 'completed';
                           if (st === 'completed') return null;

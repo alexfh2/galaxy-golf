@@ -91,9 +91,6 @@ serve(async (req) => {
     const females = results
       .filter((r: any) => r.is_female_prize || r.players?.gender === 'F')
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
-    const seniors = results
-      .filter((r: any) => r.is_senior_prize || r.players?.is_senior === true)
-      .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
 
     // Notable performances (birdies)
     const coursePar = round.course_par as number[] | null;
@@ -151,8 +148,6 @@ ESTRUCTURA DE REFERÈNCIA (adapta-la per a RESULTATS):
 *Femenina*
 🥇 [Nom] — [Punts] pts
 
-*Sènior (+65)*
-🥇 [Nom] — [Punts] pts
 
 [Si hi ha actuacions destacades com birdies, menciona-les breument]
 
@@ -176,7 +171,7 @@ CLASSIFICACIÓ HÁNDICAP SUPERIOR (≥15,5):
 ${hcpHigh.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join("\n")}
 
 ${females.length > 0 ? `CLASSIFICACIÓ FEMENINA — Guanyadora:\n1. ${females[0].players?.name} — ${females[0].stableford_points} pts (Hcp ${females[0].handicap_at_round})` : ""}
-${seniors.length > 0 ? `CLASSIFICACIÓ SÈNIOR (+65) — Guanyador:\n1. ${seniors[0].players?.name} — ${seniors[0].stableford_points} pts (Hcp ${seniors[0].handicap_at_round})` : ""}
+
 ${notablePerformances ? `ACTUACIONS DESTACADES: ${notablePerformances}` : ""}
 
 Total participants: ${results.length}

@@ -28,7 +28,6 @@ export interface ExcelParsedResult {
   result_status: ResultStatus;
   /** Partial Stableford as reported by the source (kept for audit when retired with partial card). */
   raw_stableford_points: number | null;
-  is_senior: boolean;
 }
 
 const RETIRED_TOKENS = [
@@ -209,7 +208,6 @@ export interface ExcelDiagnostics {
 
 export interface ExcelParseOutput {
   results: ExcelParsedResult[];
-  hasSeniorInfo: boolean;
   mode: HoleMode;
   warnings: string[];
   diagnostics: ExcelDiagnostics;
@@ -300,7 +298,6 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
         is_np: true,
         result_status: status,
         raw_stableford_points: status === 'retired' && partial != null ? Math.floor(partial) : null,
-        is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
       });
       continue;
     }
@@ -389,7 +386,6 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
       is_np: false,
       result_status: 'completed',
       raw_stableford_points: null,
-      is_senior: String(getVal(cols.niv) || '').toUpperCase() === 'S',
     });
   }
 
@@ -421,7 +417,7 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
     }
   }
 
-  const hasSeniorInfo = cols.age !== null || cols.niv !== null;
+  
 
   const headerName = (c: number | null): string => {
     if (c == null) return '';
@@ -446,6 +442,6 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
     discrepancies,
   };
 
-  return { results, hasSeniorInfo, mode, warnings, diagnostics };
+  return { results, mode, warnings, diagnostics };
 }
 

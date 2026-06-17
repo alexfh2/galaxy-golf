@@ -10,7 +10,6 @@ export type PublicPlayer = {
   current_handicap: number | null;
   initial_handicap: number | null;
   gender: string | null;
-  is_senior: boolean;
   photo_url: string | null;
   created_at: string;
   updated_at: string;
@@ -25,7 +24,6 @@ export type PublicResult = {
   scratch_score: number | null;
   category: string | null;
   is_female_prize: boolean;
-  is_senior_prize: boolean;
   scorecard: unknown;
   play_date: string | null;
   source_url: string | null;

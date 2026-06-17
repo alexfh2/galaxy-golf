@@ -97,13 +97,11 @@ serve(async (req) => {
     const hcpLow = results.filter((r: any) => r.category === 'hcp_low' || (r.handicap_at_round !== null && r.handicap_at_round <= 15.4));
     const hcpHigh = results.filter((r: any) => r.category === 'hcp_high' || (r.handicap_at_round !== null && r.handicap_at_round >= 15.5));
     const females = results.filter((r: any) => r.is_female_prize || r.players?.gender === 'F');
-    const seniors = results.filter((r: any) => r.is_senior_prize || r.players?.is_senior === true);
 
     // Sort each category by stableford
     hcpLow.sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     hcpHigh.sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     females.sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
-    seniors.sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
 
     // Check for notable scorecards
     const coursePar = round.course_par as number[] | null;
@@ -155,9 +153,6 @@ Hándicap Superior — els qui millor dominen el camp:
 Classificació Femenina:
 [Guanyadora]
 
-Classificació Sènior (+65):
-[Guanyador]
-
 [Si hi ha actuacions destacades: birdies, etc.]
 
 Per a més detalls visiteu la nostra web.
@@ -191,7 +186,7 @@ CLASSIFICACIÓ HÁNDICAP SUPERIOR (≥15,5) — ${hcpHigh.length} jugadors:
 ${hcpHigh.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join('\n')}
 
 ${females.length > 0 ? `CLASSIFICACIÓ FEMENINA — ${females.length} jugadores:\n1. ${females[0].players?.name} — ${females[0].stableford_points} pts (Hcp ${females[0].handicap_at_round})` : ''}
-${seniors.length > 0 ? `CLASSIFICACIÓ SÈNIOR (+65) — ${seniors.length} jugadors:\n1. ${seniors[0].players?.name} — ${seniors[0].stableford_points} pts (Hcp ${seniors[0].handicap_at_round})` : ''}
+
 ${notablePerformances ? `ACTUACIONS DESTACADES: ${notablePerformances}` : ''}
 
 Total participants: ${results.length}

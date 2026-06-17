@@ -14,7 +14,6 @@ type RankingResultRow = {
   scratch_score: number | null;
   category: string | null;
   is_female_prize: boolean;
-  is_senior_prize: boolean;
   scorecard: unknown;
   play_date: string | null;
   source_url: string | null;
@@ -28,7 +27,6 @@ type RankingResultRow = {
     license: string | null;
     club: string | null;
     gender: string | null;
-    is_senior: boolean;
     initial_handicap: number | null;
     current_handicap: number | null;
     photo_url: string | null;
@@ -56,7 +54,6 @@ type PublicPlayerRow = {
   current_handicap: number | null;
   initial_handicap: number | null;
   gender: string | null;
-  is_senior: boolean;
   photo_url: string | null;
   created_at: string;
   updated_at: string;
@@ -90,7 +87,6 @@ Deno.serve(async (req) => {
             scratch_score,
             category,
             is_female_prize,
-            is_senior_prize,
             scorecard,
             play_date,
             source_url,
@@ -102,7 +98,7 @@ Deno.serve(async (req) => {
             created_at,
             updated_at,
             rounds!inner(status, name, round_number, date, club, course, course_par, course_handicap, course_handicap_women),
-            players!inner(id, name, license, club, gender, is_senior, initial_handicap, current_handicap, photo_url, created_at, updated_at)
+            players!inner(id, name, license, club, gender, initial_handicap, current_handicap, photo_url, created_at, updated_at)
           `)
           .eq("rounds.status", "published")
           .in("result_status", ["completed", "retired"])
@@ -126,7 +122,7 @@ Deno.serve(async (req) => {
 
       adminClient
         .from("players")
-        .select("id, license, name, club, current_handicap, initial_handicap, gender, is_senior, photo_url, created_at, updated_at")
+        .select("id, license, name, club, current_handicap, initial_handicap, gender, photo_url, created_at, updated_at")
         .order("name"),
       adminClient
         .from("round_competitions")
@@ -146,7 +142,6 @@ Deno.serve(async (req) => {
       scratch_score: row.scratch_score,
       category: row.category,
       is_female_prize: row.is_female_prize,
-      is_senior_prize: row.is_senior_prize,
       scorecard: row.scorecard,
       play_date: row.play_date,
       source_url: row.source_url,
@@ -177,7 +172,6 @@ Deno.serve(async (req) => {
             license: row.players.license,
             club: row.players.club,
             gender: row.players.gender,
-            is_senior: row.players.is_senior,
             initial_handicap: row.players.initial_handicap,
             current_handicap: row.players.current_handicap,
             photo_url: row.players.photo_url,
@@ -195,7 +189,6 @@ Deno.serve(async (req) => {
       current_handicap: player.current_handicap,
       initial_handicap: player.initial_handicap,
       gender: player.gender,
-      is_senior: player.is_senior,
       photo_url: player.photo_url,
       created_at: player.created_at,
       updated_at: player.updated_at,

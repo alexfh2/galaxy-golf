@@ -89,9 +89,6 @@ serve(async (req) => {
     const females = results
       .filter((r: any) => r.is_female_prize || r.players?.gender === 'F')
       .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
-    const seniors = results
-      .filter((r: any) => r.is_senior_prize || r.players?.is_senior === true)
-      .sort((a: any, b: any) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
 
     const langLabel = language === "ca" ? "català" : "castellà";
     const publishedUrl = "https://galaxygolf.lovable.app/ranquings";
@@ -121,7 +118,6 @@ ${round.sponsor ? `Jornada patrocinada per ${round.sponsor}.` : ""}
 2. [NOM] — [X] pts
 3. [NOM] — [X] pts
 ${females.length > 0 ? `\n*Femenina*\n1. [NOM] — [X] pts` : ""}
-${seniors.length > 0 ? `\n*Sènior (+65)*\n1. [NOM] — [X] pts` : ""}
 
 Classificacions completes: ${publishedUrl}
 ---
@@ -134,7 +130,6 @@ CLASSIFICACIÓ HÁNDICAP SUPERIOR (≥15,5) — ${hcpHigh.length} jugadors:
 ${hcpHigh.slice(0, 3).map((r: any, i: number) => `${i + 1}. ${r.players?.name} — ${r.stableford_points} pts (Hcp ${r.handicap_at_round})`).join("\n")}
 
 ${females.length > 0 ? `CLASSIFICACIÓ FEMENINA — Guanyadora:\n1. ${females[0].players?.name} — ${females[0].stableford_points} pts (Hcp ${females[0].handicap_at_round})` : ""}
-${seniors.length > 0 ? `CLASSIFICACIÓ SÈNIOR (+65) — Guanyador:\n1. ${seniors[0].players?.name} — ${seniors[0].stableford_points} pts (Hcp ${seniors[0].handicap_at_round})` : ""}
 
 Total participants: ${results.length}
 

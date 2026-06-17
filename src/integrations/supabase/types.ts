@@ -213,14 +213,12 @@ export type Database = {
       }
       players: {
         Row: {
-          birth_year: number | null
           club: string | null
           created_at: string
           current_handicap: number | null
           gender: string | null
           id: string
           initial_handicap: number | null
-          is_senior: boolean
           license: string
           name: string
           phone: string | null
@@ -228,14 +226,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          birth_year?: number | null
           club?: string | null
           created_at?: string
           current_handicap?: number | null
           gender?: string | null
           id?: string
           initial_handicap?: number | null
-          is_senior?: boolean
           license: string
           name: string
           phone?: string | null
@@ -243,14 +239,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          birth_year?: number | null
           club?: string | null
           created_at?: string
           current_handicap?: number | null
           gender?: string | null
           id?: string
           initial_handicap?: number | null
-          is_senior?: boolean
           license?: string
           name?: string
           phone?: string | null
@@ -268,7 +262,6 @@ export type Database = {
           id: string
           import_source: string | null
           is_female_prize: boolean
-          is_senior_prize: boolean
           official_category: string | null
           official_position: number | null
           play_date: string | null
@@ -290,7 +283,6 @@ export type Database = {
           id?: string
           import_source?: string | null
           is_female_prize?: boolean
-          is_senior_prize?: boolean
           official_category?: string | null
           official_position?: number | null
           play_date?: string | null
@@ -312,7 +304,6 @@ export type Database = {
           id?: string
           import_source?: string | null
           is_female_prize?: boolean
-          is_senior_prize?: boolean
           official_category?: string | null
           official_position?: number | null
           play_date?: string | null
@@ -527,7 +518,6 @@ export type Database = {
           gender: string | null
           id: string | null
           initial_handicap: number | null
-          is_senior: boolean | null
           license: string | null
           name: string | null
           photo_url: string | null
@@ -540,7 +530,6 @@ export type Database = {
           gender?: string | null
           id?: string | null
           initial_handicap?: number | null
-          is_senior?: boolean | null
           license?: string | null
           name?: string | null
           photo_url?: string | null
@@ -553,7 +542,6 @@ export type Database = {
           gender?: string | null
           id?: string | null
           initial_handicap?: number | null
-          is_senior?: boolean | null
           license?: string | null
           name?: string | null
           photo_url?: string | null

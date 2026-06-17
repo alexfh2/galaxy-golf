@@ -15,7 +15,6 @@ type EditState = {
   phone: string;
   current_handicap: string;
   gender: string;
-  is_senior: boolean;
 };
 
 const AdminPlayers = () => {
@@ -43,7 +42,6 @@ const AdminPlayers = () => {
         club: patch.club?.trim() || null,
         phone: patch.phone?.trim() || null,
         gender: patch.gender || null,
-        is_senior: patch.is_senior,
         current_handicap:
           patch.current_handicap === '' || patch.current_handicap == null
             ? null
@@ -70,7 +68,6 @@ const AdminPlayers = () => {
       phone: p.phone ?? '',
       current_handicap: p.current_handicap?.toString() ?? '',
       gender: p.gender ?? '',
-      is_senior: !!p.is_senior,
     });
   };
 
@@ -99,20 +96,20 @@ const AdminPlayers = () => {
                 <TableHead>Telèfon</TableHead>
                 <TableHead>Últim HCP</TableHead>
                 <TableHead>Gènere</TableHead>
-                <TableHead>Sènior</TableHead>
+                
                 <TableHead className="text-right">Accions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Carregant...
                   </TableCell>
                 </TableRow>
               ) : !players?.length ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No hi ha jugadors registrats
                   </TableCell>
                 </TableRow>
@@ -192,21 +189,6 @@ const AdminPlayers = () => {
                           <Badge variant="secondary">Femenina</Badge>
                         ) : (
                           <span className="text-muted-foreground">M</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            checked={edit!.is_senior}
-                            onChange={(e) =>
-                              setEdit({ ...edit!, is_senior: e.target.checked })
-                            }
-                          />
-                        ) : player.is_senior ? (
-                          <Badge variant="outline">Sènior</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
