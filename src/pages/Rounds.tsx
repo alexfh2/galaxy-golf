@@ -542,6 +542,25 @@ const Rounds = () => {
               const accentWidth = hasResults ? 'w-[4px]' : isOngoing ? 'w-[3px]' : 'w-[2px]';
 
               return (
+                <div key={`wrap-${round.id}`}>
+                  {showFirstDivider && (
+                    <div className="flex items-center gap-3 mb-3 mt-1">
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
+                      <span className="text-[10px] font-semibold tracking-[0.28em] uppercase text-[hsl(var(--gg-green))]">
+                        Resultados publicados
+                      </span>
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
+                    </div>
+                  )}
+                  {showDivider && (
+                    <div className="flex items-center gap-3 mb-3 mt-6">
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-gold))]/30" />
+                      <span className="text-[10px] font-semibold tracking-[0.28em] uppercase text-[hsl(var(--gg-gold))]">
+                        Próximas pruebas
+                      </span>
+                      <span className="h-px flex-1 bg-[hsl(var(--gg-gold))]/30" />
+                    </div>
+                  )}
                 <div
                   key={round.id}
                   className={`relative border transition-all ${cardSurface}`}
