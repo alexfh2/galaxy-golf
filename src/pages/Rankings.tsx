@@ -1098,7 +1098,8 @@ export function GalaxyCupRankingPage() {
             <EmptyMessage>No se ha podido cargar el ranking.</EmptyMessage>
           ) : (
             <Tabs defaultValue="rounds" className="w-full">
-              <TabsList className="mb-6 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm">
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <TabsList className="bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm">
                 <TabsTrigger
                   value="rounds"
                   className="text-[11px] font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-3 sm:px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
@@ -1113,6 +1114,13 @@ export function GalaxyCupRankingPage() {
                   Ranking
                 </TabsTrigger>
               </TabsList>
+                <Link
+                  to="/bases-y-puntuaciones"
+                  className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--gg-copper))] hover:text-[hsl(var(--gg-navy-deep))] transition-colors border-b border-[hsl(var(--gg-copper))]/30 hover:border-[hsl(var(--gg-navy-deep))]/50 pb-0.5 self-start sm:self-auto"
+                >
+                  Bases y puntuaciones →
+                </Link>
+              </div>
               <TabsContent value="ranking">
               <CategoryTabs category={category} onChange={setCategory} accent="copper" />
               {rows.length === 0 ? (
