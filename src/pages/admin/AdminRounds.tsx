@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import RoundResultsImport from '@/components/admin/RoundResultsImport';
 import NewsGenerationDialog from '@/components/admin/NewsGenerationDialog';
+import ManualResultEditDialog from '@/components/admin/ManualResultEditDialog';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -101,6 +102,7 @@ const AdminRounds = () => {
   const [resultsRound, setResultsRound] = useState<Round | null>(null);
   const [deletingRound, setDeletingRound] = useState<Round | null>(null);
   const [newsRound, setNewsRound] = useState<Round | null>(null);
+  const [manualEditRound, setManualEditRound] = useState<Round | null>(null);
   const [courseUrl, setCourseUrl] = useState('');
   const [extractingPar, setExtractingPar] = useState(false);
   const [courseFile, setCourseFile] = useState<File | null>(null);
@@ -858,6 +860,24 @@ const AdminRounds = () => {
                         </div>
                       </button>
 
+                      {/* Manual edit */}
+                      <button
+                        onClick={() => setManualEditRound(round)}
+                        className="text-left p-4 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary/20">
+                            <Pencil className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm mb-1">Edició manual</div>
+                            <div className="text-xs text-muted-foreground leading-relaxed">
+                              Corregeix manualment Stableford i estat d'un jugador. Requereix revalidar la contrasenya admin.
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+
                       {/* Generate news */}
                       <button
                         onClick={() => round.status === 'published' && setNewsRound(round)}
@@ -1309,6 +1329,15 @@ const AdminRounds = () => {
         <NewsGenerationDialog
           round={newsRound}
           onClose={() => setNewsRound(null)}
+        />
+      )}
+
+      {/* Manual result edit dialog */}
+      {manualEditRound && (
+        <ManualResultEditDialog
+          round={manualEditRound}
+          open={!!manualEditRound}
+          onClose={() => setManualEditRound(null)}
         />
       )}
 
