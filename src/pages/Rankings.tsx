@@ -884,78 +884,51 @@ export function CircuitoRankingPage() {
                   </div>
 
                   {/* Mobile */}
-                  <div className="md:hidden space-y-3">
+                  <div className="md:hidden divide-y divide-[hsl(var(--gg-navy-deep))]/10 border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))]">
                     {filtered.map((r, i) => {
                       const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
                       const isLeader = i === 0;
+                      const hcp = fmtHcp(r.lastHcp);
                       return (
                         <div
                           key={r.player_id}
-                          className={`border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))] p-4 ${
+                          className={`px-2.5 py-2 ${
                             isLeader ? 'border-l-[3px] border-l-[hsl(var(--gg-green))]' : ''
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold text-lg text-[hsl(var(--gg-navy-deep))]/85 w-8 shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/80 w-5 shrink-0 tabular-nums">
                               {i + 1}
+                            </span>
+                            <span className="font-sans font-bold text-base text-[hsl(var(--gg-copper))] tabular-nums w-10 shrink-0 text-right">
+                              {r.total}
                             </span>
                             <button
                               type="button"
                               onClick={() => setSelectedPlayerId(r.player_id)}
-                              className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
+                              className="min-w-0 flex-1 text-left text-[13px] font-medium text-[hsl(var(--gg-navy-deep))] uppercase tracking-[0.04em] hover:text-[hsl(var(--gg-green))] transition-colors truncate"
                             >
-                              <span>{r.name}</span>
-                              {fmtHcp(r.lastHcp) && (
-                                <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
-                                  ({fmtHcp(r.lastHcp)})
+                              {r.name}
+                              {hcp && (
+                                <span className="ml-1 text-[11px] font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55 normal-case">
+                                  ({hcp})
                                 </span>
                               )}
                             </button>
                           </div>
-                          <div className="mt-3 flex items-baseline gap-2">
-                            <span className="text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/55">
-                              Total
-                            </span>
-                            <span className="font-sans font-bold text-2xl text-[hsl(var(--gg-copper))]">
-                              {r.total}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex gap-4 text-[11px] text-[hsl(var(--gg-navy-deep))]/70">
-                            <span>
-                              Pruebas:{' '}
-                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
-                                {r.rounds_played}
-                              </span>
-                            </span>
-                            <span>
-                              Mejores 7:{' '}
-                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
-                                {r.best7}
-                              </span>
-                            </span>
-                            <span>
-                              Bonus:{' '}
-                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
-                                +{r.bonus}
-                              </span>
-                            </span>
-                          </div>
-                          <div className="mt-3 pt-3 border-t border-[hsl(var(--gg-navy-deep))]/10">
-                            <span className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/45 mb-2 block">
-                              Resultados prueba a prueba
-                            </span>
-                            <div className="flex flex-wrap gap-2">
+                          <div className="mt-1.5 -mx-0.5 overflow-x-auto">
+                            <div className="flex gap-1 px-0.5 pb-0.5">
                               {roundCols.map((c) => {
                                 const v = byRid.get(c.round_id);
                                 return (
                                   <div
                                     key={c.round_id}
-                                    className="flex flex-col items-center px-2 py-1 bg-[hsl(var(--gg-bg-light))] min-w-[48px]"
+                                    className="flex flex-col items-center px-1.5 py-0.5 bg-[hsl(var(--gg-bg-light))] min-w-[34px] shrink-0"
                                   >
-                                    <span className="text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-navy-deep))]/50">
+                                    <span className="text-[8px] uppercase tracking-[0.08em] text-[hsl(var(--gg-navy-deep))]/45">
                                       {c.label}
                                     </span>
-                                    <span className="text-sm font-semibold text-[hsl(var(--gg-navy-deep))]/85">
+                                    <span className="text-[11px] font-semibold tabular-nums text-[hsl(var(--gg-navy-deep))]/85">
                                       {v != null ? v : '—'}
                                     </span>
                                   </div>
@@ -1239,83 +1212,54 @@ export function GalaxyCupRankingPage() {
                   </div>
 
                   {/* Mobile */}
-                  <div className="md:hidden space-y-3">
+                  <div className="md:hidden divide-y divide-[hsl(var(--gg-navy-deep))]/10 border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))]">
                     {filtered.map((r, i) => {
                       const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
                       const isLeader = i === 0;
+                      const hcp = fmtHcp(r.lastHcp);
                       return (
                         <div
                           key={r.player_id}
-                          className={`border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))] p-4 ${
+                          className={`px-2.5 py-2 ${
                             isLeader ? 'border-l-[3px] border-l-[hsl(var(--gg-copper))]' : ''
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold text-lg text-[hsl(var(--gg-navy-deep))]/85 w-8 shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/80 w-5 shrink-0 tabular-nums">
                               {i + 1}
+                            </span>
+                            <span className="font-sans font-bold text-base text-[hsl(var(--gg-copper))] tabular-nums w-12 shrink-0 text-right">
+                              {r.points}
                             </span>
                             <button
                               type="button"
                               onClick={() => setSelectedPlayerId(r.player_id)}
-                              className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-copper))]"
+                              className="min-w-0 flex-1 text-left text-[13px] font-medium text-[hsl(var(--gg-navy-deep))] uppercase tracking-[0.04em] hover:text-[hsl(var(--gg-copper))] transition-colors truncate"
                             >
-                              <span>{r.name}</span>
-                              {fmtHcp(r.lastHcp) && (
-                                <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
-                                  ({fmtHcp(r.lastHcp)})
+                              {r.name}
+                              {hcp && (
+                                <span className="ml-1 text-[11px] font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55 normal-case">
+                                  ({hcp})
                                 </span>
                               )}
                             </button>
                           </div>
-                          <div className="mt-3 flex items-baseline gap-2">
-                            <span className="text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/55">
-                              Puntos
-                            </span>
-                            <span className="font-sans font-bold text-2xl text-[hsl(var(--gg-copper))]">
-                              {r.points}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex gap-4 text-[11px] text-[hsl(var(--gg-navy-deep))]/70">
-                            <span>
-                              Pruebas:{' '}
-                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
-                                {r.rounds_played}
-                              </span>
-                            </span>
-                            <span>
-                              Majors:{' '}
-                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
-                                {r.majors_played}
-                              </span>
-                            </span>
-                            {r.best_position && (
-                              <span>
-                                Mejor:{' '}
-                                <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
-                                  {r.best_position}º
-                                </span>
-                              </span>
-                            )}
-                          </div>
-                          <div className="mt-3 pt-3 border-t border-[hsl(var(--gg-navy-deep))]/10">
-                            <span className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/45 mb-2 block">
-                              Resultados prueba a prueba
-                            </span>
-                            <div className="flex flex-wrap gap-2">
+                          <div className="mt-1.5 -mx-0.5 overflow-x-auto">
+                            <div className="flex gap-1 px-0.5 pb-0.5">
                               {roundCols.map((c) => {
                                 const v = byRid.get(c.round_id);
                                 return (
                                   <div
                                     key={c.round_id}
-                                    className="flex flex-col items-center px-2 py-1 bg-[hsl(var(--gg-bg-light))] min-w-[48px]"
+                                    className="flex flex-col items-center px-1.5 py-0.5 bg-[hsl(var(--gg-bg-light))] min-w-[34px] shrink-0"
                                   >
-                                    <span className="text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-navy-deep))]/50">
+                                    <span className="text-[8px] uppercase tracking-[0.08em] text-[hsl(var(--gg-navy-deep))]/45">
                                       {c.label}
                                       {c.isMajor && (
                                         <span className="ml-0.5 text-[7px] text-[hsl(var(--gg-copper))]">M</span>
                                       )}
                                     </span>
-                                    <span className="text-sm font-semibold text-[hsl(var(--gg-navy-deep))]/85">
+                                    <span className="text-[11px] font-semibold tabular-nums text-[hsl(var(--gg-navy-deep))]/85">
                                       {v != null && v > 0 ? v : '—'}
                                     </span>
                                   </div>
