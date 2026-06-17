@@ -213,7 +213,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0 bg-[hsl(var(--gg-bg-light))] border border-[hsl(var(--gg-navy-deep))]/14 text-[hsl(var(--gg-navy-deep))]">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-3xl sm:w-full max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0 bg-[hsl(var(--gg-bg-light))] border border-[hsl(var(--gg-navy-deep))]/14 text-[hsl(var(--gg-navy-deep))]">
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-[hsl(var(--gg-navy-deep))]/10">
           <DialogTitle className="font-display font-light text-2xl leading-tight text-[hsl(var(--gg-navy-deep))]">
             Perfil del jugador
