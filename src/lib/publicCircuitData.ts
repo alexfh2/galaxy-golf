@@ -80,8 +80,13 @@ export async function fetchPublicCircuitData(): Promise<PublicCircuitData> {
   if (error) throw error;
 
   const payload = data as PublicCircuitData | null;
+  const { resolvePhotoUrl } = await import('@/lib/photoUrl');
+  const players = ((payload?.players || []) as PublicPlayer[]).map((p) => ({
+    ...p,
+    photo_url: resolvePhotoUrl(p.photo_url) ?? null,
+  }));
   return {
-    players: (payload?.players || []) as PublicPlayer[],
+    players,
     results: (payload?.results || []) as PublicResult[],
     round_competitions: (payload?.round_competitions || []) as PublicRoundCompetition[],
   };
