@@ -326,47 +326,78 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
             const min = Math.min(...values);
             const max = Math.max(...values);
             const range = max - min || 1;
-            const chartH = 60;
-            const chartW = Math.max(200, hcpData.length * 60);
-            const padX = 30;
-            const padY = 22;
+            // Use viewBox so the chart scales to its container width on any device.
+            const n = hcpData.length;
+            const chartW = 600;
+            const chartH = 90;
+            const padX = 22;
+            const padY = 24;
             const usableW = chartW - padX * 2;
             const usableH = chartH - padY * 2;
 
             const points = hcpData.map((d, i) => ({
-              x: padX + (i / (hcpData.length - 1)) * usableW,
+              x: padX + (i / (n - 1)) * usableW,
               y: padY + (1 - (d.hcp - min) / range) * usableH,
               hcp: d.hcp,
               label: d.label,
             }));
 
             const polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+            // Thin out X labels when there are many rounds so they don't overlap.
+            const labelStep = n > 18 ? 4 : n > 12 ? 3 : n > 8 ? 2 : 1;
+            // Adapt point/text sizes to round count to keep things tidy.
+            const dotR = n > 16 ? 2.2 : n > 10 ? 2.8 : 3.4;
+            const hcpFs = n > 16 ? 7 : n > 10 ? 8 : 9;
+            const labelFs = n > 16 ? 7 : 8;
 
             return (
               <div>
                 <h4 className="font-display text-lg text-[hsl(var(--gg-navy-deep))] mb-3">
                   Evolución de hándicap
                 </h4>
-                <div className="bg-[hsl(var(--gg-surface-light))] rounded-sm p-3 border border-[hsl(var(--gg-navy-deep))]/12 overflow-x-auto">
-                  <svg width={chartW} height={chartH + 20}>
+                <div className="bg-[hsl(var(--gg-surface-light))] rounded-sm p-3 border border-[hsl(var(--gg-navy-deep))]/12">
+                  <svg
+                    viewBox={`0 0 ${chartW} ${chartH + 16}`}
+                    width="100%"
+                    preserveAspectRatio="none"
+                    className="block h-auto max-h-[140px]"
+                  >
                     <polyline
                       points={polyline}
                       fill="none"
                       stroke="hsl(var(--gg-green))"
-                      strokeWidth="2"
+                      strokeWidth="1.5"
                       strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
                     />
-                    {points.map((p, i) => (
-                      <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="4" fill="hsl(var(--gg-copper))" />
-                        <text x={p.x} y={p.y - 8} textAnchor="middle" className="fill-[hsl(var(--gg-navy-deep))] text-[10px] font-mono font-semibold">
-                          {p.hcp}
-                        </text>
-                        <text x={p.x} y={chartH + 14} textAnchor="middle" className="fill-[hsl(var(--gg-navy-deep))]/55 text-[9px]">
-                          {p.label}
-                        </text>
-                      </g>
-                    ))}
+                    {points.map((p, i) => {
+                      const showLabel = i % labelStep === 0 || i === n - 1;
+                      return (
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r={dotR} fill="hsl(var(--gg-copper))" />
+                          <text
+                            x={p.x}
+                            y={p.y - dotR - 3}
+                            textAnchor="middle"
+                            className="fill-[hsl(var(--gg-navy-deep))] font-mono font-semibold"
+                            style={{ fontSize: hcpFs }}
+                          >
+                            {p.hcp}
+                          </text>
+                          {showLabel && (
+                            <text
+                              x={p.x}
+                              y={chartH + 10}
+                              textAnchor="middle"
+                              className="fill-[hsl(var(--gg-navy-deep))]/55"
+                              style={{ fontSize: labelFs }}
+                            >
+                              {p.label}
+                            </text>
+                          )}
+                        </g>
+                      );
+                    })}
                   </svg>
                 </div>
               </div>
