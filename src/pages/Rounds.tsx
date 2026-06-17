@@ -511,7 +511,13 @@ const Rounds = () => {
           <p className="text-muted-foreground text-sm py-8 text-center">Sin datos</p>
         ) : (
           <div className="space-y-3">
-            {visibleRounds.map((round: any) => {
+            {visibleRounds.map((round: any, idx: number) => {
+              const showDivider =
+                splitRounds.played.length > 0 &&
+                splitRounds.pending.length > 0 &&
+                idx === splitRounds.played.length;
+              const showFirstDivider =
+                splitRounds.played.length > 0 && idx === 0;
               const played = round.date < today || (round.end_date && round.end_date < today);
               const isOngoing = !played && round.date <= today && (!round.end_date || round.end_date >= today);
               const hasResults = round.status === 'published';
