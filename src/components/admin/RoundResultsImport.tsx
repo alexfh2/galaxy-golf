@@ -1215,7 +1215,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
                       <td className="p-2 font-medium">
                         {r.name}
                         {r.gender && <span className="text-muted-foreground ml-1">({r.gender})</span>}
-                        {r._is_senior && <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">Sènior</Badge>}
+                        
                         {(() => {
                           const st = r.result_status ?? 'completed';
                           if (st === 'completed') return null;
