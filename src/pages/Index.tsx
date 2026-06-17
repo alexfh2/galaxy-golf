@@ -202,11 +202,13 @@ function CompetitionWordmark({ variant }: { variant: 'circuito' | 'galaxycup' })
   const src = isCircuito ? circuitoLogo.url : galaxycupLogo.url;
   const alt = isCircuito ? 'Circuito GalaxyGolf' : 'GalaxyCup';
   return (
-    <div className="select-none">
+    <div className="select-none flex justify-center w-full">
       <img
         src={src}
         alt={alt}
-        className="w-auto object-contain max-h-[56px] sm:max-h-[68px] lg:max-h-[84px]"
+        className={`w-auto object-contain max-h-[56px] sm:max-h-[68px] lg:max-h-[84px] ${
+          isCircuito ? 'max-w-[280px]' : 'max-w-[240px]'
+        }`}
         loading="eager"
         decoding="async"
       />
