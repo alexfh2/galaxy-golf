@@ -243,9 +243,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
                       {results.map((r) => {
                         const row = rows[r.id];
                         if (!row) return null;
-                        const fullName = r.players
-                          ? `${r.players.name}${r.players.last_name ? ' ' + r.players.last_name : ''}`
-                          : '—';
+                        const fullName = r.players?.name ?? '—';
                         return (
                           <tr key={r.id} className={row.dirty ? 'bg-accent/10' : ''}>
                             <td className="border border-border px-2 py-1.5">{fullName}</td>
