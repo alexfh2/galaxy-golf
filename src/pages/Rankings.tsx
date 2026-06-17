@@ -808,77 +808,165 @@ export function CircuitoRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
-                        <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pos.</TableHead>
-                        <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Jugador</TableHead>
-                        {roundCols.map((c) => (
-                          <TableHead
-                            key={c.round_id}
-                            title={c.full}
-                            className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-green))]/85"
-                          >
-                            {c.label}
-                          </TableHead>
-                        ))}
-                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pruebas</TableHead>
-                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Mejores 7</TableHead>
-                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Bonus</TableHead>
-                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filtered.map((r, i) => {
-                        const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
-                        const isLeader = i === 0;
-                        return (
-                          <TableRow
-                            key={r.player_id}
-                            className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
-                              isLeader
-                                ? 'bg-[hsl(var(--gg-green))]/10 hover:bg-[hsl(var(--gg-green))]/14'
-                                : 'hover:bg-[hsl(var(--gg-bg-light))]'
-                            }`}
-                          >
-                            <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
+                <>
+                  {/* Desktop */}
+                  <div className="hidden md:block rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                          <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pos.</TableHead>
+                          <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Jugador</TableHead>
+                          {roundCols.map((c) => (
+                            <TableHead
+                              key={c.round_id}
+                              title={c.full}
+                              className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-green))]/85"
+                            >
+                              {c.label}
+                            </TableHead>
+                          ))}
+                          <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Pruebas</TableHead>
+                          <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Mejores 7</TableHead>
+                          <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-green))]">Bonus</TableHead>
+                          <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filtered.map((r, i) => {
+                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                          const isLeader = i === 0;
+                          return (
+                            <TableRow
+                              key={r.player_id}
+                              className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
+                                isLeader
+                                  ? 'bg-[hsl(var(--gg-green))]/10 hover:bg-[hsl(var(--gg-green))]/14'
+                                  : 'hover:bg-[hsl(var(--gg-bg-light))]'
+                              }`}
+                            >
+                              <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
+                                {i + 1}
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPlayerId(r.player_id)}
+                                  className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
+                                >
+                                  <span>{r.name}</span>
+                                  {fmtHcp(r.lastHcp) && (
+                                    <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
+                                      ({fmtHcp(r.lastHcp)})
+                                    </span>
+                                  )}
+                                </button>
+                              </TableCell>
+                              {roundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                                    {v != null ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
+                              <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.best7}</TableCell>
+                              <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">+{r.bonus}</TableCell>
+                              <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
+                                {r.total}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile */}
+                  <div className="md:hidden space-y-3">
+                    {filtered.map((r, i) => {
+                      const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                      const isLeader = i === 0;
+                      return (
+                        <div
+                          key={r.player_id}
+                          className={`border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))] p-4 ${
+                            isLeader ? 'border-l-[3px] border-l-[hsl(var(--gg-green))]' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold text-lg text-[hsl(var(--gg-navy-deep))]/85 w-8 shrink-0">
                               {i + 1}
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
-                              >
-                                <span>{r.name}</span>
-                                {fmtHcp(r.lastHcp) && (
-                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
-                                    ({fmtHcp(r.lastHcp)})
-                                  </span>
-                                )}
-                              </button>
-                            </TableCell>
-                            {roundCols.map((c) => {
-                              const v = byRid.get(c.round_id);
-                              return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
-                                  {v != null ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.best7}</TableCell>
-                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">+{r.bonus}</TableCell>
-                            <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPlayerId(r.player_id)}
+                              className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-green))]"
+                            >
+                              <span>{r.name}</span>
+                              {fmtHcp(r.lastHcp) && (
+                                <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
+                                  ({fmtHcp(r.lastHcp)})
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                          <div className="mt-3 flex items-baseline gap-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/55">
+                              Total
+                            </span>
+                            <span className="font-sans font-bold text-2xl text-[hsl(var(--gg-copper))]">
                               {r.total}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                            </span>
+                          </div>
+                          <div className="mt-2 flex gap-4 text-[11px] text-[hsl(var(--gg-navy-deep))]/70">
+                            <span>
+                              Pruebas:{' '}
+                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
+                                {r.rounds_played}
+                              </span>
+                            </span>
+                            <span>
+                              Mejores 7:{' '}
+                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
+                                {r.best7}
+                              </span>
+                            </span>
+                            <span>
+                              Bonus:{' '}
+                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
+                                +{r.bonus}
+                              </span>
+                            </span>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-[hsl(var(--gg-navy-deep))]/10">
+                            <span className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/45 mb-2 block">
+                              Resultados prueba a prueba
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {roundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <div
+                                    key={c.round_id}
+                                    className="flex flex-col items-center px-2 py-1 bg-[hsl(var(--gg-bg-light))] min-w-[48px]"
+                                  >
+                                    <span className="text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-navy-deep))]/50">
+                                      {c.label}
+                                    </span>
+                                    <span className="text-sm font-semibold text-[hsl(var(--gg-navy-deep))]/85">
+                                      {v != null ? v : '—'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
               <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
                 Ranking regular provisional · La Gran Final se implementará en una fase posterior.
@@ -1053,98 +1141,191 @@ export function GalaxyCupRankingPage() {
                   No hay jugadores en la categoría {getGalaxyGolfCategoryLabel(category)} todavía.
                 </EmptyMessage>
               ) : (
-                <div className="rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
-                        <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
-                        <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
-                        {roundCols.map((c) => (
-                          <TableHead
-                            key={c.round_id}
-                            title={c.full}
-                            className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-copper))]/85"
-                          >
-                            {c.label}
-                            {c.isMajor && (
-                              <span className="ml-1 inline-block text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-copper))] border border-[hsl(var(--gg-copper))]/50 px-1 leading-none py-[2px]">
-                                M
+                <>
+                  {/* Desktop */}
+                  <div className="hidden md:block rounded-sm border border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-surface-light))] overflow-x-auto shadow-[0_10px_36px_-22px_rgba(11,19,36,0.35)]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-[hsl(var(--gg-navy-deep))]/14 bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
+                          <TableHead className="w-14 text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
+                          <TableHead className="min-w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
+                          {roundCols.map((c) => (
+                            <TableHead
+                              key={c.round_id}
+                              title={c.full}
+                              className="text-center whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[hsl(var(--gg-copper))]/85"
+                            >
+                              {c.label}
+                              {c.isMajor && (
+                                <span className="ml-1 inline-block text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-copper))] border border-[hsl(var(--gg-copper))]/50 px-1 leading-none py-[2px]">
+                                  M
+                                </span>
+                              )}
+                            </TableHead>
+                          ))}
+                          <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Pruebas</TableHead>
+                          <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Majors</TableHead>
+                          <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Puntos</TableHead>
+                          <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Mejor resultado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filtered.map((r, i) => {
+                          const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                          const isLeader = i === 0;
+                          return (
+                            <TableRow
+                              key={r.player_id}
+                              className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
+                                isLeader
+                                  ? 'bg-[hsl(var(--gg-copper))]/10 hover:bg-[hsl(var(--gg-copper))]/14'
+                                  : 'hover:bg-[hsl(var(--gg-bg-light))]'
+                              }`}
+                            >
+                              <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
+                                {i + 1}
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPlayerId(r.player_id)}
+                                  className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-copper))]"
+                                >
+                                  <span>{r.name}</span>
+                                  {fmtHcp(r.lastHcp) && (
+                                    <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
+                                      ({fmtHcp(r.lastHcp)})
+                                    </span>
+                                  )}
+                                </button>
+                              </TableCell>
+                              {roundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                                    {v != null && v > 0 ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
+                              <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.majors_played}</TableCell>
+                              <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
+                                {r.points}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {r.best_position ? (
+                                  <span className="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--gg-navy-deep))]/85 tabular-nums">
+                                    {r.best_position}º
+                                    {r.best_was_major && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0 rounded-none"
+                                      >
+                                        Major
+                                      </Badge>
+                                    )}
+                                  </span>
+                                ) : (
+                                  <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile */}
+                  <div className="md:hidden space-y-3">
+                    {filtered.map((r, i) => {
+                      const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
+                      const isLeader = i === 0;
+                      return (
+                        <div
+                          key={r.player_id}
+                          className={`border border-[hsl(var(--gg-navy-deep))]/10 bg-[hsl(var(--gg-surface-light))] p-4 ${
+                            isLeader ? 'border-l-[3px] border-l-[hsl(var(--gg-copper))]' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold text-lg text-[hsl(var(--gg-navy-deep))]/85 w-8 shrink-0">
+                              {i + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPlayerId(r.player_id)}
+                              className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-copper))]"
+                            >
+                              <span>{r.name}</span>
+                              {fmtHcp(r.lastHcp) && (
+                                <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
+                                  ({fmtHcp(r.lastHcp)})
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                          <div className="mt-3 flex items-baseline gap-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/55">
+                              Puntos
+                            </span>
+                            <span className="font-sans font-bold text-2xl text-[hsl(var(--gg-copper))]">
+                              {r.points}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex gap-4 text-[11px] text-[hsl(var(--gg-navy-deep))]/70">
+                            <span>
+                              Pruebas:{' '}
+                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
+                                {r.rounds_played}
+                              </span>
+                            </span>
+                            <span>
+                              Majors:{' '}
+                              <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
+                                {r.majors_played}
+                              </span>
+                            </span>
+                            {r.best_position && (
+                              <span>
+                                Mejor:{' '}
+                                <span className="font-semibold text-[hsl(var(--gg-navy-deep))]">
+                                  {r.best_position}º
+                                </span>
                               </span>
                             )}
-                          </TableHead>
-                        ))}
-                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Pruebas</TableHead>
-                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Majors</TableHead>
-                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Puntos</TableHead>
-                        <TableHead className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--gg-copper))]">Mejor resultado</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filtered.map((r, i) => {
-                        const byRid = new Map(r.history.map((h) => [h.round_id, h.stableford]));
-                        const isLeader = i === 0;
-                        return (
-                          <TableRow
-                            key={r.player_id}
-                            className={`group border-b border-[hsl(var(--gg-navy-deep))]/8 ${
-                              isLeader
-                                ? 'bg-[hsl(var(--gg-copper))]/10 hover:bg-[hsl(var(--gg-copper))]/14'
-                                : 'hover:bg-[hsl(var(--gg-bg-light))]'
-                            }`}
-                          >
-                            <TableCell className="font-semibold text-base text-[hsl(var(--gg-navy-deep))]/85">
-                              {i + 1}
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedPlayerId(r.player_id)}
-                                className="font-medium text-left text-[hsl(var(--gg-navy-deep))] transition-colors hover:text-[hsl(var(--gg-copper))]"
-                              >
-                                <span>{r.name}</span>
-                                {fmtHcp(r.lastHcp) && (
-                                  <span className="ml-1.5 text-xs font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55">
-                                    ({fmtHcp(r.lastHcp)})
-                                  </span>
-                                )}
-                              </button>
-                            </TableCell>
-                            {roundCols.map((c) => {
-                              const v = byRid.get(c.round_id);
-                              return (
-                                <TableCell key={c.round_id} className="text-center px-2 text-sm text-[hsl(var(--gg-navy-deep))]/85">
-                                  {v != null && v > 0 ? v : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.rounds_played}</TableCell>
-                            <TableCell className="text-center text-sm text-[hsl(var(--gg-navy-deep))]/80">{r.majors_played}</TableCell>
-                            <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
-                              {r.points}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {r.best_position ? (
-                                <span className="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--gg-navy-deep))]/85 tabular-nums">
-                                  {r.best_position}º
-                                  {r.best_was_major && (
-                                    <Badge
-                                      variant="outline"
-                                      className="border-[hsl(var(--gg-copper))]/50 text-[hsl(var(--gg-copper))] text-[10px] px-1.5 py-0 rounded-none"
-                                    >
-                                      Major
-                                    </Badge>
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-[hsl(var(--gg-navy-deep))]/10">
+                            <span className="text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--gg-navy-deep))]/45 mb-2 block">
+                              Resultados prueba a prueba
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {roundCols.map((c) => {
+                                const v = byRid.get(c.round_id);
+                                return (
+                                  <div
+                                    key={c.round_id}
+                                    className="flex flex-col items-center px-2 py-1 bg-[hsl(var(--gg-bg-light))] min-w-[48px]"
+                                  >
+                                    <span className="text-[9px] uppercase tracking-[0.1em] text-[hsl(var(--gg-navy-deep))]/50">
+                                      {c.label}
+                                      {c.isMajor && (
+                                        <span className="ml-0.5 text-[7px] text-[hsl(var(--gg-copper))]">M</span>
+                                      )}
+                                    </span>
+                                    <span className="text-sm font-semibold text-[hsl(var(--gg-navy-deep))]/85">
+                                      {v != null && v > 0 ? v : '—'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
               <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--gg-ivory))]/45">
                 Ranking de fase regular y Majors · Los Playoffs se implementarán en una fase posterior.
