@@ -705,6 +705,7 @@ const Rounds = () => {
                     </div>
                   )}
                 </div>
+                </div>
               );
             })}
           </div>
