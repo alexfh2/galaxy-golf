@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { resolvePhotoUrl } from '@/lib/photoUrl';
 
 export const publicCircuitDataQueryKey = ['public-circuit-data'] as const;
 
@@ -80,7 +81,6 @@ export async function fetchPublicCircuitData(): Promise<PublicCircuitData> {
   if (error) throw error;
 
   const payload = data as PublicCircuitData | null;
-  const { resolvePhotoUrl } = await import('@/lib/photoUrl');
   const players = ((payload?.players || []) as PublicPlayer[]).map((p) => ({
     ...p,
     photo_url: resolvePhotoUrl(p.photo_url) ?? null,
