@@ -53,13 +53,13 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Circuito GalaxyGolf */}
-          <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/30 bg-[hsl(var(--gg-green))]/8 p-8 flex flex-col group hover:border-[hsl(var(--gg-green))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
+          <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/30 bg-[hsl(var(--gg-green))]/8 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-green))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-green))]/55" />
-            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] mb-5">
+            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] mb-5">
               Circuito
             </p>
             <CompetitionWordmark variant="circuito" />
-            <p className="text-[hsl(var(--gg-navy-deep))]/85 leading-relaxed mt-5 mb-6">
+            <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-5 mb-6 max-w-[26ch]">
               Ranking anual por categorías, pruebas regulares y Gran Final.
             </p>
             <div className="mt-auto">
@@ -74,13 +74,13 @@ const Index = () => {
           </article>
 
           {/* GalaxyCup */}
-          <article className="relative overflow-hidden border border-[hsl(var(--gg-copper))]/30 bg-[hsl(var(--gg-copper))]/6 p-8 flex flex-col group hover:border-[hsl(var(--gg-copper))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
+          <article className="relative overflow-hidden border border-[hsl(var(--gg-copper))]/30 bg-[hsl(var(--gg-copper))]/6 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-copper))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-copper))]/55" />
-            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))] mb-5">
+            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))] mb-5">
               Race to the Playoffs
             </p>
             <CompetitionWordmark variant="galaxycup" />
-            <p className="text-[hsl(var(--gg-navy-deep))]/85 leading-relaxed mt-5 mb-6">
+            <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-5 mb-6 max-w-[26ch]">
               Competición por puntos con Majors y Playoffs.
             </p>
             <div className="mt-auto">
