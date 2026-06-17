@@ -214,8 +214,8 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-1rem)] max-w-3xl sm:w-full max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0 bg-[hsl(var(--gg-bg-light))] border border-[hsl(var(--gg-navy-deep))]/14 text-[hsl(var(--gg-navy-deep))]">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-[hsl(var(--gg-navy-deep))]/10">
-          <DialogTitle className="font-display font-light text-2xl leading-tight text-[hsl(var(--gg-navy-deep))]">
+        <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b border-[hsl(var(--gg-navy-deep))]/10">
+          <DialogTitle className="font-display font-light text-2xl leading-tight text-[hsl(var(--gg-navy-deep))] pr-8">
             Perfil del jugador
           </DialogTitle>
           {categoryLabel && (
@@ -226,18 +226,18 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
         </DialogHeader>
 
         {/* Cabecera jugador */}
-        <div className="px-6 pt-5 pb-4 flex items-center gap-4 border-b border-[hsl(var(--gg-navy-deep))]/8 bg-[hsl(var(--gg-surface-light))]">
-          <Avatar className="h-16 w-16 border border-[hsl(var(--gg-gold))]/40">
+        <div className="px-4 sm:px-6 pt-5 pb-4 flex items-center gap-3 sm:gap-4 border-b border-[hsl(var(--gg-navy-deep))]/8 bg-[hsl(var(--gg-surface-light))] min-w-0">
+          <Avatar className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 border border-[hsl(var(--gg-gold))]/40">
             {player.photo_url && <AvatarImage src={player.photo_url} alt={player.name} />}
             <AvatarFallback className="bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] font-semibold">
               {initials(player.name)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-display font-light text-2xl leading-tight text-[hsl(var(--gg-navy-deep))] truncate">
+            <h3 className="font-display font-light text-xl sm:text-2xl leading-tight text-[hsl(var(--gg-navy-deep))] truncate">
               {player.name}
             </h3>
-            <p className="text-xs text-[hsl(var(--gg-navy-deep))]/65 mt-1">
+            <p className="text-xs text-[hsl(var(--gg-navy-deep))]/65 mt-1 truncate">
               {roundsPlayed} {roundsPlayed === 1 ? 'torneo' : 'torneos'}
               {lastHcp != null && <> · Hcp {lastHcp}</>}
               {player.club && <> · {player.club}</>}
@@ -245,9 +245,10 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
           </div>
         </div>
 
-        <div className="px-6 py-5 space-y-6">
+        <div className="px-4 sm:px-6 py-5 space-y-6 min-w-0">
           {/* Resumen básico */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
             {summary.map((s) => (
               <div
                 key={s.label}
