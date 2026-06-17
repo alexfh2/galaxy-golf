@@ -153,9 +153,6 @@ Hándicap Superior — els qui millor dominen el camp:
 Classificació Femenina:
 [Guanyadora]
 
-Classificació Sènior (+65):
-[Guanyador]
-
 [Si hi ha actuacions destacades: birdies, etc.]
 
 Per a més detalls visiteu la nostra web.
