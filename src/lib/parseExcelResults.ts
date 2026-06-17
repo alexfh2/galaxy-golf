@@ -417,7 +417,7 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
     }
   }
 
-  const hasSeniorInfo = cols.age !== null || cols.niv !== null;
+  
 
   const headerName = (c: number | null): string => {
     if (c == null) return '';
