@@ -23,7 +23,7 @@ const Footer = () => {
             to="/jornades"
             className="flex items-center gap-2 px-6 py-3 border border-[hsl(var(--gg-gold))]/40 text-xs font-medium uppercase tracking-[0.2em] text-[hsl(var(--gg-gold))] hover:bg-[hsl(var(--gg-gold))]/10 transition-colors"
           >
-            Consultar calendario
+            Consultar torneos
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>

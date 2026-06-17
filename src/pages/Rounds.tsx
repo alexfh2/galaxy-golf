@@ -379,7 +379,7 @@ const Rounds = () => {
               className="font-display font-light leading-[1.05] text-[hsl(var(--gg-navy-deep))] mb-5"
               style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
             >
-              Calendario
+              Torneos
             </h1>
             <p className="text-base md:text-lg text-[hsl(var(--gg-navy-deep))]/80 font-light max-w-xl">
               Consulta todas las pruebas del Circuito GalaxyGolf y la GalaxyCup, incluyendo Majors, Playoffs y Gran Final.
