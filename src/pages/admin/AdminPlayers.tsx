@@ -191,21 +191,6 @@ const AdminPlayers = () => {
                           <span className="text-muted-foreground">M</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            checked={edit!.is_senior}
-                            onChange={(e) =>
-                              setEdit({ ...edit!, is_senior: e.target.checked })
-                            }
-                          />
-                        ) : player.is_senior ? (
-                          <Badge variant="outline">Sènior</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
                           <div className="flex justify-end gap-1">
