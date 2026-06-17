@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { resolvePhotoUrl } from '@/lib/photoUrl';
+import { signPhotoUrl } from '@/lib/photoUrl';
 
 export const publicCircuitDataQueryKey = ['public-circuit-data'] as const;
 
@@ -81,10 +81,13 @@ export async function fetchPublicCircuitData(): Promise<PublicCircuitData> {
   if (error) throw error;
 
   const payload = data as PublicCircuitData | null;
-  const players = ((payload?.players || []) as PublicPlayer[]).map((p) => ({
-    ...p,
-    photo_url: resolvePhotoUrl(p.photo_url) ?? null,
-  }));
+  const rawPlayers = (payload?.players || []) as PublicPlayer[];
+  const players = await Promise.all(
+    rawPlayers.map(async (p) => ({
+      ...p,
+      photo_url: p.photo_url ? (await signPhotoUrl(p.photo_url)) ?? null : null,
+    })),
+  );
   return {
     players,
     results: (payload?.results || []) as PublicResult[],
