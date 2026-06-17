@@ -148,8 +148,6 @@ ESTRUCTURA DE REFERÈNCIA (adapta-la per a RESULTATS):
 *Femenina*
 🥇 [Nom] — [Punts] pts
 
-*Femenina*
-🥇 [Nom] — [Punts] pts
 
 [Si hi ha actuacions destacades com birdies, menciona-les breument]
 
