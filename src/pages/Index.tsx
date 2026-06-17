@@ -74,14 +74,18 @@ const Index = () => {
           {/* Circuito GalaxyGolf */}
           <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/30 bg-[hsl(var(--gg-green))]/8 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-green))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-green))]/55" />
-            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] mb-6">
+            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] mb-4">
               Circuito
             </p>
-            <CompetitionWordmark variant="circuito" />
-            <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-6 mb-6 max-w-[26ch]">
-              Ranking anual por categorías, pruebas regulares y Gran Final.
-            </p>
-            <div className="mt-auto">
+            <div className="flex-1 flex flex-col justify-center items-center w-full">
+              <div className="pt-3">
+                <CompetitionWordmark variant="circuito" />
+              </div>
+              <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-5 max-w-[26ch]">
+                Ranking anual por categorías, pruebas regulares y Gran Final.
+              </p>
+            </div>
+            <div className="mt-6">
               <Link
                 to="/circuito-galaxygolf"
                 className="inline-flex items-center gap-3 px-6 py-3 bg-[hsl(var(--gg-green))] text-white text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-green))]/85 transition-colors"
@@ -95,14 +99,16 @@ const Index = () => {
           {/* GalaxyCup */}
           <article className="relative overflow-hidden border border-[hsl(var(--gg-copper))]/30 bg-[hsl(var(--gg-copper))]/6 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-copper))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-copper))]/55" />
-            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))] mb-6">
+            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))] mb-4">
               Race to the Playoffs
             </p>
-            <CompetitionWordmark variant="galaxycup" />
-            <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-6 mb-6 max-w-[26ch]">
-              Competición por puntos con Majors y Playoffs.
-            </p>
-            <div className="mt-auto">
+            <div className="flex-1 flex flex-col justify-center items-center w-full">
+              <CompetitionWordmark variant="galaxycup" />
+              <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-5 max-w-[26ch]">
+                Competición por puntos con Majors y Playoffs.
+              </p>
+            </div>
+            <div className="mt-6">
               <Link
                 to="/galaxycup"
                 className="inline-flex items-center gap-3 px-6 py-3 bg-[hsl(var(--gg-copper))] text-white text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-copper))]/85 transition-colors"
