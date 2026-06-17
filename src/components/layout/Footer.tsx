@@ -40,7 +40,13 @@ const Footer = () => {
           © {new Date().getFullYear()}
         </p>
       </div>
-      <div className="container pb-4 flex justify-end">
+      <div className="container pb-4 flex justify-between items-center gap-4">
+        <Link
+          to="/bases-y-puntuaciones"
+          className="text-[10px] tracking-[0.18em] uppercase text-[hsl(var(--gg-ivory))]/50 hover:text-[hsl(var(--gg-gold))] transition-colors"
+        >
+          Bases y puntuaciones
+        </Link>
         <Link
           to="/admin"
           className="text-[10px] tracking-[0.18em] uppercase text-[hsl(var(--gg-ivory))]/30 hover:text-[hsl(var(--gg-ivory))]/60 transition-colors"

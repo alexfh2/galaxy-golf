@@ -19,6 +19,7 @@ import PlayerDetail from "./pages/PlayerDetail";
 
 import Stats from "./pages/Stats";
 import News from "./pages/News";
+import BasesYPuntuaciones from "./pages/BasesYPuntuaciones";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSeasons from "./pages/admin/AdminSeasons";
@@ -52,6 +53,7 @@ const App = () => (
               
               <Route path="/estadistiques" element={<Stats />} />
               <Route path="/noticies" element={<News />} />
+              <Route path="/bases-y-puntuaciones" element={<BasesYPuntuaciones />} />
             </Route>
 
             {/* Admin routes */}
