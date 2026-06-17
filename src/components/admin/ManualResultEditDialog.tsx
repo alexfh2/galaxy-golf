@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Loader2, Lock, Save, Grid3x3 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { computeScratchStableford } from '@/lib/scratchStableford';
+import { computeScratchStableford, computeHandicapStableford } from '@/lib/scratchStableford';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
