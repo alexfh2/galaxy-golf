@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import RoundResultsImport from '@/components/admin/RoundResultsImport';
 import NewsGenerationDialog from '@/components/admin/NewsGenerationDialog';
+import ManualResultEditDialog from '@/components/admin/ManualResultEditDialog';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import type { Database } from '@/integrations/supabase/types';
 
