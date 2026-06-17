@@ -1332,6 +1332,15 @@ const AdminRounds = () => {
         />
       )}
 
+      {/* Manual result edit dialog */}
+      {manualEditRound && (
+        <ManualResultEditDialog
+          round={manualEditRound}
+          open={!!manualEditRound}
+          onClose={() => setManualEditRound(null)}
+        />
+      )}
+
       {/* Delete confirmation */}
       <AlertDialog open={!!deletingRound} onOpenChange={(open) => !open && setDeletingRound(null)}>
         <AlertDialogContent>
