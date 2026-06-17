@@ -45,7 +45,7 @@ const GALAXYCUP_MAJOR_POINTS = [
 ];
 
 const sortKey = (r: PublicResult) => {
-  const d = r.rounds?.date || r.play_date || '9999-99-99';
+  const d = r.play_date || r.rounds?.date || '9999-99-99';
   const n = String(r.rounds?.round_number ?? 9999).padStart(4, '0');
   const c = r.created_at || '';
   return `${d}|${n}|${c}`;
