@@ -10,7 +10,7 @@ import logoGalaxyGolf from '@/assets/galaxygolf-logo.png.asset.json';
 const navItems = [
   { label: 'Circuito GalaxyGolf', path: '/circuito-galaxygolf' },
   { label: 'GalaxyCup', path: '/galaxycup' },
-  { label: 'Calendario', path: '/jornades' },
+  { label: 'Torneos', path: '/jornades' },
   { label: 'Estadísticas', path: '/estadistiques' },
   { label: 'Noticias', path: '/noticies' },
   { label: 'Jugadores', path: '/jugadors' },
@@ -28,18 +28,9 @@ const Logo = ({ className = '' }: { className?: string }) => (
 const Navbar = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const isHome = location.pathname === '/';
 
   return (
-    <header
-      className={`${
-        isHome ? 'absolute' : 'sticky'
-      } top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-        isHome
-          ? 'bg-transparent'
-          : 'bg-[hsl(var(--gg-navbar-navy))] border-b border-[hsl(var(--gg-gold))]/15'
-      }`}
-    >
+    <header className="sticky top-0 left-0 right-0 z-50 bg-[hsl(var(--gg-navbar-navy))] border-b border-[hsl(var(--gg-gold))]/15 transition-colors duration-300">
       <div className="container flex h-20 items-center py-4">
         <Link to="/" className="flex items-center" aria-label="GalaxyGolf — Inicio">
           <Logo className="h-12 sm:h-14" />
@@ -56,7 +47,7 @@ const Navbar = () => {
                 className={`relative px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] transition-colors ${
                   isActive
                     ? 'text-[hsl(var(--gg-gold))]'
-                    : 'text-[hsl(var(--gg-ivory))]/70 hover:text-[hsl(var(--gg-gold))]'
+                    : 'text-[hsl(var(--gg-ivory))]/80 hover:text-[hsl(var(--gg-gold))]'
                 }`}
               >
                 {item.label}
@@ -70,17 +61,10 @@ const Navbar = () => {
 
         <div className="flex items-center gap-3 ml-auto">
           <LanguageSwitcher />
-          {/* ThemeToggle hidden: app locked to dark mode */}
-          <Link
-            to="/admin"
-            className="hidden sm:inline-flex items-center px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] border border-[hsl(var(--gg-gold))]/60 text-[hsl(var(--gg-gold))] hover:bg-[hsl(var(--gg-gold))]/10 hover:border-[hsl(var(--gg-gold))] transition-colors"
-          >
-            Iniciar sesión
-          </Link>
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" className={isHome ? 'text-foreground/70 hover:text-foreground' : ''}>
+              <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -94,18 +78,11 @@ const Navbar = () => {
                     key={`m-${item.label}-${idx}`}
                     to={item.path}
                     onClick={() => setOpen(false)}
-                    className="px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.15em] text-foreground/80 hover:text-[hsl(var(--gg-gold))] transition-colors"
+                    className="px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.15em] text-foreground/85 hover:text-[hsl(var(--gg-gold))] transition-colors"
                   >
                     {item.label}
                   </Link>
                 ))}
-                <Link
-                  to="/admin"
-                  onClick={() => setOpen(false)}
-                  className="mt-4 px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] border border-[hsl(var(--gg-copper))]/60 text-[hsl(var(--gg-copper))] text-center"
-                >
-                  Iniciar sesión
-                </Link>
               </nav>
             </SheetContent>
           </Sheet>
