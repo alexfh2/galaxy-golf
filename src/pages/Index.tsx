@@ -141,7 +141,11 @@ const Index = () => {
               </div>
               <Link
                 to={`/jornades?round=${lastRound.id}`}
-                className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[hsl(var(--${ctaBg}))] text-white text-[10px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--${ctaBg}))]/85 transition-colors shrink-0`}
+                className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors shrink-0 ${
+                  ctaBg === 'gg-copper'
+                    ? 'bg-[hsl(var(--gg-copper))] hover:bg-[hsl(var(--gg-copper))]/85'
+                    : 'bg-[hsl(var(--gg-green))] hover:bg-[hsl(var(--gg-green))]/85'
+                }`}
               >
                 Ver resultados
                 <ArrowRight className="h-3.5 w-3.5" />
