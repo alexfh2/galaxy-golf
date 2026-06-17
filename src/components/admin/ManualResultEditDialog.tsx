@@ -77,6 +77,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
       setPassword('');
       setRows({});
       setPendingSave(null);
+      setHoleEditResultId(null);
     }
   }, [open]);
 
