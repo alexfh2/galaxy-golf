@@ -671,11 +671,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           const updates: Record<string, unknown> = {};
           if (r.handicap != null) updates.current_handicap = r.handicap;
           if (r.gender === 'F' || r.gender === 'M') updates.gender = r.gender;
-          if (r._is_senior != null) updates.is_senior = r._is_senior;
-          if (r.age != null) {
-            updates.birth_year = new Date().getFullYear() - Math.floor(r.age);
-            updates.is_senior = r.age >= SENIOR_AGE;
-          }
           if (Object.keys(updates).length > 0) {
             await supabase
               .from('players')
