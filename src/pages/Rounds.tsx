@@ -547,7 +547,7 @@ const Rounds = () => {
                     <div className="flex items-center gap-3 mb-3 mt-1">
                       <span className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
                       <span className="text-[10px] font-semibold tracking-[0.28em] uppercase text-[hsl(var(--gg-green))]">
-                        Resultados publicados
+                        ULTIMOS RESULTADOS PUBLICADOS
                       </span>
                       <span className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
                     </div>
