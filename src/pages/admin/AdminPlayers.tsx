@@ -68,7 +68,6 @@ const AdminPlayers = () => {
       phone: p.phone ?? '',
       current_handicap: p.current_handicap?.toString() ?? '',
       gender: p.gender ?? '',
-      is_senior: !!p.is_senior,
     });
   };
 
