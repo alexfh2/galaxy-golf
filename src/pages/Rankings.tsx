@@ -786,13 +786,14 @@ export function CircuitoRankingPage() {
               <TabsList className="mb-6 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm">
                 <TabsTrigger
                   value="rounds"
-                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                  className="text-[11px] font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-3 sm:px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
                 >
-                  Resultado prueba a prueba
+                  <span className="hidden sm:inline">Resultado prueba a prueba</span>
+                  <span className="sm:hidden">Prueba a prueba</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="ranking"
-                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                  className="text-[11px] font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-3 sm:px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-green))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
                 >
                   Ranking
                 </TabsTrigger>
@@ -1119,13 +1120,14 @@ export function GalaxyCupRankingPage() {
               <TabsList className="mb-6 bg-[hsl(var(--gg-surface-light))] border border-[hsl(var(--gg-navy-deep))]/12 p-1 h-auto rounded-sm">
                 <TabsTrigger
                   value="rounds"
-                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                  className="text-[11px] font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-3 sm:px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
                 >
-                  Resultado prueba a prueba
+                  <span className="hidden sm:inline">Resultado prueba a prueba</span>
+                  <span className="sm:hidden">Prueba a prueba</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="ranking"
-                  className="text-[11px] font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
+                  className="text-[11px] font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-3 sm:px-5 py-2 rounded-none data-[state=active]:bg-[hsl(var(--gg-copper))] data-[state=active]:text-[hsl(var(--gg-surface-light))]"
                 >
                   Ranking
                 </TabsTrigger>
