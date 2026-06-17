@@ -34,9 +34,11 @@ const AdminPlayers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditState | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'handicap'>('name');
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const { data: players, isLoading } = useQuery({
+  const { data: playersRaw, isLoading } = useQuery({
     queryKey: ['admin-players'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,6 +49,24 @@ const AdminPlayers = () => {
       return data;
     },
   });
+
+  const players = useMemo(() => {
+    let list = playersRaw ? [...playersRaw] : [];
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p: any) => (p.name ?? '').toLowerCase().includes(q));
+    }
+    if (sortBy === 'name') {
+      list.sort((a: any, b: any) => (a.name ?? '').localeCompare(b.name ?? ''));
+    } else if (sortBy === 'handicap') {
+      list.sort((a: any, b: any) => {
+        const ha = a.current_handicap == null ? Infinity : Number(a.current_handicap);
+        const hb = b.current_handicap == null ? Infinity : Number(b.current_handicap);
+        return ha - hb;
+      });
+    }
+    return list;
+  }, [playersRaw, searchQuery, sortBy]);
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<EditState> }) => {
