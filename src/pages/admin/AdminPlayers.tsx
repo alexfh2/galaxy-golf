@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Check, X, Phone, Upload, Trash2, User as UserIcon, Search } from 'lucide-react';
-import { resolvePhotoUrl } from '@/lib/photoUrl';
+import { SignedPhoto } from '@/components/SignedPhoto';
 
 type EditState = {
   name: string;
@@ -290,8 +290,8 @@ const AdminPlayers = () => {
                         <div className="flex items-center gap-2">
                           <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border/60">
                             {player.photo_url ? (
-                              <img
-                                src={resolvePhotoUrl(player.photo_url)}
+                              <SignedPhoto
+                                src={player.photo_url}
                                 alt={player.name}
                                 className="h-full w-full object-cover"
                               />
