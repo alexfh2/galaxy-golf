@@ -750,7 +750,6 @@ export function GalaxyCupRoundsBreakdown({ data }: { data: PublicCircuitData }) 
                 </p>
               ) : (
                 <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
-                <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
                   <Table className="[&_th]:px-2 [&_td]:px-2 [&_th]:py-2 [&_td]:py-1.5 sm:[&_th]:px-4 sm:[&_td]:px-4 sm:[&_th]:py-3 sm:[&_td]:py-3">
                     <TableHeader>
                       <TableRow className="bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
