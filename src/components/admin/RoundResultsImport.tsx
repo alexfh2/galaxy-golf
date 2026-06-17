@@ -838,6 +838,14 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
         </TabsContent>
 
         <TabsContent value="url" className="space-y-3 mt-3">
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex gap-3 items-start">
+            <Info className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+            <p className="text-[13px] leading-relaxed text-amber-100/80">
+              Recomendación: utiliza siempre el enlace de resultados Scratch de GolfDirecto cuando esté disponible.
+              Este formato permite leer mejor los golpes hoyo a hoyo, calcular correctamente las estadísticas y completar la tarjeta del jugador.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label className="text-sm font-semibold">URLs dels resultats</Label>
             <p className="text-xs text-muted-foreground">
