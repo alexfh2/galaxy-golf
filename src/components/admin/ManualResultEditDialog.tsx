@@ -83,11 +83,11 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('results')
-        .select('*, players(id, name, last_name)')
+        .select('*, players(id, name)')
         .eq('round_id', round.id)
         .order('stableford_points', { ascending: false });
       if (error) throw error;
-      return data as (Result & { players: { id: string; name: string; last_name: string | null } | null })[];
+      return data as unknown as (Result & { players: { id: string; name: string } | null })[];
     },
   });
 
