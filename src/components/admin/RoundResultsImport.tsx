@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, AlertTriangle, Search, Plus, Trash2, Upload, FileSpreadsheet } from 'lucide-react';
+import { Check, X, AlertTriangle, Info, Search, Plus, Trash2, Upload, FileSpreadsheet } from 'lucide-react';
 import { DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
