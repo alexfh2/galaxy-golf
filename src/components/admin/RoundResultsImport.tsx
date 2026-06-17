@@ -270,69 +270,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     return withGroups;
   };
 
-  // --- Senior file cross-reference (Excel or PDF) ---
-  const handleSeniorFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const isPdf = file.name.toLowerCase().endsWith('.pdf');
-      const seniorLicenses = new Set<string>();
-      const seniorNames = new Set<string>();
-      let seniorCount = 0;
-
-      if (isPdf) {
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(',')[1]);
-          };
-          reader.readAsDataURL(file);
-        });
-
-        const { data, error } = await supabase.functions.invoke('parse-senior-pdf', {
-          body: { pdf_base64: base64 },
-        });
-        if (error) throw new Error(error.message);
-
-        const players: { name: string; license: string }[] = data?.players || [];
-        seniorCount = players.length;
-        for (const p of players) {
-          if (p.license) seniorLicenses.add(p.license.trim().toUpperCase());
-          if (p.name) seniorNames.add(p.name.trim().toUpperCase());
-        }
-      } else {
-        const buffer = await file.arrayBuffer();
-        const { results: seniorRows } = parseExcelResults(buffer);
-        seniorCount = seniorRows.length;
-        for (const sr of seniorRows) {
-          if (sr.license) seniorLicenses.add(sr.license.trim().toUpperCase());
-          if (sr.name) seniorNames.add(sr.name.trim().toUpperCase());
-        }
-      }
-
-      let matched = 0;
-      setResults(prev => prev.map(r => {
-        const matchByLic = r.license && seniorLicenses.has(r.license.trim().toUpperCase());
-        const matchByName = seniorNames.has(r.name.trim().toUpperCase());
-        const isSenior = !!(matchByLic || matchByName);
-        if (isSenior) matched++;
-        return { ...r, _is_senior: isSenior };
-      }));
-
-      setNeedsSeniorFile(false);
-      toast({
-        title: `${matched} jugadors sènior identificats`,
-        description: `${seniorCount} jugadors al fitxer sènior, ${matched} coincidències amb els resultats.`,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconegut';
-      toast({ title: "Error llegint fitxer sènior", description: message, variant: 'destructive' });
-    } finally {
-      if (seniorFileRef.current) seniorFileRef.current.value = '';
-    }
-  };
 
   // --- Excel import ---
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
