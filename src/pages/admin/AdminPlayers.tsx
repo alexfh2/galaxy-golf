@@ -169,6 +169,29 @@ const AdminPlayers = () => {
     <div className="animate-fade-in">
       <h1 className="font-display text-2xl font-bold mb-6">Jugadors</h1>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cercar per nom..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Ordenar per:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'name' | 'handicap')}
+            className="h-9 rounded border border-border bg-background px-3 text-sm"
+          >
+            <option value="name">Alfabètic</option>
+            <option value="handicap">Hàndicap</option>
+          </select>
+        </div>
+      </div>
+
       <Card className="border-border/60">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
