@@ -327,7 +327,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
           _uid: uid(),
           _selected: true,
           _is_np: r.result_status !== 'completed',
-          _is_senior: r.age != null ? r.age >= SENIOR_AGE : r.is_senior,
           _hole_mode: parsedMode,
           _hole_stableford: r.hole_stableford,
         }));
@@ -336,10 +335,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       setSource(`Excel: ${file.name}`);
       setImportSource('excel');
       const matched = await matchPlayers(parsed);
-
-      if (!hasSeniorInfo) {
-        setNeedsSeniorFile(true);
-      }
 
       if (parserWarnings.length > 0) {
         setWarnings(prev => [...parserWarnings, ...prev]);
@@ -354,7 +349,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
 
       toast({
         title: `${matched.length} resultats importats des d'Excel`,
-        description: `${modeLabel}. ${excelResults.filter(r => r.is_np).length} N.P exclosos.${!hasSeniorInfo ? ' Cal pujar classificació sènior.' : ''}${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
+        description: `${modeLabel}. ${excelResults.filter(r => r.is_np).length} N.P exclosos.${conflicts > 0 ? ` ⚠ ${conflicts} conflictes de duplicats per resoldre.` : ''}`,
       });
 
     } catch (err: unknown) {
