@@ -750,42 +750,50 @@ export function GalaxyCupRoundsBreakdown({ data }: { data: PublicCircuitData }) 
                 </p>
               ) : (
                 <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
-                  <Table>
+                <div className="overflow-x-auto border border-[hsl(var(--gg-navy-deep))]/10">
+                  <Table className="[&_th]:px-2 [&_td]:px-2 [&_th]:py-2 [&_td]:py-1.5 sm:[&_th]:px-4 sm:[&_td]:px-4 sm:[&_th]:py-3 sm:[&_td]:py-3">
                     <TableHeader>
                       <TableRow className="bg-[hsl(var(--gg-bg-light))] hover:bg-[hsl(var(--gg-bg-light))]">
-                        <TableHead className="w-12 text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">HCP</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Stableford</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Estado</TableHead>
-                        <TableHead className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Puntos GalaxyCup</TableHead>
-                        <TableHead className="text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Tipo</TableHead>
+                        <TableHead className="w-8 sm:w-12 text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.16em] text-[hsl(var(--gg-copper))]">Pos.</TableHead>
+                        <TableHead className="text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.16em] text-[hsl(var(--gg-copper))]">Jugador</TableHead>
+                        <TableHead className="hidden sm:table-cell text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">HCP</TableHead>
+                        <TableHead className="text-center text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.16em] text-[hsl(var(--gg-copper))]">Stab.</TableHead>
+                        <TableHead className="text-center text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.16em] text-[hsl(var(--gg-copper))]">Estado</TableHead>
+                        <TableHead className="text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.08em] sm:tracking-[0.16em] text-[hsl(var(--gg-copper))]">Puntos</TableHead>
+                        <TableHead className="hidden sm:table-cell text-center text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--gg-copper))]">Tipo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {rows.map((row) => (
+                      {rows.map((row) => {
+                        const hcp = fmtHcp(row.handicap);
+                        return (
                         <TableRow key={row.player_id} className="border-b border-[hsl(var(--gg-navy-deep))]/8">
-                          <TableCell className="font-semibold text-sm text-[hsl(var(--gg-navy-deep))]/85">
+                          <TableCell className="font-semibold text-xs sm:text-sm text-[hsl(var(--gg-navy-deep))]/85 tabular-nums">
                             {row.position ?? <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
                           </TableCell>
-                          <TableCell className="text-sm">
+                          <TableCell className="text-xs sm:text-sm">
                             <button
                               type="button"
                               onClick={() => setSelectedPlayerId(row.player_id)}
                               className="text-left hover:underline decoration-[hsl(var(--gg-copper))]/50 underline-offset-2 text-[hsl(var(--gg-navy-deep))] hover:text-[hsl(var(--gg-copper))] transition-colors cursor-pointer"
                             >
                               {row.name}
+                              {hcp && (
+                                <span className="ml-1 text-[10px] font-normal tabular-nums text-[hsl(var(--gg-navy-deep))]/55 sm:hidden">
+                                  ({hcp})
+                                </span>
+                              )}
                             </button>
                           </TableCell>
-                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{fmtHcp(row.handicap) ?? '—'}</TableCell>
-                          <TableCell className="text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">
+                          <TableCell className="hidden sm:table-cell text-center text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/75">{hcp ?? '—'}</TableCell>
+                          <TableCell className="text-center text-xs sm:text-sm tabular-nums text-[hsl(var(--gg-navy-deep))]/85">
                             {row.status === 'completed' ? row.stableford : <span className="text-[hsl(var(--gg-navy-deep))]/25">—</span>}
                           </TableCell>
                           <TableCell className="text-center"><StatusBadge status={row.status} /></TableCell>
-                          <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-sm">
+                          <TableCell className="text-center font-sans font-bold text-[hsl(var(--gg-copper))] tabular-nums text-xs sm:text-sm">
                             {row.status === 'completed' ? row.points : 0}
                           </TableCell>
-                          <TableCell className="text-center text-[10px] uppercase tracking-[0.16em]">
+                          <TableCell className="hidden sm:table-cell text-center text-[10px] uppercase tracking-[0.16em]">
                             {row.isMajor ? (
                               <span className="text-[hsl(var(--gg-copper))]">Major</span>
                             ) : (
@@ -793,7 +801,8 @@ export function GalaxyCupRoundsBreakdown({ data }: { data: PublicCircuitData }) 
                             )}
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
