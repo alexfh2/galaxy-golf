@@ -527,8 +527,16 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
               ))}
 
               {parArr && (
-                <div className="text-xs text-muted-foreground">
-                  Stableford scratch calculat: <span className="font-medium">{previewScratch ?? '—'}</span>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  <div>
+                    Stableford <strong>amb handicap</strong>:{' '}
+                    <span className="font-medium">{previewHandicap ?? '—'}</span>
+                    {playerHcp != null && <> · HCP jugador: <code>{playerHcp}</code></>}
+                    {!hcpArr && <> · falten stroke index del campo</>}
+                  </div>
+                  <div className="opacity-70">
+                    Stableford scratch (referència): <span className="font-medium">{previewScratch ?? '—'}</span>
+                  </div>
                 </div>
               )}
 
@@ -536,11 +544,11 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
                 <Checkbox
                   checked={updateStableford}
                   onCheckedChange={(v) => setUpdateStableford(v === true)}
-                  disabled={!parArr || previewScratch == null}
+                  disabled={previewHandicap == null}
                 />
                 <span>
-                  També actualitzar <code>stableford_points</code> amb el valor calculat
-                  {parArr ? '' : ' (no disponible: falta course_par)'}
+                  També actualitzar <code>stableford_points</code> amb el valor amb handicap
+                  {previewHandicap == null ? ' (no disponible: falten dades del campo o HCP del jugador)' : ''}
                 </span>
               </label>
             </div>
