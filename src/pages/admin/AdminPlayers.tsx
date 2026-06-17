@@ -145,18 +145,27 @@ const AdminPlayers = () => {
 
   const handleUpload = async (player: any, file: File) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Format no vàlid',
+        description: 'El fitxer ha de ser una imatge (JPG, PNG, WebP...).',
+        variant: 'destructive',
+      });
+      return;
+    }
     setUploadingId(player.id);
     try {
+      const { blob, ext, contentType } = await optimizeImage(file);
+
       // Remove previous photo if it lives in our bucket
       if (player.photo_url) {
         const prev = extractStoragePath(player.photo_url);
         if (prev) await supabase.storage.from(PHOTO_BUCKET).remove([prev]);
       }
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `${PHOTO_PREFIX}/${player.id}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, blob, { upsert: true, contentType });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
       const { error: updErr } = await supabase
