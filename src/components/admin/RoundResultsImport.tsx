@@ -632,8 +632,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       for (const r of selected) {
         if (r._matched_player_id) continue;
 
-        const birthYear = r.age != null ? new Date().getFullYear() - Math.floor(r.age) : null;
-        const isSenior = r._is_senior ?? (r.age != null ? r.age >= SENIOR_AGE : false);
         const licenseValue = (r.license || '').trim().toUpperCase() ||
           `AUTO-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -645,8 +643,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
             current_handicap: r.handicap,
             initial_handicap: r.handicap,
             gender: r.gender === 'F' ? 'F' : r.gender === 'M' ? 'M' : null,
-            is_senior: isSenior,
-            birth_year: birthYear,
           }, { onConflict: 'license', ignoreDuplicates: false })
           .select('id')
           .single();
