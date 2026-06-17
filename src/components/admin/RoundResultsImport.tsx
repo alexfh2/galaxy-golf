@@ -279,7 +279,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     setLoading(true);
     setWarnings([]);
     setResults([]);
-    setNeedsSeniorFile(false);
     setExcelDiagnostics(null);
 
     try {
