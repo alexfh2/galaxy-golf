@@ -285,7 +285,6 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
       const buffer = await file.arrayBuffer();
       const {
         results: excelResults,
-        hasSeniorInfo,
         warnings: parserWarnings,
         mode: parsedMode,
         diagnostics,
