@@ -103,13 +103,13 @@ const AdminPlayers = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Carregant...
                   </TableCell>
                 </TableRow>
               ) : !players?.length ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No hi ha jugadors registrats
                   </TableCell>
                 </TableRow>
