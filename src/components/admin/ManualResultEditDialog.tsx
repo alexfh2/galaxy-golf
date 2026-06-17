@@ -237,6 +237,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
                         <th className="border border-border px-2 py-2 w-24">Stableford</th>
                         <th className="border border-border px-2 py-2 w-24">Raw Stbl.</th>
                         <th className="border border-border px-2 py-2 w-40">Estat</th>
+                        <th className="border border-border px-2 py-2 w-32">Hoyos</th>
                         <th className="border border-border px-2 py-2 w-32">Acció</th>
                       </tr>
                     </thead>
