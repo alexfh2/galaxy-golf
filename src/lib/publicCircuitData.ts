@@ -10,7 +10,6 @@ export type PublicPlayer = {
   current_handicap: number | null;
   initial_handicap: number | null;
   gender: string | null;
-  is_senior: boolean;
   photo_url: string | null;
   created_at: string;
   updated_at: string;
