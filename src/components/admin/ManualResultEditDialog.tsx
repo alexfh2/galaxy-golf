@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Loader2, Lock, Save, Grid3x3 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { computeScratchStableford } from '@/lib/scratchStableford';
+import { computeScratchStableford, computeHandicapStableford } from '@/lib/scratchStableford';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Round = Tables<'rounds'>;
@@ -87,11 +87,11 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('results')
-        .select('*, players(id, name)')
+        .select('*, players(id, name, gender)')
         .eq('round_id', round.id)
         .order('stableford_points', { ascending: false });
       if (error) throw error;
-      return data as unknown as (Result & { players: { id: string; name: string } | null })[];
+      return data as unknown as (Result & { players: { id: string; name: string; gender: string | null } | null })[];
     },
   });
 
@@ -378,7 +378,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
 interface HoleEditProps {
   open: boolean;
   onClose: () => void;
-  result: Result & { players: { id: string; name: string } | null };
+  result: Result & { players: { id: string; name: string; gender?: string | null } | null };
   round: Round;
   onSaved: () => void | Promise<void>;
 }
@@ -420,6 +420,22 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
     ? (coursePar as number[])
     : null;
 
+  const courseHcpMen = (round as unknown as { course_handicap?: unknown }).course_handicap;
+  const courseHcpWomen = (round as unknown as { course_handicap_women?: unknown }).course_handicap_women;
+  const gender = result.players?.gender ?? null;
+  const effectiveHcpArrSrc =
+    gender === 'F' && Array.isArray(courseHcpWomen) && (courseHcpWomen as unknown[]).length === 18
+      ? courseHcpWomen
+      : courseHcpMen;
+  const hcpArr: number[] | null =
+    Array.isArray(effectiveHcpArrSrc) && (effectiveHcpArrSrc as unknown[]).length === 18
+      ? (effectiveHcpArrSrc as number[])
+      : null;
+
+  const playerHcp: number | null =
+    (result as unknown as { handicap_at_round?: number | null }).handicap_at_round ??
+    (typeof sc?.handicap_play === 'number' ? sc!.handicap_play! : null);
+
   const numericScores: (number | null)[] = scores.map((s) => {
     const t = s.trim();
     if (t === '') return null;
@@ -431,6 +447,10 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
     ? computeScratchStableford({ scores: numericScores }, parArr)
     : null;
 
+  const previewHandicap = parArr && hcpArr && playerHcp != null
+    ? computeHandicapStableford({ scores: numericScores }, parArr, hcpArr, playerHcp)
+    : null;
+
   const handleSave = async () => {
     setSaving(true);
     const newScorecard = {
@@ -438,8 +458,8 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
       scores: numericScores,
     };
     const update: Record<string, unknown> = { scorecard: newScorecard };
-    if (updateStableford && previewScratch != null) {
-      update.stableford_points = previewScratch;
+    if (updateStableford && previewHandicap != null) {
+      update.stableford_points = previewHandicap;
     }
     const { error } = await supabase
       .from('results')
@@ -507,8 +527,16 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
               ))}
 
               {parArr && (
-                <div className="text-xs text-muted-foreground">
-                  Stableford scratch calculat: <span className="font-medium">{previewScratch ?? '—'}</span>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  <div>
+                    Stableford <strong>amb handicap</strong>:{' '}
+                    <span className="font-medium">{previewHandicap ?? '—'}</span>
+                    {playerHcp != null && <> · HCP jugador: <code>{playerHcp}</code></>}
+                    {!hcpArr && <> · falten stroke index del campo</>}
+                  </div>
+                  <div className="opacity-70">
+                    Stableford scratch (referència): <span className="font-medium">{previewScratch ?? '—'}</span>
+                  </div>
                 </div>
               )}
 
@@ -516,11 +544,11 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
                 <Checkbox
                   checked={updateStableford}
                   onCheckedChange={(v) => setUpdateStableford(v === true)}
-                  disabled={!parArr || previewScratch == null}
+                  disabled={previewHandicap == null}
                 />
                 <span>
-                  També actualitzar <code>stableford_points</code> amb el valor calculat
-                  {parArr ? '' : ' (no disponible: falta course_par)'}
+                  També actualitzar <code>stableford_points</code> amb el valor amb handicap
+                  {previewHandicap == null ? ' (no disponible: falten dades del campo o HCP del jugador)' : ''}
                 </span>
               </label>
             </div>
