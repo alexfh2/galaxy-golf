@@ -169,7 +169,7 @@ const RoundResultsImport = ({ round, onClose }: Props) => {
     note: string | null;
   } | null>(null);
 
-  const seniorFileRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     supabase.from('results').select('id, player_id', { count: 'exact' })
