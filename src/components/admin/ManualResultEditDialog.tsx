@@ -140,7 +140,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
 
     const sp = row.stableford_points.trim();
     const rsp = row.raw_stableford_points.trim();
-    const update: Record<string, unknown> = {
+    const update = {
       stableford_points: sp === '' ? null : Number(sp),
       raw_stableford_points: rsp === '' ? null : Number(rsp),
       result_status: row.result_status,
