@@ -28,6 +28,56 @@ const extractStoragePath = (url: string): string | null => {
   return url.substring(idx + marker.length);
 };
 
+const PHOTO_SIZE = 300;
+
+const loadImage = (file: File): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
+    img.src = url;
+  });
+
+const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> =>
+  new Promise((resolve) => canvas.toBlob((b) => resolve(b), type, quality));
+
+/**
+ * Optimize an uploaded image: center-crop to square, resize to 300x300,
+ * encode as WebP (fallback JPEG) at ~0.8 quality.
+ */
+const optimizeImage = async (
+  file: File,
+): Promise<{ blob: Blob; ext: 'webp' | 'jpg'; contentType: string }> => {
+  const img = await loadImage(file);
+  const side = Math.min(img.naturalWidth, img.naturalHeight);
+  const sx = (img.naturalWidth - side) / 2;
+  const sy = (img.naturalHeight - side) / 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = PHOTO_SIZE;
+  canvas.height = PHOTO_SIZE;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas no disponible');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, PHOTO_SIZE, PHOTO_SIZE);
+
+  let blob = await canvasToBlob(canvas, 'image/webp', 0.8);
+  if (blob && blob.type === 'image/webp') {
+    return { blob, ext: 'webp', contentType: 'image/webp' };
+  }
+  blob = await canvasToBlob(canvas, 'image/jpeg', 0.8);
+  if (!blob) throw new Error('No s\'ha pogut processar la imatge');
+  return { blob, ext: 'jpg', contentType: 'image/jpeg' };
+};
+
 const AdminPlayers = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -95,18 +145,27 @@ const AdminPlayers = () => {
 
   const handleUpload = async (player: any, file: File) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Format no vàlid',
+        description: 'El fitxer ha de ser una imatge (JPG, PNG, WebP...).',
+        variant: 'destructive',
+      });
+      return;
+    }
     setUploadingId(player.id);
     try {
+      const { blob, ext, contentType } = await optimizeImage(file);
+
       // Remove previous photo if it lives in our bucket
       if (player.photo_url) {
         const prev = extractStoragePath(player.photo_url);
         if (prev) await supabase.storage.from(PHOTO_BUCKET).remove([prev]);
       }
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `${PHOTO_PREFIX}/${player.id}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, blob, { upsert: true, contentType });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
       const { error: updErr } = await supabase
