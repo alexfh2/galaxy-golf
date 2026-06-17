@@ -378,7 +378,7 @@ export default function ManualResultEditDialog({ round, open, onClose }: Props) 
 interface HoleEditProps {
   open: boolean;
   onClose: () => void;
-  result: Result & { players: { id: string; name: string } | null };
+  result: Result & { players: { id: string; name: string; gender?: string | null } | null };
   round: Round;
   onSaved: () => void | Promise<void>;
 }
