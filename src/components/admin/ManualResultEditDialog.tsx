@@ -420,6 +420,22 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
     ? (coursePar as number[])
     : null;
 
+  const courseHcpMen = (round as unknown as { course_handicap?: unknown }).course_handicap;
+  const courseHcpWomen = (round as unknown as { course_handicap_women?: unknown }).course_handicap_women;
+  const gender = result.players?.gender ?? null;
+  const effectiveHcpArrSrc =
+    gender === 'F' && Array.isArray(courseHcpWomen) && (courseHcpWomen as unknown[]).length === 18
+      ? courseHcpWomen
+      : courseHcpMen;
+  const hcpArr: number[] | null =
+    Array.isArray(effectiveHcpArrSrc) && (effectiveHcpArrSrc as unknown[]).length === 18
+      ? (effectiveHcpArrSrc as number[])
+      : null;
+
+  const playerHcp: number | null =
+    (result as unknown as { handicap_at_round?: number | null }).handicap_at_round ??
+    (typeof sc?.handicap_play === 'number' ? sc!.handicap_play! : null);
+
   const numericScores: (number | null)[] = scores.map((s) => {
     const t = s.trim();
     if (t === '') return null;
@@ -431,6 +447,10 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
     ? computeScratchStableford({ scores: numericScores }, parArr)
     : null;
 
+  const previewHandicap = parArr && hcpArr && playerHcp != null
+    ? computeHandicapStableford({ scores: numericScores }, parArr, hcpArr, playerHcp)
+    : null;
+
   const handleSave = async () => {
     setSaving(true);
     const newScorecard = {
@@ -438,8 +458,8 @@ function HoleByHoleEditDialog({ open, onClose, result, round, onSaved }: HoleEdi
       scores: numericScores,
     };
     const update: Record<string, unknown> = { scorecard: newScorecard };
-    if (updateStableford && previewScratch != null) {
-      update.stableford_points = previewScratch;
+    if (updateStableford && previewHandicap != null) {
+      update.stableford_points = previewHandicap;
     }
     const { error } = await supabase
       .from('results')
