@@ -23,7 +23,7 @@ const Index = () => {
   });
 
   const lastRoundName =
-    lastRound?.name || lastRound?.course || lastRound?.club || lastRound?.venue || 'Sede por confirmar';
+    lastRound?.name || lastRound?.course || lastRound?.club || 'Sede por confirmar';
   const lastRoundComps: RoundCompetitionLink[] = ((lastRound?.round_competitions ?? []) as RoundCompetitionLink[])
     .filter((l) => l.competitions)
     .sort((a, b) => (a.competitions?.display_order ?? 0) - (b.competitions?.display_order ?? 0));
