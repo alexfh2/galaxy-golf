@@ -3,7 +3,7 @@ import { ArrowRight, Calendar, MapPin } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import circuitoLogo from '@/assets/circuito-galaxygolf.png.asset.json';
-import galaxycupLogo from '@/assets/galaxycup.png.asset.json';
+import galaxycupLogo from '@/assets/galaxycup-v2.png.asset.json';
 
 type RoundCompetitionLink = {
   competitions: { name: string; slug: string; display_order: number | null } | null;
