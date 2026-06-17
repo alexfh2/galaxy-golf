@@ -243,13 +243,11 @@ const Rounds = () => {
     }).sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const female = results.filter(r => ((r as any).players_public)?.gender === 'F')
       .sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
-    const senior = results.filter(r => ((r as any).players_public)?.is_senior)
-      .sort((a, b) => (b.stableford_points ?? 0) - (a.stableford_points ?? 0));
     const scratch = results
       .map(r => ({ ...r, _scratchPts: computeScratchStableford(r.scorecard, (r as any).rounds?.course_par) }))
       .filter(r => r._scratchPts != null)
       .sort((a, b) => (b._scratchPts ?? 0) - (a._scratchPts ?? 0));
-    return { hcpLow, hcpHigh, female, senior, scratch };
+    return { hcpLow, hcpHigh, female, scratch };
   };
 
   const categorized = categorizeResults(roundResults);
