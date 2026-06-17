@@ -15,7 +15,6 @@ type EditState = {
   phone: string;
   current_handicap: string;
   gender: string;
-  is_senior: boolean;
 };
 
 const AdminPlayers = () => {
