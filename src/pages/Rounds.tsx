@@ -65,13 +65,44 @@ const Rounds = () => {
       );
   };
 
-  const visibleRounds = useMemo(() => {
+  const filteredRounds = useMemo(() => {
     if (!rounds) return [];
     if (filter === 'all') return rounds;
     return rounds.filter((r: any) =>
       getLinks(r).some((l) => l.competitions?.slug === filter),
     );
   }, [rounds, filter]);
+
+  const splitRounds = useMemo(() => {
+    const played: any[] = [];
+    const pending: any[] = [];
+    for (const r of filteredRounds) {
+      if (r.status === 'published') played.push(r);
+      else pending.push(r);
+    }
+    played.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    pending.sort((a, b) => {
+      const da = a.date ?? '';
+      const db = b.date ?? '';
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da.localeCompare(db);
+    });
+    return { played, pending };
+  }, [filteredRounds]);
+
+  const visibleRounds = useMemo(
+    () => [...splitRounds.played, ...splitRounds.pending],
+    [splitRounds],
+  );
+
+  const roundDisplayName = (r: any): string =>
+    (r?.name && String(r.name).trim()) ||
+    (r?.course && String(r.course).trim()) ||
+    (r?.club && String(r.club).trim()) ||
+    (r?.venue && String(r.venue).trim()) ||
+    'Sede por confirmar';
 
   const filterOptions: { value: CompetitionFilter; label: string }[] = [
     { value: 'all', label: 'Todas las pruebas' },
