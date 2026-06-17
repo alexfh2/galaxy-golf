@@ -65,7 +65,7 @@ interface Props {
   onClose: () => void;
 }
 
-const SENIOR_AGE = 65;
+
 
 // Normalise a name for duplicate detection: lowercase, strip accents, collapse spaces, trim
 const normaliseName = (s: string): string =>
