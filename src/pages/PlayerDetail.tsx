@@ -69,7 +69,7 @@ const PlayerDetail = () => {
             <h1 className="font-display text-3xl font-bold text-primary-foreground">
               {player.name}
               {player.gender === 'F' && <Badge variant="outline" className="ml-2 text-xs border-primary-foreground/40 text-primary-foreground">F</Badge>}
-              {player.is_senior && <Badge variant="outline" className="ml-2 text-xs border-primary-foreground/40 text-primary-foreground">SR</Badge>}
+              
             </h1>
             <div className="flex gap-4 mt-2 text-sm text-primary-foreground/80">
               {player.club && <span>{player.club}</span>}
