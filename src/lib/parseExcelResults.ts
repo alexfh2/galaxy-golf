@@ -442,6 +442,6 @@ export function parseExcelResults(buffer: ArrayBuffer, options?: ExcelParseOptio
     discrepancies,
   };
 
-  return { results, hasSeniorInfo, mode, warnings, diagnostics };
+  return { results, mode, warnings, diagnostics };
 }
 
