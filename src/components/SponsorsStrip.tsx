@@ -69,7 +69,7 @@ export function SponsorsStrip() {
             {ROW_2.map((s) => (
               <div
                 key={s.name}
-                className="w-full h-14 flex items-center justify-center bg-[hsl(var(--gg-bg-light))]"
+                className="w-full h-12 flex items-center justify-center bg-[hsl(var(--gg-bg-light))]"
               >
                 <SponsorLogo s={s} />
               </div>
