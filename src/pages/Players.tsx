@@ -75,10 +75,12 @@ const venueName = (r: PublicResult): string =>
   '—';
 
 export default function Players() {
+  const heroUrl = useRandomHero('players');
   const { data, isLoading } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
   });
+
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
