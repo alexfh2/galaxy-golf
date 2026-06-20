@@ -33,6 +33,10 @@ export async function signPhotoUrl(
   url: string | null | undefined,
 ): Promise<string | undefined> {
   if (!url) return undefined;
+  // If the URL is already a signed URL (contains a token), use it as-is.
+  // The server (edge function) may have pre-signed it with service role.
+  if (url.includes(SIGN_MARKER) && url.includes('token=')) return url;
+
   const path = extractPath(url);
   if (!path) return url;
 
