@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import circuitoLogo from '@/assets/circuito-galaxygolf-v2.png.asset.json';
 import galaxycupLogo from '@/assets/galaxycup-v3.png.asset.json';
 import { useRandomHero } from '@/lib/heroPool';
+import { SponsorsStrip } from '@/components/SponsorsStrip';
 
 type RoundCompetitionLink = {
   competitions: { name: string; slug: string; display_order: number | null } | null;
@@ -211,25 +212,7 @@ const Index = () => {
       </section>
 
       {/* ——— SPONSORS STRIP ——— */}
-      <section className="border-y border-[hsl(var(--gg-green))]/20 bg-[hsl(var(--gg-bg-light))]">
-        <div className="container py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] shrink-0">
-              Patrocinadores oficiales
-            </p>
-            <div className="flex-1 grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-3 items-center">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-7 flex items-center justify-center text-[10px] font-semibold tracking-[0.22em] uppercase text-[hsl(var(--gg-navy-deep))]/40"
-                >
-                  Sponsor
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <SponsorsStrip />
 
       {/* ——— SEASON STATS ——— */}
       <section className="bg-[hsl(var(--gg-bg-light))]">
