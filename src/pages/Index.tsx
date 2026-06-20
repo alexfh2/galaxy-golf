@@ -89,7 +89,7 @@ const Index = () => {
           <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/30 bg-[hsl(var(--gg-green))]/8 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-green))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
             <div
               aria-hidden
-              className="absolute inset-0 bg-[hsl(var(--gg-bg-light))]/[0.72]"
+              className="absolute inset-0 bg-[hsl(var(--gg-bg-light))]/[0.82]"
             />
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-green))]/55" />
             <p className="relative text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))] mb-4">
