@@ -492,7 +492,7 @@ export default function Stats() {
       {/* HERO */}
       <section className="relative overflow-hidden bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))] border-b border-[hsl(var(--gg-gold))]/20">
         <img
-          src={heroCircuito}
+          src={heroUrl}
           alt=""
           aria-hidden
           className="absolute inset-0 w-full h-full object-cover opacity-90"
