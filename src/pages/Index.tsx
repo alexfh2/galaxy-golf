@@ -140,7 +140,9 @@ const Index = () => {
             </div>
           </article>
         </div>
+        </div>
       </section>
+
 
       {/* ——— ÚLTIMOS RESULTADOS PUBLICADOS ——— */}
       <section className="container pb-8">
