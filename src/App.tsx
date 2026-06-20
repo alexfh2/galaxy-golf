@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import AdminLayout from "./components/admin/AdminLayout";
+import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Rankings from "./pages/Rankings";
 import CircuitoRanking from "./pages/CircuitoRanking";
@@ -39,6 +40,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Public routes */}
             <Route element={<Layout />}>
