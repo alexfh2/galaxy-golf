@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useRandomHero } from '@/lib/heroPool';
 
 /* ============================================================
  * Bases y Puntuaciones — Página pública
@@ -692,6 +693,7 @@ function GalaxyCupContent() {
 }
 
 export default function BasesYPuntuaciones() {
+  const heroUrl = useRandomHero('bases');
   useEffect(() => {
     document.title = 'Bases y puntuaciones · GalaxyGolf 2026';
   }, []);
@@ -700,6 +702,19 @@ export default function BasesYPuntuaciones() {
     <>
       {/* Hero */}
       <section className="relative bg-[hsl(var(--gg-navy-deep))] text-[hsl(var(--gg-surface-light))] overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center opacity-40"
+          style={{ backgroundImage: `url(${heroUrl})` }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, hsl(var(--gg-navy-deep)) 0%, hsl(var(--gg-navy-deep) / 0.92) 40%, hsl(var(--gg-navy-deep) / 0.55) 70%, hsl(var(--gg-navy-deep) / 0.2) 100%)',
+          }}
+        />
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(circle_at_30%_20%,hsl(var(--gg-gold))_0%,transparent_55%)]" />
         <div className="container relative py-20 md:py-28">
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[hsl(var(--gg-gold))] mb-4">
@@ -715,6 +730,7 @@ export default function BasesYPuntuaciones() {
           </p>
         </div>
       </section>
+
 
       {/* Tabs */}
       <section className="bg-background py-12 md:py-16">

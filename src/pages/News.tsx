@@ -10,7 +10,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar, Newspaper } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import heroNews from '@/assets/hero-news.png.asset.json';
+import { useRandomHero } from '@/lib/heroPool';
 import { signPhotoUrl } from '@/lib/photoUrl';
 
 type PhotoMeta = {
@@ -24,6 +24,7 @@ type PhotoMeta = {
 
 const News = () => {
   const { t } = useTranslation();
+  const heroUrl = useRandomHero('news');
   const [lightbox, setLightbox] = useState<{ url: string; caption?: string | null } | null>(null);
 
   const { data: news, isLoading } = useQuery({
@@ -102,7 +103,7 @@ const News = () => {
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-bottom"
-          style={{ backgroundImage: `url(${heroNews.url})` }}
+          style={{ backgroundImage: `url(${heroUrl})` }}
         />
         <div
           aria-hidden

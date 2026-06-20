@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
-import heroPlayers from '@/assets/hero-players.png.asset.json';
+import { useRandomHero } from '@/lib/heroPool';
 import {
   fetchPublicCircuitData,
   publicCircuitDataQueryKey,
@@ -75,10 +75,12 @@ const venueName = (r: PublicResult): string =>
   '—';
 
 export default function Players() {
+  const heroUrl = useRandomHero('players');
   const { data, isLoading } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
   });
+
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
@@ -258,7 +260,7 @@ export default function Players() {
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-bottom opacity-90"
-          style={{ backgroundImage: `url(${heroPlayers.url})` }}
+          style={{ backgroundImage: `url(${heroUrl})` }}
         />
         <div
           aria-hidden

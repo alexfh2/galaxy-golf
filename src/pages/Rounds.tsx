@@ -8,7 +8,7 @@ import { fetchPublicCircuitData, publicCircuitDataQueryKey } from '@/lib/publicC
 import { buildPlayerCategoryHandicapMap } from '@/lib/playerCategoryHandicap';
 import { computeScratchStableford } from '@/lib/scratchStableford';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
-import heroCalendar from '@/assets/hero-calendar.png.asset.json';
+import { useRandomHero } from '@/lib/heroPool';
 
 type CompetitionSlug = 'circuito-galaxygolf' | 'galaxycup';
 type Stage = 'regular' | 'major' | 'playoff' | 'final';
@@ -26,6 +26,7 @@ type RoundCompetitionLink = {
 
 const Rounds = () => {
   const locale = es;
+  const heroUrl = useRandomHero('rounds');
   const [expandedRound, setExpandedRound] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [activeResultTab, setActiveResultTab] = useState('hcpLow');
@@ -373,7 +374,7 @@ const Rounds = () => {
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroCalendar.url})` }}
+          style={{ backgroundImage: `url(${heroUrl})` }}
         />
         <div
           aria-hidden

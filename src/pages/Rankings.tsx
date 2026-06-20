@@ -25,8 +25,7 @@ import {
   getGalaxyGolfCategoryByHandicap,
   getGalaxyGolfCategoryLabel,
 } from '@/lib/playerCategoryHandicap';
-import heroCircuito from '@/assets/hero-circuito.jpg';
-import heroGalaxyCup from '@/assets/hero-galaxycup.jpg';
+import { useRandomHero } from '@/lib/heroPool';
 
 /* ============================================================
  * Rankings GalaxyGolf 2026
@@ -683,6 +682,7 @@ function DashboardStrip({ children }: { children: React.ReactNode }) {
 
 /* ============ Página: Circuito GalaxyGolf ============ */
 export function CircuitoRankingPage() {
+  const heroUrl = useRandomHero('circuito');
   const { data, isLoading, error } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
@@ -723,7 +723,7 @@ export function CircuitoRankingPage() {
           </>
         }
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
-        bgImage={heroCircuito}
+        bgImage={heroUrl}
         leaderCard={
           <LeadersCard
             accent="green"
@@ -976,6 +976,7 @@ export function CircuitoRankingPage() {
 
 /* ============ Página: GalaxyCup ============ */
 export function GalaxyCupRankingPage() {
+  const heroUrl = useRandomHero('galaxycup');
   const { data, isLoading, error } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
@@ -1028,7 +1029,7 @@ export function GalaxyCupRankingPage() {
           </>
         }
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
-        bgImage={heroGalaxyCup}
+        bgImage={heroUrl}
         overlayStrength="strong"
         eyebrowAccent="copper"
         eyebrowSize="lg"
