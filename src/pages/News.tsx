@@ -10,7 +10,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar, Newspaper } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import heroNews from '@/assets/hero-news.png.asset.json';
+import { useRandomHero } from '@/lib/heroPool';
 import { signPhotoUrl } from '@/lib/photoUrl';
 
 type PhotoMeta = {
