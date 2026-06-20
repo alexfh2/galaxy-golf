@@ -72,14 +72,6 @@ const Index = () => {
         />
         <div
           aria-hidden
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to right, hsl(var(--gg-bg-light)) 0%, hsl(var(--gg-bg-light) / 0.92) 35%, hsl(var(--gg-bg-light) / 0.7) 65%, hsl(var(--gg-bg-light) / 0.45) 100%)',
-          }}
-        />
-        <div
-          aria-hidden
           className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
         />
         <div className="container relative pt-10 pb-8">
