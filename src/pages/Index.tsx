@@ -124,17 +124,21 @@ const Index = () => {
 
           {/* GalaxyCup */}
           <article className="relative overflow-hidden border border-[hsl(var(--gg-copper))]/30 bg-[hsl(var(--gg-copper))]/6 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-copper))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-[hsl(var(--gg-bg-light))]/[0.82]"
+            />
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-copper))]/55" />
-            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))] mb-4">
+            <p className="relative text-xs font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-copper))] mb-4">
               Race to the Playoffs
             </p>
-            <div className="flex-1 flex flex-col justify-center items-center w-full">
+            <div className="relative flex-1 flex flex-col justify-center items-center w-full">
               <CompetitionWordmark variant="galaxycup" />
               <p className="text-[11px] text-[hsl(var(--gg-navy-deep))]/70 leading-relaxed mt-5 max-w-[26ch]">
                 Competición por puntos con Majors y Playoffs.
               </p>
             </div>
-            <div className="mt-6">
+            <div className="relative mt-6">
               <Link
                 to="/galaxycup"
                 className="inline-flex items-center gap-3 px-6 py-3 bg-[hsl(var(--gg-copper))] text-white text-[11px] font-semibold uppercase tracking-[0.22em] hover:bg-[hsl(var(--gg-copper))]/85 transition-colors"
