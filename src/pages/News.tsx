@@ -24,6 +24,7 @@ type PhotoMeta = {
 
 const News = () => {
   const { t } = useTranslation();
+  const heroUrl = useRandomHero('news');
   const [lightbox, setLightbox] = useState<{ url: string; caption?: string | null } | null>(null);
 
   const { data: news, isLoading } = useQuery({
