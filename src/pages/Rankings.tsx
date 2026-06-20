@@ -976,6 +976,7 @@ export function CircuitoRankingPage() {
 
 /* ============ Página: GalaxyCup ============ */
 export function GalaxyCupRankingPage() {
+  const heroUrl = useRandomHero('galaxycup');
   const { data, isLoading, error } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
