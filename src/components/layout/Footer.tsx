@@ -7,9 +7,6 @@ const Footer = () => {
       <div className="border-b border-[hsl(var(--gg-gold))]/15">
         <div className="container py-14 flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
-            <p className="font-display text-2xl italic">
-              Dos competiciones. Una misma pasión por el golf.
-            </p>
             <p className="text-sm text-[hsl(var(--gg-ivory))]/60 mt-1">
               Sigue el Circuito GALAXY GOLF y la GalaxyCup durante toda la temporada 2026.
             </p>
