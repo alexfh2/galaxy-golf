@@ -75,13 +75,14 @@ const Index = () => {
           className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
         />
         <div className="container relative pt-10 pb-8">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
-          <h2 className="text-[11px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))]">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/40" />
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-[0.18em] uppercase text-[hsl(var(--gg-bg-light))] px-5 py-2 [text-shadow:0_2px_12px_rgba(11,19,36,0.65)]">
             Temporada 2026
           </h2>
-          <div className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
+          <div className="h-px flex-1 bg-[hsl(var(--gg-gold))]/40" />
         </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
