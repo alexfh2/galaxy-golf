@@ -723,7 +723,7 @@ export function CircuitoRankingPage() {
           </>
         }
         text="Sigue tu temporada, suma en cada prueba y asegura tu camino a la Gran Final."
-        bgImage={heroCircuito}
+        bgImage={heroUrl}
         leaderCard={
           <LeadersCard
             accent="green"
