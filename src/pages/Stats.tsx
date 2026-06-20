@@ -159,6 +159,7 @@ function LeaderRow({
 /* ===================== Página ===================== */
 
 export default function Stats() {
+  const heroUrl = useRandomHero('stats');
   const { data, isLoading } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
