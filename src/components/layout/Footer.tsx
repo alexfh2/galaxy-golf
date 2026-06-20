@@ -6,11 +6,7 @@ const Footer = () => {
     <footer className="border-t border-border/40 bg-[hsl(var(--gg-navy))] text-[hsl(var(--gg-ivory))]">
       <div className="border-b border-[hsl(var(--gg-gold))]/15">
         <div className="container py-14 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-5">
-            <div className="h-12 w-12 rounded-full border border-[hsl(var(--gg-gold))]/40 flex items-center justify-center">
-              <span className="font-display text-xl text-[hsl(var(--gg-gold))]">G</span>
-            </div>
-            <div>
+          <div>
               <p className="font-display text-2xl italic">
                 Dos competiciones. Una misma pasión por el golf.
               </p>
