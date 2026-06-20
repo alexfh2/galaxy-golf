@@ -21,6 +21,7 @@ type RoundRow = {
 };
 
 const Index = () => {
+  const heroUrl = useRandomHero('home');
   const { data: lastRounds } = useQuery({
     queryKey: ['home-last-published-rounds'],
     queryFn: async () => {
