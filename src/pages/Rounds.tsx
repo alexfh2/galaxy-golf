@@ -374,7 +374,7 @@ const Rounds = () => {
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroCalendar.url})` }}
+          style={{ backgroundImage: `url(${heroUrl})` }}
         />
         <div
           aria-hidden
