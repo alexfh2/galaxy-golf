@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useRandomHero } from '@/lib/heroPool';
 
 /* ============================================================
  * Bases y Puntuaciones — Página pública
