@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PlayerProfileDialog from '@/components/PlayerProfileDialog';
-import heroPlayers from '@/assets/hero-players.png.asset.json';
+import { useRandomHero } from '@/lib/heroPool';
 import {
   fetchPublicCircuitData,
   publicCircuitDataQueryKey,
