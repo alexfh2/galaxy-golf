@@ -682,6 +682,7 @@ function DashboardStrip({ children }: { children: React.ReactNode }) {
 
 /* ============ Página: Circuito GalaxyGolf ============ */
 export function CircuitoRankingPage() {
+  const heroUrl = useRandomHero('circuito');
   const { data, isLoading, error } = useQuery({
     queryKey: publicCircuitDataQueryKey,
     queryFn: fetchPublicCircuitData,
