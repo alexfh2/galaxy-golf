@@ -63,7 +63,25 @@ const Index = () => {
   return (
     <div className="animate-fade-in bg-[hsl(var(--gg-bg-light))] text-[hsl(var(--gg-navy-deep))]">
       {/* ——— ACCESOS A COMPETICIONES (HERO) ——— */}
-      <section className="container pt-10 pb-8">
+      <section className="relative overflow-hidden border-b border-[hsl(var(--gg-gold))]/20">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroUrl})` }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, hsl(var(--gg-bg-light)) 0%, hsl(var(--gg-bg-light) / 0.92) 35%, hsl(var(--gg-bg-light) / 0.7) 65%, hsl(var(--gg-bg-light) / 0.45) 100%)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--gg-bg-light))] via-transparent to-transparent"
+        />
+        <div className="container relative pt-10 pb-8">
         <div className="flex items-center gap-4 mb-6">
           <div className="h-px flex-1 bg-[hsl(var(--gg-green))]/25" />
           <h2 className="text-[11px] font-semibold tracking-[0.3em] uppercase text-[hsl(var(--gg-green))]">
@@ -73,6 +91,7 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
           {/* Circuito GalaxyGolf */}
           <article className="relative overflow-hidden border border-[hsl(var(--gg-green))]/30 bg-[hsl(var(--gg-green))]/8 p-8 flex flex-col items-center text-center group hover:border-[hsl(var(--gg-green))]/55 transition-colors shadow-[0_4px_28px_-14px_rgba(11,19,36,0.22)]">
             <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-[hsl(var(--gg-green))]/55" />
