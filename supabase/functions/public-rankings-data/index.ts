@@ -181,18 +181,54 @@ Deno.serve(async (req) => {
         : null,
     }));
 
-    const players: PublicPlayerRow[] = (playersData || []).map((player: any) => ({
-      id: player.id,
-      license: player.license,
-      name: player.name,
-      club: player.club,
-      current_handicap: player.current_handicap,
-      initial_handicap: player.initial_handicap,
-      gender: player.gender,
-      photo_url: player.photo_url,
-      created_at: player.created_at,
-      updated_at: player.updated_at,
-    }));
+    // Pre-sign player photo URLs server-side (service role) so the public site
+    // can render them without each anon client needing to call storage sign.
+    const PHOTO_BUCKET = "photos";
+    const SIGN_EXPIRES_IN = 60 * 60 * 24 * 7; // 7 days
+    const extractPhotoPath = (url: string | null): string | null => {
+      if (!url) return null;
+      const markers = [
+        `/object/public/${PHOTO_BUCKET}/`,
+        `/object/sign/${PHOTO_BUCKET}/`,
+        `/object/${PHOTO_BUCKET}/`,
+      ];
+      for (const m of markers) {
+        const i = url.indexOf(m);
+        if (i !== -1) {
+          const rest = url.substring(i + m.length);
+          const q = rest.indexOf("?");
+          return q === -1 ? rest : rest.substring(0, q);
+        }
+      }
+      return null;
+    };
+    const signedPhotoCache = new Map<string, string | null>();
+    const signPlayerPhoto = async (url: string | null): Promise<string | null> => {
+      const path = extractPhotoPath(url);
+      if (!path) return url ?? null;
+      if (signedPhotoCache.has(path)) return signedPhotoCache.get(path)!;
+      const { data, error } = await adminClient.storage
+        .from(PHOTO_BUCKET)
+        .createSignedUrl(path, SIGN_EXPIRES_IN);
+      const signed = !error && data?.signedUrl ? data.signedUrl : null;
+      signedPhotoCache.set(path, signed);
+      return signed;
+    };
+
+    const players: PublicPlayerRow[] = await Promise.all(
+      (playersData || []).map(async (player: any) => ({
+        id: player.id,
+        license: player.license,
+        name: player.name,
+        club: player.club,
+        current_handicap: player.current_handicap,
+        initial_handicap: player.initial_handicap,
+        gender: player.gender,
+        photo_url: await signPlayerPhoto(player.photo_url),
+        created_at: player.created_at,
+        updated_at: player.updated_at,
+      })),
+    );
 
     const round_competitions = (roundCompsData || []).map((row: any) => ({
       round_id: row.round_id,
