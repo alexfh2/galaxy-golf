@@ -200,7 +200,7 @@ const PlayerProfileDialog = ({ playerId, open, onOpenChange }: PlayerProfileDial
     { label: 'Torneos jugados', value: roundsPlayed },
     { label: 'Mejor Stableford', value: bestStb },
     { label: 'Media Stableford', value: avgStb },
-    { label: 'Hándicap actual', value: lastHcp ?? '—' },
+    { label: 'ÚLTIMO HANDICAP', value: lastHcp ?? '—' },
   ];
 
   const categoryLabel = positions?.categoryLabel ?? null;
