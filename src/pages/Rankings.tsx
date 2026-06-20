@@ -1029,7 +1029,7 @@ export function GalaxyCupRankingPage() {
           </>
         }
         text="Cada torneo cuenta. Solo los mejores avanzan hacia los Playoffs."
-        bgImage={heroGalaxyCup}
+        bgImage={heroUrl}
         overlayStrength="strong"
         eyebrowAccent="copper"
         eyebrowSize="lg"
