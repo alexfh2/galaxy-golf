@@ -103,7 +103,7 @@ const News = () => {
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-bottom"
-          style={{ backgroundImage: `url(${heroNews.url})` }}
+          style={{ backgroundImage: `url(${heroUrl})` }}
         />
         <div
           aria-hidden
