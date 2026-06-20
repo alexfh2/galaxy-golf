@@ -26,6 +26,7 @@ type RoundCompetitionLink = {
 
 const Rounds = () => {
   const locale = es;
+  const heroUrl = useRandomHero('rounds');
   const [expandedRound, setExpandedRound] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [activeResultTab, setActiveResultTab] = useState('hcpLow');
