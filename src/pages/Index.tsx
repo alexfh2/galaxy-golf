@@ -214,14 +214,6 @@ const Index = () => {
       {/* ——— SPONSORS STRIP ——— */}
       <SponsorsStrip />
 
-      {/* ——— SEASON STATS ——— */}
-      <section className="bg-[hsl(var(--gg-bg-light))]">
-        <div className="container py-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-          <StaticStat value="2" label="Competiciones" />
-          <StaticStat value="29" label="Jornadas" />
-          <StaticStat value="2026" label="Temporada" />
-        </div>
-      </section>
     </div>
   );
 };
