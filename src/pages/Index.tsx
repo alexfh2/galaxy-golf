@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import circuitoLogo from '@/assets/circuito-galaxygolf-v2.png.asset.json';
 import galaxycupLogo from '@/assets/galaxycup-v3.png.asset.json';
+import { useRandomHero } from '@/lib/heroPool';
 
 type RoundCompetitionLink = {
   competitions: { name: string; slug: string; display_order: number | null } | null;
