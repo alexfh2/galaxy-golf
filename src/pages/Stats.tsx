@@ -12,7 +12,7 @@ import {
   getGalaxyGolfCategoryByHandicap,
   getGalaxyGolfCategoryLabel,
 } from "@/lib/playerCategoryHandicap";
-import heroCircuito from "@/assets/hero-circuito.jpg";
+import { useRandomHero } from "@/lib/heroPool";
 import PlayerProfileDialog from "@/components/PlayerProfileDialog";
 
 /* ============================================================
