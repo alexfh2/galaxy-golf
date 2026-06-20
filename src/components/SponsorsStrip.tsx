@@ -1,6 +1,6 @@
 import occident from "@/assets/sponsors/occident.png.asset.json";
 import iseguros from "@/assets/sponsors/iseguros.png.asset.json";
-import costaDaurada from "@/assets/sponsors/costa-daurada.png.asset.json";
+import costaDaurada from "@/assets/sponsors/costa-daurada-v2.png.asset.json";
 import agrumaca from "@/assets/sponsors/agrumaca.jpg.asset.json";
 import gde from "@/assets/sponsors/gde.png.asset.json";
 import toa from "@/assets/sponsors/toa.png.asset.json";
@@ -16,14 +16,14 @@ type Sponsor = {
 
 const ROW_1: Sponsor[] = [
   { name: "Occident", url: occident.url, h: 30, blend: true },
-  { name: "iSeguros Online", url: iseguros.url, h: 38, blend: true },
-  { name: "Costa Daurada Destinació", url: costaDaurada.url, h: 64, blend: true },
+  { name: "iSeguros Online", url: iseguros.url, h: 42, blend: true },
+  { name: "Costa Daurada Destinació", url: costaDaurada.url, h: 78, blend: true },
 ];
 
 const ROW_2: Sponsor[] = [
-  { name: "Agrumaca Grup", url: agrumaca.url, h: 30, blend: true },
-  { name: "gde innovation partners", url: gde.url, h: 34, blend: true },
-  { name: "TOA Shoes", url: toa.url, h: 26, blend: true },
+  { name: "Agrumaca Grup", url: agrumaca.url, h: 26, blend: true },
+  { name: "gde innovation partners", url: gde.url, h: 28, blend: true },
+  { name: "TOA Shoes", url: toa.url, h: 22, blend: true },
 ];
 
 function SponsorLogo({ s }: { s: Sponsor }) {
