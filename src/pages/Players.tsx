@@ -260,7 +260,7 @@ export default function Players() {
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-bottom opacity-90"
-          style={{ backgroundImage: `url(${heroPlayers.url})` }}
+          style={{ backgroundImage: `url(${heroUrl})` }}
         />
         <div
           aria-hidden
